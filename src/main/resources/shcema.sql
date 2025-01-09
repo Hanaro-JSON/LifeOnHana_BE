@@ -1,3 +1,5 @@
+USE lifeonhana_localDB;
+
 CREATE TABLE IF NOT EXISTS User(
     user_id BIGINT AUTO_INCREMENT PRIMARY KEY,
     user_name VARCHAR(127) NOT NULL,
