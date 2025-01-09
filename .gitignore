@@ -36,5 +36,9 @@ out/
 ### VS Code ###
 .vscode/
 
+<<<<<<< HEAD
 ### git ###
 .gitmessage.txt
+=======
+.gitmessage
+>>>>>>> 08dea2a ([docs] .gitignore 수정)
