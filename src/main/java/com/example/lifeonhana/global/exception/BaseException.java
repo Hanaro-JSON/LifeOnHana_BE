@@ -1,6 +1,5 @@
 package com.example.lifeonhana.global.exception;
 
-import org.aspectj.bridge.Message;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.HttpStatusCode;
 
@@ -15,5 +14,5 @@ public abstract class BaseException extends RuntimeException {
 	public abstract HttpStatus getHttpStatus();
 	public String getCustomMessage() {
 		return getMessage();
-	};
+	}
 }
