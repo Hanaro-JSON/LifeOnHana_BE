@@ -1,46 +1,74 @@
 package com.example.lifeonhana.entity;
 
-import java.time.LocalDate;
-import org.hibernate.annotations.CreationTimestamp;
 import jakarta.persistence.*;
-import lombok.Builder;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
-import lombok.AllArgsConstructor;
 import lombok.Setter;
+import java.util.ArrayList;
+import java.util.List;
 
 @Entity
-@Getter
-@Setter
-@Builder
-@NoArgsConstructor
-@AllArgsConstructor
 @Table(name = "user")
+@Getter @Setter
+@NoArgsConstructor
 public class User {
 	@Id
 	@GeneratedValue(strategy = GenerationType.IDENTITY)
-	@Column(name = "user_id")
 	private Long userId;
 
-	@Column(name = "user_name", length = 127, nullable = false)
-	private String userName;
+	@Column(nullable = false, length = 100)
+	private String name;
 
-	@Column(name = "user_gender", length = 1, nullable = false)
-	private String userGender;
+	@Column(nullable = false, length = 100)
+	private String authId;
 
-	@Column(name = "user_email", length = 127, nullable = false)
-	private String userEmail;
+	@Column(length = 100)
+	private String password;
 
-	@Column(name = "phone_number", length = 20, nullable = false)
-	private String phoneNumber;
+	@Enumerated(EnumType.STRING)
+	@Column(nullable = false)
+	private Provider provider;
 
-	@Column(name = "user_birth", length = 8, nullable = false)
-	private String userBirth;
+	@Column(nullable = false)
+	private String providerId;
 
-	@CreationTimestamp
-	@Column(name = "user_registered_date", nullable = false, updatable = false)
-	private LocalDate userRegisteredDate;
+	@Column(nullable = false)
+	private String birthday;
 
-	@Column(name = "user_kakao_id")
-	private String userKakaoId;
+	@Enumerated(EnumType.STRING)
+	@Column(nullable = false)
+	private SoundSpeed soundSpeed;
+
+	@Column(nullable = false)
+	private Integer textSize;
+
+	@OneToMany(mappedBy = "user")
+	private List<ArticleLike> articleLikes = new ArrayList<>();
+
+	@OneToMany(mappedBy = "user")
+	private List<ProductLike> productLikes = new ArrayList<>();
+
+	@OneToMany(mappedBy = "user")
+	private List<History> histories = new ArrayList<>();
+
+	@OneToMany(mappedBy = "user")
+	private List<LumpSum> lumpSums = new ArrayList<>();
+
+	@OneToMany(mappedBy = "user")
+	private List<Salary> salaries = new ArrayList<>();
+
+	@OneToOne(mappedBy = "user")
+	private Mydata mydata;
+
+	public enum Provider {
+		KAKAO,
+		NAVER,
+		GOOGLE
+	}
+
+	public enum SoundSpeed {
+		SLOW,
+		NORMAL,
+		FAST
+	}
 }
