@@ -30,6 +30,14 @@ spring:
           min-idle: 1
           max-wait: 2000ms
 
+jwt:
+  secret: 526213295f8b15a1864ce077a86e7e88c610b2254cea97af8fd4d37aaff8535e4c60301a3bf5c4c9e27ba6826577f53b330f05361c0b59597b7ecb97a1c19b3f
+  access:
+    token:
+      expiration: 36000000
+  refresh:
+    token:
+      expiration: 604800000
 
 logging:
   level:
