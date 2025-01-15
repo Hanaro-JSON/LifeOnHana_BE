@@ -29,18 +29,18 @@ public class Account {
 	@Column(nullable = false)
 	private String accountName;
 
-	@Column(nullable = false, precision = 8, scale = 2)
-	private BigDecimal balance;
+	@Column(nullable = false, precision = 15, scale = 2)
+	private BigDecimal balance = BigDecimal.ZERO;
 
+	@Enumerated(EnumType.STRING)
 	@Column(nullable = false)
-	private Boolean isMain;
+	private ServiceAccount serviceAccount;
 
 	public enum Bank {
-		HANA,
-		KB,
-		SHINHAN,
-		WOORI,
-		NH,
-		IBK
+		HANA, SHINHAN, NH, TOSS, KB, IBK, KAKAO, NAVER, WOORI
+	}
+
+	public enum ServiceAccount {
+		SALARY, WALLET, OTHER
 	}
 }

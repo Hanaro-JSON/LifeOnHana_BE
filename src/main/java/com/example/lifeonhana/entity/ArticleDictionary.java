@@ -1,6 +1,9 @@
 package com.example.lifeonhana.entity;
 
+import java.io.Serializable;
+
 import jakarta.persistence.*;
+import lombok.EqualsAndHashCode;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
@@ -10,13 +13,20 @@ import lombok.Setter;
 @Getter @Setter
 @NoArgsConstructor
 public class ArticleDictionary {
-	@Id
-	@ManyToOne(fetch = FetchType.LAZY)
-	@JoinColumn(name = "article_id")
-	private Article article;
+	@EmbeddedId
+	private ArticleDictionaryId id;
 
-	@Id
-	@ManyToOne(fetch = FetchType.LAZY)
-	@JoinColumn(name = "dictionary_id")
-	private Dictionary dictionary;
+	@Embeddable
+	@Getter @Setter
+	@NoArgsConstructor
+	@EqualsAndHashCode
+	public static class ArticleDictionaryId implements Serializable {
+		@ManyToOne(fetch = FetchType.LAZY)
+		@JoinColumn(name = "article_id")
+		private Article article;
+
+		@ManyToOne(fetch = FetchType.LAZY)
+		@JoinColumn(name = "dictionary_id")
+		private Dictionary dictionary;
+	}
 }

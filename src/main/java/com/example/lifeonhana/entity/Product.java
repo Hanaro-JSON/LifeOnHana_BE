@@ -19,7 +19,7 @@ public class Product {
 
 	@Enumerated(EnumType.STRING)
 	@Column(nullable = false)
-	private ProductCategory category;
+	private Category category;
 
 	@Column(nullable = false)
 	private String name;
@@ -58,11 +58,7 @@ public class Product {
 	@OneToMany(mappedBy = "product")
 	private List<ProductLike> productLikes = new ArrayList<>();
 
-	public enum ProductCategory {
-		DEPOSIT,
-		SAVINGS,
-		LOAN,
-		FUND,
-		INSURANCE
+	public enum Category {
+		LOAN, SAVINGS, LIFE
 	}
 }

@@ -37,3 +37,5 @@ out/
 .vscode/
 
 .gitmessage.txt
+
+application.yml

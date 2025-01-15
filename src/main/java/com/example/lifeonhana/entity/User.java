@@ -35,12 +35,8 @@ public class User {
 	@Column(nullable = false)
 	private String birthday;
 
-	@Enumerated(EnumType.STRING)
 	@Column(nullable = false)
-	private SoundSpeed soundSpeed;
-
-	@Column(nullable = false)
-	private Integer textSize;
+	private Boolean isFirst;
 
 	@OneToMany(mappedBy = "user")
 	private List<ArticleLike> articleLikes = new ArrayList<>();
@@ -54,21 +50,13 @@ public class User {
 	@OneToMany(mappedBy = "user")
 	private List<LumpSum> lumpSums = new ArrayList<>();
 
-	@OneToMany(mappedBy = "user")
-	private List<Salary> salaries = new ArrayList<>();
-
 	@OneToOne(mappedBy = "user")
 	private Mydata mydata;
 
-	public enum Provider {
-		KAKAO,
-		NAVER,
-		GOOGLE
-	}
+	@OneToMany(mappedBy = "user")
+	private List<Wallet> wallets = new ArrayList<>();
 
-	public enum SoundSpeed {
-		SLOW,
-		NORMAL,
-		FAST
+	public enum Provider {
+		KAKAO, GOOGLE, NAVER
 	}
 }
