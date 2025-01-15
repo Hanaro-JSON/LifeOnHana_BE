@@ -27,7 +27,7 @@ public class AuthController {
 		try {
 			AuthResponseDTO authResponse = authService.signIn(request);
 			return ResponseEntity.ok(ApiResponse.builder()
-				.code(HttpStatus.OK)
+				.code(HttpStatus.OK.value())
 				.status(HttpStatus.OK)
 				.message("로그인 성공")
 				.data(authResponse)
@@ -42,7 +42,7 @@ public class AuthController {
 		try {
 			AuthResponseDTO newTokens = authService.refreshToken(request.getRefreshToken());
 			return ResponseEntity.ok(ApiResponse.builder()
-				.code(HttpStatus.OK)
+				.code(HttpStatus.OK.value())
 				.status(HttpStatus.OK)
 				.message("토큰 갱신 성공")
 				.data(newTokens)
@@ -57,7 +57,7 @@ public class AuthController {
 		try {
 			authService.signOut(token);
 			return ResponseEntity.ok(ApiResponse.builder()
-				.code(HttpStatus.OK)
+				.code(HttpStatus.OK.value())
 				.status(HttpStatus.OK)
 				.message("로그아웃 성공")
 				.data(null)

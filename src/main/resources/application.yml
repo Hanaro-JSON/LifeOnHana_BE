@@ -39,6 +39,12 @@ jwt:
     token:
       expiration: 604800000
 
+springdoc:
+  api-docs:
+    path: /api-docs
+  swagger-ui:
+    path: /swagger-ui.html
+
 logging:
   level:
     org.hibernate.SQL: debug
