@@ -7,20 +7,21 @@ import lombok.Setter;
 import java.time.LocalDateTime;
 
 @Entity
-@Table(name = "salary")
+@Table(name = "wallet")
 @Getter @Setter
 @NoArgsConstructor
-public class Salary {
+
+public class Wallet {
 	@Id
 	@GeneratedValue(strategy = GenerationType.IDENTITY)
-	private Long salaryId;
+	private Long walletId;
 
 	@ManyToOne(fetch = FetchType.LAZY)
 	@JoinColumn(name = "user_id", nullable = false)
 	private User user;
 
 	@Column(nullable = false)
-	private Long salaryAmount;
+	private Long walletAmount;
 
 	@Enumerated(EnumType.STRING)
 	@Column(nullable = false)

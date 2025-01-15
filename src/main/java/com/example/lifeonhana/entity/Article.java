@@ -28,6 +28,9 @@ public class Article {
 	private String thumbnailS3Key;
 
 	@Column(nullable = false)
+	private String ttsS3Key;
+
+	@Column(nullable = false)
 	private String shorts;
 
 	@Column(nullable = false, columnDefinition = "json")
@@ -52,9 +55,6 @@ public class Article {
 	private List<Whilick> whilicks = new ArrayList<>();
 
 	public enum Category {
-		NEWS,
-		GUIDE,
-		ANALYSIS,
-		EDUCATION
+		REAL_ESTATE, INVESTMENT, INHERITANCE_GIFT, TRAVEL, CULTURE, HOBBY
 	}
 }

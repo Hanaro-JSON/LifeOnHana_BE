@@ -31,22 +31,18 @@ public class LumpSum {
 	@Column(nullable = false)
 	private Reason reason;
 
+	@Column
 	private String reasonDetail;
 
 	@Column(nullable = false)
 	private LocalDateTime requestDate;
 
 	public enum Source {
-		SALARY,
-		INVESTMENT,
-		INHERITANCE,
-		OTHER
+		SALARY, OTHER, LOAN
 	}
 
 	public enum Reason {
-		INVESTMENT,
-		SAVINGS,
-		EXPENDITURE,
-		OTHER
+		CHILDREN, MEDICAL, HOUSING, BUSINESS_INVESTMENT,
+		VEHICLE_TRANSPORT, LEISURE, DEBT_REPAYMENT, OTHER
 	}
 }
