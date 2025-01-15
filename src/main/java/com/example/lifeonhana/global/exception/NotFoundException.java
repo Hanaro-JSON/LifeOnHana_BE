@@ -1,7 +1,6 @@
 package com.example.lifeonhana.global.exception;
 
 import org.springframework.http.HttpStatus;
-import org.springframework.http.HttpStatusCode;
 
 public class NotFoundException extends BaseException{
 	public NotFoundException(String message) {
@@ -9,8 +8,8 @@ public class NotFoundException extends BaseException{
 	}
 
 	@Override
-	public HttpStatusCode getStatusCode() {
-		return HttpStatus.NOT_FOUND;
+	public int getStatusCode() {
+		return HttpStatus.NOT_FOUND.value();
 	}
 
 	@Override

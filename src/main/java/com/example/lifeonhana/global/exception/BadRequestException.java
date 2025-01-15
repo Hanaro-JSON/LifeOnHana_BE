@@ -1,7 +1,6 @@
 package com.example.lifeonhana.global.exception;
 
 import org.springframework.http.HttpStatus;
-import org.springframework.http.HttpStatusCode;
 
 public class BadRequestException extends BaseException {
 
@@ -15,8 +14,8 @@ public class BadRequestException extends BaseException {
 	}
 
 	@Override
-	public HttpStatusCode getStatusCode() {
-		return HttpStatus.BAD_REQUEST;
+	public int getStatusCode() {
+		return HttpStatus.BAD_REQUEST.value();
 	}
 
 	@Override
