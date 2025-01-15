@@ -4,7 +4,7 @@ spring:
 
   datasource:
     driver-class-name: com.mysql.cj.jdbc.Driver
-    url: jdbc:mysql://lifeonhana.cxq2u4wk2434.ap-northeast-2.rds.amazonaws.com:3306/lifeonhana
+    url: jdbc:mysql://lifeonhana.cxq2u4wk2434.ap-northeast-2.rds.amazonaws.com:3306/lifeonhana_serverDB
     username: admin
     password: LifeOnHana1!
 
