@@ -14,7 +14,7 @@ import lombok.Data;
 @JsonInclude(JsonInclude.Include.NON_NULL)
 @Builder
 public class ApiResponse {
-	private HttpStatusCode code;
+	private int code;
 	private HttpStatus status;
 	private String message;
 	private Object data;
