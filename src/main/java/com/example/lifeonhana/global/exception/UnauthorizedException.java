@@ -1,7 +1,6 @@
 package com.example.lifeonhana.global.exception;
 
 import org.springframework.http.HttpStatus;
-import org.springframework.http.HttpStatusCode;
 
 public class UnauthorizedException extends BaseException {
 	public UnauthorizedException(String message) {
@@ -9,8 +8,8 @@ public class UnauthorizedException extends BaseException {
 	}
 
 	@Override
-	public HttpStatusCode getStatusCode() {
-		return HttpStatus.UNAUTHORIZED;
+	public int getStatusCode() {
+		return HttpStatus.UNAUTHORIZED.value();
 	}
 
 	@Override
