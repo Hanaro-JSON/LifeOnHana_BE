@@ -48,4 +48,17 @@ public class WalletController {
 		return ResponseEntity.ok(new ApiResult(200, HttpStatus.OK, "하나지갑 정보 등록 성공", walletDTO));
 	}
 
+	@GetMapping("")
+	@Operation(summary = "하나지갑 정보 조회", description = "하나지갑 정보를 조회합니다.")
+	@ApiResponses(value = {
+		@ApiResponse(responseCode = "200", description = "조회 성공"),
+		@ApiResponse(responseCode = "401", description = "인증 실패"),
+		@ApiResponse(responseCode = "404", description = "하나지갑 정보를 찾을 수 없습니다.")
+	})
+	@SecurityRequirement(name = "bearerAuth")
+	public ResponseEntity<ApiResult> getWallet(@RequestHeader("Authorization") String token) {
+		WalletDTO wallet = walletService.getUserWallet(token);
+		return ResponseEntity.ok(new ApiResult(200, HttpStatus.OK, "하나지갑 정보 조회 성공", wallet));
+	}
+
 }
