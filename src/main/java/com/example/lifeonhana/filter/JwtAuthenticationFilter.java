@@ -33,7 +33,7 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
 	private final RedisService redisService;
 
 	@Override
-	protected void doFilterInternal(
+	public void doFilterInternal(
 		HttpServletRequest request,
 		HttpServletResponse response,
 		FilterChain filterChain
