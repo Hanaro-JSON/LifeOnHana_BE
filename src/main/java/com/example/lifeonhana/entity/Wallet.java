@@ -46,5 +46,14 @@ public class Wallet {
 		public String getValue() {
 			return value;
 		}
+
+		public static PaymentDay fromValue(String value) {
+			for (PaymentDay paymentDay : values()) {
+				if (paymentDay.value.equals(value)) {
+					return paymentDay;
+				}
+			}
+			throw new IllegalArgumentException("No enum constant for value: " + value);
+		}
 	}
 }
