@@ -1,7 +1,6 @@
 package com.example.lifeonhana;
 
 import org.springframework.http.HttpStatus;
-import org.springframework.http.HttpStatusCode;
 
 import com.fasterxml.jackson.annotation.JsonInclude;
 
@@ -13,7 +12,7 @@ import lombok.Data;
 @AllArgsConstructor
 @JsonInclude(JsonInclude.Include.NON_NULL)
 @Builder
-public class ApiResponse {
+public class ApiResult {
 	private int code;
 	private HttpStatus status;
 	private String message;

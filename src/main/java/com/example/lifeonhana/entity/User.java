@@ -25,13 +25,6 @@ public class User {
 	@Column(length = 100)
 	private String password;
 
-	@Enumerated(EnumType.STRING)
-	@Column(nullable = false)
-	private Provider provider;
-
-	@Column(nullable = false)
-	private String providerId;
-
 	@Column(nullable = false)
 	private String birthday;
 
@@ -55,8 +48,4 @@ public class User {
 
 	@OneToMany(mappedBy = "user")
 	private List<Wallet> wallets = new ArrayList<>();
-
-	public enum Provider {
-		KAKAO, GOOGLE, NAVER
-	}
 }
