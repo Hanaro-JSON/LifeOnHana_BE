@@ -41,7 +41,7 @@ public class AuthService {
 			throw new UnauthorizedException("유효하지 않은 리프레시 토큰입니다.");
 		}
 
-		String authId = jwtService.extractEmail(refreshToken);
+		String authId = jwtService.extractAuthId(refreshToken);
 		Long userId = jwtService.extractUserId(refreshToken);
 
 		String storedRefreshToken = redisService.getRefreshToken(authId);
@@ -58,7 +58,7 @@ public class AuthService {
 	public void signOut(String token) {
 		try {
 			String accessToken = token.startsWith("Bearer ") ? token.substring(7) : token;
-			String authId = jwtService.extractEmail(accessToken);
+			String authId = jwtService.extractAuthId(accessToken);
 
 			Long expiration = jwtService.getExpirationFromToken(accessToken);
 			redisService.addToBlacklist(accessToken, expiration);
