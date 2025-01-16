@@ -4,13 +4,13 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.bind.annotation.RestControllerAdvice;
 
-import com.example.lifeonhana.ApiResponse;
+import com.example.lifeonhana.ApiResult;
 
 @RestControllerAdvice
 public class GlobalExceptionHandler {
 	@ExceptionHandler(BaseException.class)
 	public ResponseEntity<?> handleApiException(BaseException exception) {
-		ApiResponse response = ApiResponse.builder()
+		ApiResult response = ApiResult.builder()
 			.code(exception.getStatusCode())
 			.status(exception.getHttpStatus())
 			.message(exception.getCustomMessage())
