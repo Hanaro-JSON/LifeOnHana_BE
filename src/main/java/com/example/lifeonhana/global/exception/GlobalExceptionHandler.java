@@ -1,5 +1,6 @@
 package com.example.lifeonhana.global.exception;
 
+import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.bind.annotation.RestControllerAdvice;
@@ -18,4 +19,10 @@ public class GlobalExceptionHandler {
 			.build();
 		return ResponseEntity.status(exception.getHttpStatus()).body(response);
 	}
+
+	@ExceptionHandler(Exception.class)
+	public ResponseEntity<?> handleException(Exception exception) {
+		return ResponseEntity.internalServerError().body(exception.getMessage());
+	}
+
 }
