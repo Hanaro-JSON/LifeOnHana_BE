@@ -57,7 +57,7 @@ public class JwtService {
 			.compact();
 	}
 
-	public String extractEmail(String token) {
+	public String extractAuthId(String token) {
 		return extractAllClaims(token).getSubject();
 	}
 
