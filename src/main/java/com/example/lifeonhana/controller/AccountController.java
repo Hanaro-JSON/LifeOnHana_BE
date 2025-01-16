@@ -5,7 +5,7 @@ import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.RequestHeader;
 import org.springframework.web.bind.annotation.RestController;
 
-import com.example.lifeonhana.ApiResponse;
+import com.example.lifeonhana.ApiResult;
 import com.example.lifeonhana.dto.response.AccountListResponseDTO;
 import com.example.lifeonhana.service.AccountService;
 import com.example.lifeonhana.service.JwtService;
@@ -21,7 +21,7 @@ public class AccountController {
 	}
 
 	@GetMapping("/api/account")
-	public ResponseEntity<ApiResponse> getAccounts(@RequestHeader("Authorization") String token) {
+	public ResponseEntity<ApiResult> getAccounts(@RequestHeader("Authorization") String token) {
 
 		token = token.substring(7);
 		Long userId = jwtService.extractUserId(token);
@@ -29,7 +29,7 @@ public class AccountController {
 		AccountListResponseDTO response = accountService.getAccounts(userId);
 
 		return ResponseEntity.ok(
-			ApiResponse.builder()
+			ApiResult.builder()
 				.code(HttpStatus.OK.value())
 				.status(HttpStatus.OK)
 				.message("계좌 목록 조회 성공")
