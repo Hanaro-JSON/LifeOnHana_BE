@@ -36,7 +36,7 @@ public class WalletService {
 		Long userId = getUserIdFromToken(token);
 		Wallet wallet = walletRepository.findWalletIdByUserUserId(userId);
 		if (wallet == null) {
-			throw new NotFoundException("하나지갑 내역을 찾을 수 없습니다.");
+			throw new NotFoundException("하나지갑이 존재하지 않습니다.");
 		}
 
 		return WalletDTO.builder()
@@ -57,34 +57,45 @@ public class WalletService {
 		}
 		Wallet newWallet = new Wallet();
 		newWallet.setUser(user);
-		newWallet.setWalletAmount(wallet.getWalletAmount());
-		newWallet.setPaymentDay(Wallet.PaymentDay.fromValue(wallet.getPaymentDay()));
-		System.out.println("wallet.getStartDate() = " + wallet.getStartDate());
-		System.out.println("wallet.getEndDate() = " + wallet.getEndDate());
+		return setWallet(wallet, newWallet);
+	}
+
+	public WalletDTO updateWallet(WalletDTO walletDTO, String token) {
+		Long userId = getUserIdFromToken(token);
+		Wallet wallet = walletRepository.findWalletIdByUserUserId(userId);
+		if (wallet == null) {
+			throw new NotFoundException("하나지갑이 존재하지 않습니다.");
+		}
+		return setWallet(walletDTO, wallet);
+
+	}
+
+	private WalletDTO setWallet(WalletDTO walletDTO, Wallet wallet) {
+		wallet.setWalletAmount(walletDTO.getWalletAmount());
+		wallet.setPaymentDay(Wallet.PaymentDay.fromValue(walletDTO.getPaymentDay()));
 		try {
 			DateTimeFormatter formatter = DateTimeFormatter.ofPattern("yyyy-MM");
-			int paymentDay = Integer.parseInt(wallet.getPaymentDay());
+			int paymentDay = Integer.parseInt(walletDTO.getPaymentDay());
 
-			YearMonth startYearMonth = YearMonth.parse(wallet.getStartDate(), formatter);
-			YearMonth endYearMonth = YearMonth.parse(wallet.getEndDate(), formatter);
+			YearMonth startYearMonth = YearMonth.parse(walletDTO.getStartDate(), formatter);
+			YearMonth endYearMonth = YearMonth.parse(walletDTO.getEndDate(), formatter);
 
 			LocalDate startDate = startYearMonth.atDay(Math.min(paymentDay, startYearMonth.lengthOfMonth()));
 			LocalDate endDate = endYearMonth.atDay(Math.min(paymentDay, endYearMonth.lengthOfMonth()));
 
-			newWallet.setStartDate(startDate.atStartOfDay());
-			newWallet.setEndDate(endDate.atStartOfDay());
+			wallet.setStartDate(startDate.atStartOfDay());
+			wallet.setEndDate(endDate.atStartOfDay());
 		} catch (DateTimeParseException | NumberFormatException e) {
 			throw new IllegalArgumentException("날짜 형식이 잘못되었습니다. 'yyyy-MM' 형식이어야 합니다.", e);
 		}
-
-		walletRepository.save(newWallet);
+		walletRepository.save(wallet);
 
 		return WalletDTO.builder()
-			.walletId(newWallet.getWalletId())
-			.walletAmount(newWallet.getWalletAmount())
-			.paymentDay(newWallet.getPaymentDay().toString())
-			.startDate(newWallet.getStartDate().toString())
-			.endDate(newWallet.getEndDate().toString())
+			.walletId(wallet.getWalletId())
+			.walletAmount(wallet.getWalletAmount())
+			.paymentDay(wallet.getPaymentDay().toString())
+			.startDate(wallet.getStartDate().toString())
+			.endDate(wallet.getEndDate().toString())
 			.build();
 	}
 }
