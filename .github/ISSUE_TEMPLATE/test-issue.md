@@ -1,8 +1,8 @@
 ---
-name: Feature request
-about: "[feat] ✨ 이슈제목"
-title: "[feat] ✨ 00기능 개발 요청"
-labels: ''
+name: test issue
+about: "[test] \U0001F58D️ 이슈 제목"
+title: "[test] \U0001F58D️ 이슈 제목"
+labels: "\U0001F58D️ test"
 assignees: ''
 
 ---
