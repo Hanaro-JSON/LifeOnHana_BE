@@ -10,6 +10,10 @@ import com.example.lifeonhana.dto.response.AccountListResponseDTO;
 import com.example.lifeonhana.service.AccountService;
 import com.example.lifeonhana.service.JwtService;
 
+import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.tags.Tag;
+
+@Tag(name = "Account", description = "계좌 관련 API")
 @RestController
 public class AccountController {
 	private final JwtService jwtService;
@@ -20,6 +24,7 @@ public class AccountController {
 		this.accountService = accountService;
 	}
 
+	@Operation(summary = "계좌 목록 조회", description = "계좌 목록 조회")
 	@GetMapping("/api/account")
 	public ResponseEntity<ApiResult> getAccounts(@RequestHeader("Authorization") String token) {
 
