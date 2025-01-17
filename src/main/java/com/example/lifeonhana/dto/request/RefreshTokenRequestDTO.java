@@ -1,4 +1,4 @@
-package com.example.lifeonhana.dto;
+package com.example.lifeonhana.dto.request;
 
 import lombok.AllArgsConstructor;
 import lombok.Builder;

@@ -1,4 +1,4 @@
-package com.example.lifeonhana.dto;
+package com.example.lifeonhana.dto.request;
 
 import lombok.AllArgsConstructor;
 import lombok.Builder;
@@ -9,10 +9,9 @@ import lombok.Setter;
 @Getter
 @Setter
 @Builder
-@NoArgsConstructor
 @AllArgsConstructor
-public class AuthResponseDTO {
-	private String accessToken;
-	private String refreshToken;
-	private String userId;
+@NoArgsConstructor
+public class AuthRequestDTO {
+	private String authId;
+	private String password;
 }
