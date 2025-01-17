@@ -36,5 +36,10 @@ public class ArticleLike {
 	public static class ArticleLikeId implements Serializable {
 		private Long userId;     // User의 ID 값만 저장
 		private Long articleId;  // Article의 ID 값만 저장
+
+		public ArticleLikeId(Long userId, Long articleId) {
+			this.userId = userId;
+			this.articleId = articleId;
+		}
 	}
 }
