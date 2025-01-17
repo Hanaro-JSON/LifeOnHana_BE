@@ -57,3 +57,17 @@ public class ArticleLikeService {
 			.build();
 	}
 
+	public LikeResponseDto getLikeInfo(Long userId, Long articleId) {
+		Article article = articleRepository.findById(articleId)
+			.orElseThrow(() -> new NotFoundException("존재하지 않는 게시글입니다."));
+
+		boolean isLiked = articleLikeRepository.findByIdUserIdAndIdArticleId(userId, articleId)
+			.isPresent();
+
+		return LikeResponseDto.builder()
+			.isLiked(isLiked)
+			.likeCount(article.getLikeCount())
+			.build();
+	}
+
+}

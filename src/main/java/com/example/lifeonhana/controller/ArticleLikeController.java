@@ -42,3 +42,23 @@ public class ArticleLikeController {
 				.build()
 		);
 	}
+	@GetMapping("/{articleId}/like")
+	public ResponseEntity<ApiResult> getLikeInfo(
+		@PathVariable Long articleId,
+		@RequestHeader("Authorization") String token) {
+
+		token = token.substring(7);
+		Long userId = jwtService.extractUserId(token);
+
+		LikeResponseDto responseDto = articleLikeService.getLikeInfo(userId, articleId);
+
+		return ResponseEntity.ok(
+			ApiResult.builder()
+				.code(200)
+				.status(HttpStatus.OK)
+				.message("게시글 좋아요 정보 조회 성공")
+				.data(responseDto)
+				.build()
+		);
+	}
+}
