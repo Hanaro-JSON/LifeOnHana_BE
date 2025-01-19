@@ -27,6 +27,13 @@ public interface HistoryRepository extends JpaRepository<History, Long> {
 		Pageable pageable
 	);
 
+	// Page<History> findByUserAndHistoryDatetimeBetweenOrderByHistoryDatetimeDesc(
+	// 	User user,
+	// 	LocalDateTime startDate,
+	// 	LocalDateTime endDate,
+	// 	Pageable pageable
+	// );
+
 	@Query("SELECT COALESCE(SUM(h.amount), 0) FROM History h " +
 		"WHERE h.user = :user " +
 		"AND h.historyDatetime BETWEEN :startDate AND :endDate " +
@@ -36,6 +43,12 @@ public interface HistoryRepository extends JpaRepository<History, Long> {
 		@Param("startDate") LocalDateTime startDate,
 		@Param("endDate") LocalDateTime endDate
 	);
+
+	// BigDecimal findSumOfAmountByUserAndHistoryDatetimeBetweenAndIsExpenseFalse(
+	// 	User user,
+	// 	LocalDateTime startDate,
+	// 	LocalDateTime endDate
+	// );
 
 	@Query("SELECT COALESCE(SUM(h.amount), 0) FROM History h " +
 		"WHERE h.user = :user " +
@@ -101,6 +114,13 @@ public interface HistoryRepository extends JpaRepository<History, Long> {
 		@Param("startDate") LocalDateTime startDate,
 		@Param("endDate") LocalDateTime endDate
 	);
+
+	// BigDecimal findSumOfAmountByUserAndHistoryDatetimeBetweenAndCategoryAndIsExpenseFalse(
+	// 	User user,
+	// 	LocalDateTime startDate,
+	// 	LocalDateTime endDate,
+	// 	History.Category category
+	// );
 
 	interface CategoryAmountProjection {
 		History.Category getCategory();

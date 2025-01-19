@@ -1,10 +1,11 @@
 package com.example.lifeonhana.service;
 
-import com.example.lifeonhana.dto.HistoryDTO.HistoryResponseDTO;
-import com.example.lifeonhana.dto.HistoryDTO.HistoryResponseDTO.HistoryDetailDTO;
-import com.example.lifeonhana.dto.HistoryDTO.MonthlyExpenseResponseDTO;
-import com.example.lifeonhana.dto.HistoryDTO.StatisticsResponseDTO;
-import com.example.lifeonhana.dto.HistoryDTO.StatisticsResponseDTO.CategoryStatDTO;
+import com.example.lifeonhana.dto.response.CategoryStatResponseDTO;
+import com.example.lifeonhana.dto.response.HistoryDetailResponseDTO;
+import com.example.lifeonhana.dto.response.HistoryResponseDTO;
+import com.example.lifeonhana.dto.response.MonthlyExpenseDetailResponseDTO;
+import com.example.lifeonhana.dto.response.MonthlyExpenseResponseDTO;
+import com.example.lifeonhana.dto.response.StatisticsResponseDTO;
 import com.example.lifeonhana.entity.History;
 import com.example.lifeonhana.entity.History.Category;
 import com.example.lifeonhana.entity.User;
@@ -76,32 +77,32 @@ public class HistoryService {
 		BigDecimal totalIncome = historyRepository.calculateTotalIncome(user, dateRange[0], dateRange[1]);
 		BigDecimal totalExpense = historyRepository.calculateTotalExpense(user, dateRange[0], dateRange[1]);
 
-		List<HistoryDetailDTO> historyDTOs = historiesPage.getContent().stream()
+		List<HistoryDetailResponseDTO> historyDTOs = historiesPage.getContent().stream()
 			.map(this::convertToHistoryDTO)
 			.collect(Collectors.toList());
 
-		return HistoryResponseDTO.builder()
-			.yearMonth(yearMonth)
-			.totalIncome(totalIncome)
-			.totalExpense(totalExpense)
-			.histories(historyDTOs)
-			.page(page)
-			.size(size)
-			.totalPages(historiesPage.getTotalPages())
-			.totalElements(historiesPage.getTotalElements())
-			.build();
+		return new HistoryResponseDTO(
+			yearMonth,
+			totalIncome,
+			totalExpense,
+			historyDTOs,
+			page,
+			size,
+			historiesPage.getTotalPages(),
+			historiesPage.getTotalElements()
+		);
 	}
 
-	private HistoryDetailDTO convertToHistoryDTO(History history) {
-		return HistoryDetailDTO.builder()
-			.historyId(history.getHistoryId())
-			.category(history.getCategory())
-			.amount(history.getAmount())
-			.description(history.getDescription())
-			.historyDateTime(history.getHistoryDatetime())
-			.isFixed(history.getIsFixed())
-			.isExpense(history.getIsExpense())
-			.build();
+	private HistoryDetailResponseDTO convertToHistoryDTO(History history) {
+		return new HistoryDetailResponseDTO(
+			history.getHistoryId(),
+			history.getCategory(),
+			history.getAmount(),
+			history.getDescription(),
+			history.getHistoryDatetime(),
+			history.getIsFixed(),
+			history.getIsExpense()
+		);
 	}
 
 	// 2. 월별 지출 내역 조회
@@ -123,7 +124,7 @@ public class HistoryService {
 			));
 
 		// 모든 월 목록 생성 (최근 5개월)
-		List<MonthlyExpenseResponseDTO.MonthlyExpenseDetailDTO> monthlyExpenses = new ArrayList<>();
+		List<MonthlyExpenseDetailResponseDTO> monthlyExpenses = new ArrayList<>();
 		for (int i = 0; i < 5; i++) {
 			YearMonth month = currentMonth.minusMonths(i);
 			String monthStr = month.format(DateTimeFormatter.ofPattern("yyyyMM"));
@@ -131,17 +132,17 @@ public class HistoryService {
 			// 해당 월의 데이터가 있으면 그 값을, 없으면 0을 사용
 			Integer expense = expensesByMonth.getOrDefault(monthStr, 0);
 
-			monthlyExpenses.add(MonthlyExpenseResponseDTO.MonthlyExpenseDetailDTO.builder()
-				.month(monthStr)
-				.totalExpense(expense)
-				.build());
+			monthlyExpenses.add(new MonthlyExpenseDetailResponseDTO(
+				monthStr,
+				expense
+			));
 		}
 
-		return MonthlyExpenseResponseDTO.builder()
-			.averageExpense(historyRepository.calculateAverageMonthlyExpense(user, startDate, endDate))
-			.currentBalance(walletRepository.findCurrentBalance(user))
-			.monthlyExpenses(monthlyExpenses)
-			.build();
+		return new MonthlyExpenseResponseDTO(
+			historyRepository.calculateAverageMonthlyExpense(user, startDate, endDate),
+			walletRepository.findCurrentBalance(user),
+			monthlyExpenses
+		);
 	}
 
 	// 3. 거래 통계 조회
@@ -160,23 +161,23 @@ public class HistoryService {
 		historyRepository.findExpenseStatsByCategory(user, dateRange[0], dateRange[1])
 			.forEach(stat -> categoryAmounts.put(stat.getCategory(), stat.getAmount()));
 
-		List<CategoryStatDTO> expenseCategories = Arrays.stream(Category.values())
+		List<CategoryStatResponseDTO> expenseCategories = Arrays.stream(Category.values())
 			.filter(category -> category != Category.INTEREST)
 			.map(category -> {
 				BigDecimal amount = categoryAmounts.getOrDefault(category, BigDecimal.ZERO);
-				return CategoryStatDTO.builder()
-					.category(category)
-					.amount(amount)
-					.percentage(calculatePercentage(amount, totalExpense))
-					.build();
+				return new CategoryStatResponseDTO(
+					category,
+					amount,
+					calculatePercentage(amount, totalExpense)
+				);
 			})
 			.collect(Collectors.toList());
 
-		return StatisticsResponseDTO.builder()
-			.yearMonth(yearMonth)
-			.totalExpense(totalExpense.intValue())
-			.totalInterest(totalInterest.intValue())
-			.expenseCategories(expenseCategories)
-			.build();
+		return new StatisticsResponseDTO(
+			yearMonth,
+			totalExpense.intValue(),
+			totalInterest.intValue(),
+			expenseCategories
+		);
 	}
 }

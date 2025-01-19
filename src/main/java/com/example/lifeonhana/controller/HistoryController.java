@@ -1,14 +1,15 @@
 package com.example.lifeonhana.controller;
 
 import com.example.lifeonhana.ApiResult;
-import com.example.lifeonhana.dto.HistoryDTO.HistoryResponseDTO;
-import com.example.lifeonhana.dto.HistoryDTO.MonthlyExpenseResponseDTO;
-import com.example.lifeonhana.dto.HistoryDTO.StatisticsResponseDTO;
+import com.example.lifeonhana.dto.response.HistoryResponseDTO;
+import com.example.lifeonhana.dto.response.MonthlyExpenseResponseDTO;
+import com.example.lifeonhana.dto.response.StatisticsResponseDTO;
 import com.example.lifeonhana.service.HistoryService;
+import com.example.lifeonhana.global.exception.BadRequestException;
+import com.example.lifeonhana.global.exception.UnauthorizedException;
+
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.Parameter;
-import io.swagger.v3.oas.annotations.media.Content;
-import io.swagger.v3.oas.annotations.media.Schema;
 import io.swagger.v3.oas.annotations.responses.ApiResponse;
 import io.swagger.v3.oas.annotations.responses.ApiResponses;
 import io.swagger.v3.oas.annotations.tags.Tag;
@@ -45,6 +46,15 @@ public class HistoryController {
 		@Parameter(hidden = true)
 		@AuthenticationPrincipal String authId
 	) {
+		if (authId == null || authId.isEmpty()) {
+			throw new UnauthorizedException("로그인이 필요한 서비스입니다.");
+		}
+
+		// YYYYMM 형식 검증
+		if (!yearMonth.matches("\\d{6}")) {
+			throw new BadRequestException("올바른 년월 형식이 아닙니다. (YYYYMM)");
+		}
+
 		HistoryResponseDTO response = historyService.getHistories(yearMonth, authId, page, size);
 		return ResponseEntity.ok(ApiResult.builder()
 			.code(HttpStatus.OK.value())
@@ -64,6 +74,10 @@ public class HistoryController {
 		@Parameter(hidden = true)
 		@AuthenticationPrincipal String authId
 	) {
+		if (authId == null || authId.isEmpty()) {
+			throw new UnauthorizedException("로그인이 필요한 서비스입니다.");
+		}
+
 		MonthlyExpenseResponseDTO response = historyService.getMonthlyExpenses(authId);
 		return ResponseEntity.ok(ApiResult.builder()
 			.code(HttpStatus.OK.value())
@@ -87,6 +101,15 @@ public class HistoryController {
 		@Parameter(hidden = true)
 		@AuthenticationPrincipal String authId
 	) {
+		if (authId == null || authId.isEmpty()) {
+			throw new UnauthorizedException("로그인이 필요한 서비스입니다.");
+		}
+
+		// YYYYMM 형식 검증
+		if (!yearMonth.matches("\\d{6}")) {
+			throw new BadRequestException("올바른 년월 형식이 아닙니다. (YYYYMM)");
+		}
+
 		StatisticsResponseDTO response = historyService.getStatistics(yearMonth, authId);
 		return ResponseEntity.ok(ApiResult.builder()
 			.code(HttpStatus.OK.value())
