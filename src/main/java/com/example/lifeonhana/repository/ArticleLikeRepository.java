@@ -29,4 +29,6 @@ public interface ArticleLikeRepository extends JpaRepository<ArticleLike, Articl
 
 	@Query("SELECT al FROM ArticleLike al WHERE al.id.userId = :userId AND al.isLike = true")
 	List<ArticleLike> findByIdUserIdAndIsLikeTrue(@Param("userId") Long userId);
+	@Query("SELECT al FROM ArticleLike al WHERE al.id.userId = :userId AND al.id.articleId IN :articleIds")
+	List<ArticleLike> findByUserAndArticleIds(@Param("userId") Long userId, @Param("articleIds") List<Long> articleIds);
 }

@@ -13,14 +13,31 @@ import com.example.lifeonhana.dto.response.ArticleListResponse;
 import com.example.lifeonhana.service.ArticleService;
 import com.example.lifeonhana.service.JwtService;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
+import com.example.lifeonhana.dto.response.ArticleSearchResponseDto;
+import com.example.lifeonhana.global.exception.UnauthorizedException;
+import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.responses.ApiResponse;
+import io.swagger.v3.oas.annotations.responses.ApiResponses;
+import io.swagger.v3.oas.annotations.security.SecurityRequirement;
+import io.swagger.v3.oas.annotations.tags.Tag;
+import jakarta.validation.constraints.Max;
+import jakarta.validation.constraints.Min;
+import lombok.extern.slf4j.Slf4j;
+import org.springframework.validation.annotation.Validated;
 
+import java.util.List;
+
+@Tag(name = "Article", description = "기사 관련 API")
 @RestController
 @RequestMapping("/api/articles")
 @RequiredArgsConstructor
+@Validated
+@Slf4j
 public class ArticleController {
 
 	private final ArticleService articleService;
 	private final JwtService jwtService;
+	private static final int MAX_LIMIT = 100;
 
 	@GetMapping("/{articleId}")
 	public ResponseEntity<ApiResult> getArticleDetails(@PathVariable Long articleId) {
@@ -92,4 +109,56 @@ public class ArticleController {
 					.build());
 		}
 	}
+
+	@Operation(summary = "기사 검색", description = "키워드로 기사를 검색합니다.")
+	@ApiResponses({
+			@ApiResponse(responseCode = "200", description = "기사 검색 성공"),
+			@ApiResponse(responseCode = "400", description = "잘못된 요청"),
+			@ApiResponse(responseCode = "401", description = "인증이 필요합니다.")
+	})
+	@GetMapping("/search")
+	@SecurityRequirement(name = "bearerAuth")
+	public ResponseEntity<ApiResult> searchArticles(
+			@Parameter(description = "검색 키워드")
+			@RequestParam(name = "query", required = false) String query,
+
+			@Parameter(description = "시작 위치", example = "0")
+			@RequestParam(defaultValue = "0")
+			@Min(value = 0, message = "offset은 0 이상이어야 합니다.")
+			int offset,
+
+			@Parameter(description = "가져올 항목 수", example = "10")
+			@RequestParam(defaultValue = "10")
+			@Min(value = 1, message = "limit는 1 이상이어야 합니다.")
+			@Max(value = MAX_LIMIT, message = "limit는 100 이하여야 합니다.")
+			int limit,
+
+			@Parameter(hidden = true)
+			@AuthenticationPrincipal String authId
+	) {
+		validateAuthentication(authId);
+		log.debug("Searching articles - query: {}, offset: {}, limit: {}",
+				query, offset, limit);
+
+		List<ArticleSearchResponseDto> articles = articleService.searchArticles(
+				query, offset, limit, authId);
+
+		return createSuccessResponse("기사 검색 성공", articles);
+	}
+
+	private void validateAuthentication(String authId) {
+		if (authId == null || authId.isEmpty()) {
+			throw new UnauthorizedException("로그인이 필요한 서비스입니다.");
+		}
+	}
+
+	private ResponseEntity<ApiResult> createSuccessResponse(String message, Object data) {
+		return ResponseEntity.ok(ApiResult.builder()
+				.code(HttpStatus.OK.value())
+				.status(HttpStatus.OK)
+				.message(message)
+				.data(data)
+				.build());
+	}
 }
+

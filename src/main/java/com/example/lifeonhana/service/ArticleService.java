@@ -1,9 +1,17 @@
 package com.example.lifeonhana.service;
+import com.example.lifeonhana.dto.response.ArticleSearchResponseDto;
 import com.example.lifeonhana.entity.Article;
-import com.example.lifeonhana.entity.enums.ArticleCategory;
+import com.example.lifeonhana.entity.ArticleLike;
+import com.example.lifeonhana.entity.User;
 import com.example.lifeonhana.global.exception.NotFoundException;
+import jakarta.persistence.criteria.CriteriaBuilder;
+import jakarta.persistence.criteria.Root;
+import org.springframework.transaction.annotation.Transactional;
 import lombok.RequiredArgsConstructor;
+import org.springframework.data.domain.Pageable;
+import org.springframework.data.jpa.domain.Specification;
 import org.springframework.stereotype.Service;
+import org.springframework.util.StringUtils;
 import org.springframework.web.client.HttpClientErrorException;
 import org.springframework.web.client.RestTemplate;
 
@@ -167,4 +175,87 @@ public class ArticleService {
 			.map(entry -> Long.parseLong(entry.getKey().toString()))
 			.collect(Collectors.toSet());
 	}
+
+	@Transactional(readOnly = true)
+	public List<ArticleSearchResponseDto> searchArticles(String query, int offset, int limit, String authId) {
+		User user = findUser(authId);
+		Page<Article> articles = searchArticlesWithPaging(query, offset, limit);
+
+		Map<Long, Boolean> likeStatusMap = getLikeStatusMap(articles.getContent(), user);
+		return ArticleSearchResponseDto.fromList(articles.getContent(), likeStatusMap);
+	}
+
+	private Page<Article> searchArticlesWithPaging(String query, int offset, int limit) {
+		Pageable pageable = PageRequest.of(offset / limit, limit);
+
+		if (!StringUtils.hasText(query)) {
+			return articleRepository.findAll(pageable);
+		}
+
+		Specification<Article> spec = createSearchSpecification(createSearchPattern(query));
+		return articleRepository.findAll(spec, pageable);
+	}
+
+	private String createSearchPattern(String query) {
+		return "%" + query.trim().toLowerCase() + "%";
+	}
+
+	private Specification<Article> createSearchSpecification(String searchPattern) {
+		return (root, criteriaQuery, cb) -> {
+			criteriaQuery.distinct(true);
+			criteriaQuery.orderBy(cb.desc(root.get("publishedAt")));
+
+			jakarta.persistence.criteria.Predicate textSearch = createTextSearchPredicates(root, cb, searchPattern);
+			jakarta.persistence.criteria.Predicate jsonSearch = createJsonSearchPredicates(root, cb, searchPattern);
+
+			return cb.or(textSearch, jsonSearch);
+		};
+	}
+
+	private jakarta.persistence.criteria.Predicate createTextSearchPredicates(Root<Article> root, CriteriaBuilder cb, String searchPattern) {
+		return cb.or(
+				cb.like(cb.lower(root.get("title")), searchPattern),
+				cb.like(cb.lower(root.get("shorts")), searchPattern)
+		);
+	}
+
+	private jakarta.persistence.criteria.Predicate createJsonSearchPredicates(Root<Article> root, CriteriaBuilder cb, String searchPattern) {
+		return cb.or(
+				cb.like(cb.lower(cb.function(
+						"JSON_EXTRACT",
+						String.class,
+						root.get("content"),
+						cb.literal("$[*].content")
+				)), searchPattern),
+				cb.like(cb.lower(cb.function(
+						"JSON_EXTRACT",
+						String.class,
+						root.get("content"),
+						cb.literal("$[*].description")
+				)), searchPattern)
+		);
+	}
+
+	private User findUser(String authId) {
+		return userRepository.findByAuthId(authId)
+				.orElseThrow(() -> new NotFoundException("사용자를 찾을 수 없습니다."));
+	}
+
+	private Map<Long, Boolean> getLikeStatusMap(List<Article> articles, User user) {
+		List<Long> articleIds = articles.stream()
+				.map(Article::getArticleId)
+				.toList();
+
+		return articleLikeRepository.findByUserAndArticleIds(user.getUserId(), articleIds).stream()
+				.collect(Collectors.toMap(
+						like -> like.getId().getArticleId(),
+						ArticleLike::getIsLike,
+						(existing, replacement) -> existing
+				));
+	}
 }
+
+
+
+
+
