@@ -126,4 +126,10 @@ public interface HistoryRepository extends JpaRepository<History, Long> {
 		History.Category getCategory();
 		BigDecimal getAmount();
 	}
+
+	List<History> findByUser_UserIdAndIsFixedAndIsExpenseOrderByHistoryDatetimeDesc(
+		Long userId, 
+		Boolean isFixed, 
+		Boolean isExpense
+	);
 }
