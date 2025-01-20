@@ -27,6 +27,9 @@ public interface HistoryRepository extends JpaRepository<History, Long> {
 		Pageable pageable
 	);
 
+	List<History> findTop5ByUser_UserIdOrderByHistoryDatetimeDesc(Long userId);
+
+
 	// Page<History> findByUserAndHistoryDatetimeBetweenOrderByHistoryDatetimeDesc(
 	// 	User user,
 	// 	LocalDateTime startDate,
