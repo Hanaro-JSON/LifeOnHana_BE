@@ -1,4 +1,7 @@
 package com.example.lifeonhana.service;
+import com.example.lifeonhana.entity.Article;
+import com.example.lifeonhana.entity.enums.ArticleCategory;
+import com.example.lifeonhana.global.exception.NotFoundException;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.web.client.HttpClientErrorException;
@@ -13,6 +16,17 @@ import com.example.lifeonhana.dto.response.ArticleDetailResponse;
 import com.example.lifeonhana.repository.ArticleRepository;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Sort;
+import java.util.HashSet;
+import java.util.Set;
+import java.util.stream.Collectors;
+import com.example.lifeonhana.dto.response.ArticleListResponse;
+import com.example.lifeonhana.dto.response.ArticleListItemResponse;
+import org.springframework.data.redis.core.RedisTemplate;
+import java.time.format.DateTimeFormatter;
+import com.example.lifeonhana.repository.UserRepository;
 
 @Service
 @RequiredArgsConstructor
@@ -23,6 +37,8 @@ public class ArticleService {
 	private final ArticleRepository articleRepository;
 	private final RestTemplate restTemplate;
 	private static final Logger log = LoggerFactory.getLogger(ArticleService.class);
+	private final RedisTemplate<String, Object> redisTemplate;
+	private final UserRepository userRepository;
 
 	public ArticleDetailResponse getArticleDetails(Long articleId) {
 		// 1. 데이터베이스에서 기사 조회
@@ -80,5 +96,47 @@ public class ArticleService {
 			throw new RuntimeException("예상치 못한 오류가 발생했습니다.", e);
 		}
 
+	}
+
+	public ArticleListResponse getArticles(String category, int page, int size, String authId) {
+		PageRequest pageRequest = PageRequest.of(page, size, Sort.by("publishedAt").descending());
+		
+		Page<Article> articlesPage;
+		if (category != null && !category.isEmpty()) {
+			Article.Category articleCategory = Article.Category.valueOf(category.toUpperCase());
+			articlesPage = articleRepository.findByCategory(articleCategory, pageRequest);
+		} else {
+			articlesPage = articleRepository.findAll(pageRequest);
+		}
+		
+		// 사용자의 좋아요 정보 조회
+		final Set<Long> likedArticleIds = authId != null
+			? redisTemplate.opsForHash().entries("user:" + userRepository.findByAuthId(authId)
+				.orElseThrow(() -> new NotFoundException("사용자를 찾을 수 없습니다."))
+				.getUserId() + ":likes")
+				.entrySet().stream()
+				.filter(entry -> Boolean.TRUE.equals(entry.getValue()))
+				.map(entry -> Long.parseLong(entry.getKey().toString()))
+				.collect(Collectors.toSet())
+			: new HashSet<>();
+		
+		List<ArticleListItemResponse> articleResponses = articlesPage.getContent().stream()
+			.map(article -> new ArticleListItemResponse(
+				article.getArticleId(),
+				article.getTitle(),
+				article.getCategory().toString(),
+				article.getThumbnailS3Key(),
+				article.getPublishedAt().format(DateTimeFormatter.ISO_DATE),
+				likedArticleIds.contains(article.getArticleId())
+			))
+			.toList();
+		
+		return new ArticleListResponse(
+			articleResponses,
+			page + 1,
+			size,
+			articlesPage.getTotalPages(),
+			articlesPage.getTotalElements()
+		);
 	}
 }
