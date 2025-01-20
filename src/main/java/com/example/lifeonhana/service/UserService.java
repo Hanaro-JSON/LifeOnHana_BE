@@ -5,10 +5,13 @@ import com.example.lifeonhana.dto.response.MyDataResponseDTO;
 import com.example.lifeonhana.entity.User;
 import com.example.lifeonhana.entity.Mydata;
 import com.example.lifeonhana.entity.Account;
+import com.example.lifeonhana.repository.ArticleLikeRepository;
 import com.example.lifeonhana.repository.UserRepository;
 import com.example.lifeonhana.global.exception.NotFoundException;
 import com.example.lifeonhana.entity.History;
 import com.example.lifeonhana.repository.HistoryRepository;
+import com.example.lifeonhana.dto.response.UserNicknameResponseDTO;
+import com.example.lifeonhana.entity.enums.ArticleCategory;
 
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
@@ -30,6 +33,7 @@ import org.slf4j.LoggerFactory;
 public class UserService {
     private final UserRepository userRepository;
     private final HistoryRepository historyRepository;
+    private final ArticleLikeRepository articleLikeRepository;
     private static final Logger log = LoggerFactory.getLogger(UserService.class);
 
     @Transactional(readOnly = true)
@@ -131,5 +135,26 @@ public class UserService {
             .reduce(BigDecimal.ZERO, BigDecimal::add);
         
         return totalAmount.divide(BigDecimal.valueOf(monthlyTotals.size()), 0, RoundingMode.HALF_UP);
+    }
+
+    public UserNicknameResponseDTO getUserNickname(String authId) {
+        // 1. 사용자 정보 조회
+        User user = userRepository.findByAuthId(authId)
+            .orElseThrow(() -> new NotFoundException("사용자를 찾을 수 없습니다."));
+
+        // 2. 사용자의 좋아요가 가장 많은 카테고리 조회
+        String categoryStr = articleLikeRepository.findMostLikedCategory(authId)
+            .orElseThrow(() -> new NotFoundException("좋아요 기록이 없습니다."));
+        
+        // 3. String을 Enum으로 변환
+        ArticleCategory topCategory = ArticleCategory.valueOf(categoryStr);
+
+        // 4. 칭호 생성
+        String nickname = topCategory.generateNickname(user.getName());
+
+        return UserNicknameResponseDTO.builder()
+            .nickname(nickname)
+            .category(topCategory)
+            .build();
     }
 } 
