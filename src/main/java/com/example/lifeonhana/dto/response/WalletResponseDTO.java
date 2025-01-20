@@ -1,6 +1,6 @@
-package com.example.lifeonhana.dto;
+package com.example.lifeonhana.dto.response;
 
-public record WalletDTO (
+public record WalletResponseDTO(
 	long walletId,
 	long walletAmount,
 	String paymentDay,
