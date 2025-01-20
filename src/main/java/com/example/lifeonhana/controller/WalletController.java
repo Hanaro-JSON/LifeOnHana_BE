@@ -11,7 +11,8 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
 import com.example.lifeonhana.ApiResult;
-import com.example.lifeonhana.dto.WalletDTO;
+import com.example.lifeonhana.dto.request.WalletRequestDTO;
+import com.example.lifeonhana.dto.response.WalletResponseDTO;
 import com.example.lifeonhana.service.WalletService;
 
 import io.swagger.v3.oas.annotations.Operation;
@@ -41,8 +42,8 @@ public class WalletController {
 	})
 	@SecurityRequirement(name = "bearerAuth")
 	public ResponseEntity<ApiResult> createWallet(@AuthenticationPrincipal String authId,
-		@RequestBody WalletDTO wallet) {
-		WalletDTO walletDTO = walletService.creatWallet(wallet, authId);
+		@RequestBody WalletRequestDTO wallet) {
+		WalletResponseDTO walletDTO = walletService.creatWallet(wallet, authId);
 		return ResponseEntity.ok(new ApiResult(200, HttpStatus.OK, "하나지갑 정보 등록 성공", walletDTO));
 	}
 
@@ -55,7 +56,7 @@ public class WalletController {
 	})
 	@SecurityRequirement(name = "bearerAuth")
 	public ResponseEntity<ApiResult> getWallet(@AuthenticationPrincipal String authId) {
-		WalletDTO wallet = walletService.getUserWallet(authId);
+		WalletResponseDTO wallet = walletService.getUserWallet(authId);
 		return ResponseEntity.ok(new ApiResult(200, HttpStatus.OK, "하나지갑 정보 조회 성공", wallet));
 	}
 
@@ -67,8 +68,9 @@ public class WalletController {
 		@ApiResponse(responseCode = "404", description = "하나지갑 정보를 찾을 수 없습니다.")
 	})
 	@SecurityRequirement(name = "bearerAuth")
-	public ResponseEntity<ApiResult> putWallet(@AuthenticationPrincipal String authId, @RequestBody WalletDTO wallet) {
-		WalletDTO walletDTO = walletService.updateWallet(wallet, authId);
+	public ResponseEntity<ApiResult> putWallet(@AuthenticationPrincipal String authId,
+		@RequestBody WalletRequestDTO wallet) {
+		WalletResponseDTO walletDTO = walletService.updateWallet(wallet, authId);
 		return ResponseEntity.ok(new ApiResult(HttpStatus.OK.value(), HttpStatus.OK, "하나지갑 정보 수정 성공", walletDTO));
 	}
 
