@@ -5,8 +5,6 @@ import static org.mockito.ArgumentMatchers.anyString;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 import static org.junit.jupiter.api.Assertions.*;
-import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.*;
-import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.*;
 
 import java.util.Optional;
 
@@ -16,13 +14,11 @@ import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
-import org.springframework.http.MediaType;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.test.util.ReflectionTestUtils;
 
-import com.example.lifeonhana.dto.AuthRequestDTO;
-import com.example.lifeonhana.dto.AuthResponseDTO;
-import com.example.lifeonhana.dto.RefreshTokenRequestDTO;
+import com.example.lifeonhana.dto.request.AuthRequestDTO;
+import com.example.lifeonhana.dto.response.AuthResponseDTO;
 import com.example.lifeonhana.entity.User;
 import com.example.lifeonhana.global.exception.NotFoundException;
 import com.example.lifeonhana.global.exception.UnauthorizedException;

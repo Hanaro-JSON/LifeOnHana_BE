@@ -5,9 +5,9 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
 import com.example.lifeonhana.ApiResult;
-import com.example.lifeonhana.dto.AuthRequestDTO;
-import com.example.lifeonhana.dto.AuthResponseDTO;
-import com.example.lifeonhana.dto.RefreshTokenRequestDTO;
+import com.example.lifeonhana.dto.request.AuthRequestDTO;
+import com.example.lifeonhana.dto.response.AuthResponseDTO;
+import com.example.lifeonhana.dto.request.RefreshTokenRequestDTO;
 import com.example.lifeonhana.service.AuthService;
 import com.example.lifeonhana.service.JwtService;
 import com.example.lifeonhana.global.exception.BadRequestException;

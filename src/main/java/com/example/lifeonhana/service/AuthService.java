@@ -4,8 +4,8 @@ import org.springframework.beans.factory.annotation.Value;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 
-import com.example.lifeonhana.dto.AuthRequestDTO;
-import com.example.lifeonhana.dto.AuthResponseDTO;
+import com.example.lifeonhana.dto.request.AuthRequestDTO;
+import com.example.lifeonhana.dto.response.AuthResponseDTO;
 import com.example.lifeonhana.global.exception.BadRequestException;
 import com.example.lifeonhana.global.exception.NotFoundException;
 import com.example.lifeonhana.global.exception.UnauthorizedException;

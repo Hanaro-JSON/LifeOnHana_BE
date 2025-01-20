@@ -1,8 +1,8 @@
 package com.example.lifeonhana.auth;
 
-import com.example.lifeonhana.dto.AuthRequestDTO;
-import com.example.lifeonhana.dto.AuthResponseDTO;
-import com.example.lifeonhana.dto.RefreshTokenRequestDTO;
+import com.example.lifeonhana.dto.request.AuthRequestDTO;
+import com.example.lifeonhana.dto.response.AuthResponseDTO;
+import com.example.lifeonhana.dto.request.RefreshTokenRequestDTO;
 import com.example.lifeonhana.entity.User;
 import com.example.lifeonhana.repository.UserRepository;
 import com.example.lifeonhana.service.RedisService;
