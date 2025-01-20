@@ -12,6 +12,8 @@ import java.util.Map;
 @Service
 public class FlaskService {
 
+	private static final String flaskUrl = "http://127.0.0.1:5000/api/ask_claude";
+
 	private final RestTemplate restTemplate;
 
 	public FlaskService(RestTemplate restTemplate) {
@@ -19,7 +21,6 @@ public class FlaskService {
 	}
 
 	public Map<String, Object> getRecommendationsFromFlask(String reason, BigDecimal amount) {
-		String flaskUrl = "http://127.0.0.1:5000/api/ask_claude";
 
 		HttpHeaders headers = new HttpHeaders();
 		headers.set("Content-Type", "application/json");

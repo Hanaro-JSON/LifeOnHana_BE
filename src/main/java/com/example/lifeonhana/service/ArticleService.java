@@ -18,6 +18,8 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 @RequiredArgsConstructor
 public class ArticleService {
 
+	private static final String flaskUrl = "http://127.0.0.1:5000/related_products";
+
 	private final ArticleRepository articleRepository;
 	private final RestTemplate restTemplate;
 	private static final Logger log = LoggerFactory.getLogger(ArticleService.class);
@@ -28,8 +30,6 @@ public class ArticleService {
 			.orElseThrow(() -> new IllegalArgumentException("존재하지 않는 ID입니다."));
 
 		try {
-			String flaskUrl = "http://127.0.0.1:5000/related_products";
-
 			// `content` 데이터를 JSON 배열로 변환
 			ObjectMapper objectMapper = new ObjectMapper();
 			List<Object> contentList = objectMapper.readValue(article.getContent(), List.class);
