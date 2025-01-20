@@ -7,7 +7,8 @@ import java.time.format.DateTimeParseException;
 
 import org.springframework.stereotype.Service;
 
-import com.example.lifeonhana.dto.WalletDTO;
+import com.example.lifeonhana.dto.request.WalletRequestDTO;
+import com.example.lifeonhana.dto.response.WalletResponseDTO;
 import com.example.lifeonhana.entity.User;
 import com.example.lifeonhana.entity.Wallet;
 import com.example.lifeonhana.global.exception.BadRequestException;
@@ -25,13 +26,13 @@ public class WalletService {
 		this.userRepository = userRepository;
 	}
 
-	public WalletDTO getUserWallet(String authId) {
+	public WalletResponseDTO getUserWallet(String authId) {
 		Wallet wallet = walletRepository.findWalletIdByUserAuthId(authId);
 		if (wallet == null) {
 			throw new NotFoundException("하나지갑이 존재하지 않습니다.");
 		}
 
-		return new WalletDTO(
+		return new WalletResponseDTO(
 			wallet.getWalletId(),
 			wallet.getWalletAmount(),
 			String.valueOf(wallet.getPaymentDay()),
@@ -40,7 +41,7 @@ public class WalletService {
 		);
 	}
 
-	public WalletDTO creatWallet(WalletDTO wallet, String authId) {
+	public WalletResponseDTO creatWallet(WalletRequestDTO wallet, String authId) {
 		User user = userRepository.getUserByAuthId(authId);
 		if (walletRepository.findWalletIdByUserAuthId(authId) != null) {
 			throw new BadRequestException("이미 하나지갑 정보가 존재합니다.");
@@ -50,7 +51,7 @@ public class WalletService {
 		return setWallet(wallet, newWallet);
 	}
 
-	public WalletDTO updateWallet(WalletDTO walletDTO, String authId) {
+	public WalletResponseDTO updateWallet(WalletRequestDTO walletDTO, String authId) {
 		Wallet wallet = walletRepository.findWalletIdByUserAuthId(authId);
 		if (wallet == null) {
 			throw new NotFoundException("하나지갑이 존재하지 않습니다.");
@@ -59,7 +60,7 @@ public class WalletService {
 
 	}
 
-	private WalletDTO setWallet(WalletDTO walletDTO, Wallet wallet) {
+	private WalletResponseDTO setWallet(WalletRequestDTO walletDTO, Wallet wallet) {
 		wallet.setWalletAmount(walletDTO.walletAmount());
 		wallet.setPaymentDay(Wallet.PaymentDay.fromValue(walletDTO.paymentDay()));
 		try {
@@ -79,7 +80,7 @@ public class WalletService {
 		}
 		walletRepository.save(wallet);
 
-		return new WalletDTO(
+		return new WalletResponseDTO(
 			wallet.getWalletId(),
 			wallet.getWalletAmount(),
 			wallet.getPaymentDay().toString(),
