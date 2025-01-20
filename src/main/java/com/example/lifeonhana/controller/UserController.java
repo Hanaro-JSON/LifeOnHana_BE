@@ -2,6 +2,7 @@ package com.example.lifeonhana.controller;
 
 import com.example.lifeonhana.ApiResult;
 import com.example.lifeonhana.dto.response.UserResponseDTO;
+import com.example.lifeonhana.dto.response.MyDataResponseDTO;
 import com.example.lifeonhana.service.UserService;
 import com.example.lifeonhana.global.exception.UnauthorizedException;
 
@@ -48,6 +49,32 @@ public class UserController {
             .code(HttpStatus.OK.value())
             .status(HttpStatus.OK)
             .message("사용자 정보 조회 성공")
+            .data(response)
+            .build());
+    }
+
+    @Operation(summary = "마이데이터 조회", description = "사용자의 마이데이터 정보를 조회합니다.")
+    @ApiResponses({
+        @ApiResponse(responseCode = "200", description = "조회 성공"),
+        @ApiResponse(responseCode = "401", description = "인증이 필요합니다."),
+        @ApiResponse(responseCode = "404", description = "마이데이터를 찾을 수 없습니다.")
+    })
+    @GetMapping("/mydata")
+    @SecurityRequirement(name = "bearerAuth")
+    public ResponseEntity<ApiResult> getMyData(
+        @Parameter(hidden = true)
+        @AuthenticationPrincipal String authId
+    ) {
+        if (authId == null || authId.isEmpty()) {
+            throw new UnauthorizedException("로그인이 필요한 서비스입니다.");
+        }
+
+        MyDataResponseDTO response = userService.getMyData(authId);
+        
+        return ResponseEntity.ok(ApiResult.builder()
+            .code(HttpStatus.OK.value())
+            .status(HttpStatus.OK)
+            .message("마이데이터 조회 성공")
             .data(response)
             .build());
     }
