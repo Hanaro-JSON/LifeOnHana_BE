@@ -7,7 +7,8 @@ import java.time.format.DateTimeParseException;
 
 import org.springframework.stereotype.Service;
 
-import com.example.lifeonhana.dto.WalletDTO;
+import com.example.lifeonhana.dto.request.WalletRequestDTO;
+import com.example.lifeonhana.dto.response.WalletResponseDTO;
 import com.example.lifeonhana.entity.User;
 import com.example.lifeonhana.entity.Wallet;
 import com.example.lifeonhana.global.exception.BadRequestException;
@@ -18,41 +19,31 @@ import com.example.lifeonhana.repository.WalletRepository;
 @Service
 public class WalletService {
 	private final WalletRepository walletRepository;
-	private final JwtService jwtService;
 	private final UserRepository userRepository;
 
-	public WalletService(WalletRepository walletRepository, JwtService jwtService, UserRepository userRepository) {
+	public WalletService(WalletRepository walletRepository, UserRepository userRepository) {
 		this.walletRepository = walletRepository;
-		this.jwtService = jwtService;
 		this.userRepository = userRepository;
 	}
 
-	private Long getUserIdFromToken(String token) {
-		String accessToken = token.replace("Bearer ", "");
-		return jwtService.extractUserId(accessToken);
-	}
-
-	public WalletDTO getUserWallet(String token) {
-		Long userId = getUserIdFromToken(token);
-		Wallet wallet = walletRepository.findWalletIdByUserUserId(userId);
+	public WalletResponseDTO getUserWallet(String authId) {
+		Wallet wallet = walletRepository.findWalletIdByUserAuthId(authId);
 		if (wallet == null) {
 			throw new NotFoundException("하나지갑이 존재하지 않습니다.");
 		}
 
-		return WalletDTO.builder()
-			.walletId(wallet.getWalletId())
-			.walletAmount(wallet.getWalletAmount())
-			.paymentDay(String.valueOf(wallet.getPaymentDay()))
-			.startDate(String.valueOf(wallet.getStartDate()))
-			.endDate(String.valueOf(wallet.getEndDate()))
-			.build();
+		return new WalletResponseDTO(
+			wallet.getWalletId(),
+			wallet.getWalletAmount(),
+			String.valueOf(wallet.getPaymentDay()),
+			String.valueOf(wallet.getStartDate()),
+			String.valueOf(wallet.getEndDate())
+		);
 	}
 
-	//1일 15일 예외처리 어떻게 할건지 정하기
-	public WalletDTO creatWallet(WalletDTO wallet, String token) {
-		Long userId = getUserIdFromToken(token);
-		User user = userRepository.getUserByUserId(userId);
-		if (walletRepository.findWalletIdByUserUserId(userId) != null) {
+	public WalletResponseDTO creatWallet(WalletRequestDTO wallet, String authId) {
+		User user = userRepository.getUserByAuthId(authId);
+		if (walletRepository.findWalletIdByUserAuthId(authId) != null) {
 			throw new BadRequestException("이미 하나지갑 정보가 존재합니다.");
 		}
 		Wallet newWallet = new Wallet();
@@ -60,9 +51,8 @@ public class WalletService {
 		return setWallet(wallet, newWallet);
 	}
 
-	public WalletDTO updateWallet(WalletDTO walletDTO, String token) {
-		Long userId = getUserIdFromToken(token);
-		Wallet wallet = walletRepository.findWalletIdByUserUserId(userId);
+	public WalletResponseDTO updateWallet(WalletRequestDTO walletDTO, String authId) {
+		Wallet wallet = walletRepository.findWalletIdByUserAuthId(authId);
 		if (wallet == null) {
 			throw new NotFoundException("하나지갑이 존재하지 않습니다.");
 		}
@@ -70,15 +60,15 @@ public class WalletService {
 
 	}
 
-	private WalletDTO setWallet(WalletDTO walletDTO, Wallet wallet) {
-		wallet.setWalletAmount(walletDTO.getWalletAmount());
-		wallet.setPaymentDay(Wallet.PaymentDay.fromValue(walletDTO.getPaymentDay()));
+	private WalletResponseDTO setWallet(WalletRequestDTO walletDTO, Wallet wallet) {
+		wallet.setWalletAmount(walletDTO.walletAmount());
+		wallet.setPaymentDay(Wallet.PaymentDay.fromValue(walletDTO.paymentDay()));
 		try {
 			DateTimeFormatter formatter = DateTimeFormatter.ofPattern("yyyy-MM");
-			int paymentDay = Integer.parseInt(walletDTO.getPaymentDay());
+			int paymentDay = Integer.parseInt(walletDTO.paymentDay());
 
-			YearMonth startYearMonth = YearMonth.parse(walletDTO.getStartDate(), formatter);
-			YearMonth endYearMonth = YearMonth.parse(walletDTO.getEndDate(), formatter);
+			YearMonth startYearMonth = YearMonth.parse(walletDTO.startDate(), formatter);
+			YearMonth endYearMonth = YearMonth.parse(walletDTO.endDate(), formatter);
 
 			LocalDate startDate = startYearMonth.atDay(Math.min(paymentDay, startYearMonth.lengthOfMonth()));
 			LocalDate endDate = endYearMonth.atDay(Math.min(paymentDay, endYearMonth.lengthOfMonth()));
@@ -90,12 +80,12 @@ public class WalletService {
 		}
 		walletRepository.save(wallet);
 
-		return WalletDTO.builder()
-			.walletId(wallet.getWalletId())
-			.walletAmount(wallet.getWalletAmount())
-			.paymentDay(wallet.getPaymentDay().toString())
-			.startDate(wallet.getStartDate().toString())
-			.endDate(wallet.getEndDate().toString())
-			.build();
+		return new WalletResponseDTO(
+			wallet.getWalletId(),
+			wallet.getWalletAmount(),
+			wallet.getPaymentDay().toString(),
+			wallet.getStartDate().toString(),
+			wallet.getEndDate().toString()
+			);
 	}
 }
