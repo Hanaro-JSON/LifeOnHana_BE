@@ -9,5 +9,5 @@ import com.example.lifeonhana.entity.ProductLike;
 
 @Repository
 public interface ProductLikeRepository extends JpaRepository<ProductLike, Long> {
-	Page<ProductLike> findByUser_UserIdAndIsLikeTrue(Long userId, Pageable pageable);
+	Page<ProductLike> findByUser_AuthIdAndIsLikeTrue(String authId, Pageable pageable);
 }

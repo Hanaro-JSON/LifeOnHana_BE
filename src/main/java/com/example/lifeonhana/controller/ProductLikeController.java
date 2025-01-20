@@ -4,14 +4,14 @@ import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.web.bind.annotation.GetMapping;
-import org.springframework.web.bind.annotation.RequestHeader;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
 import com.example.lifeonhana.ApiResult;
-import com.example.lifeonhana.dto.ProductLikeDTO;
+import com.example.lifeonhana.dto.response.ProductLikeResponseDTO;
 import com.example.lifeonhana.service.ProductLikeService;
 
 import io.swagger.v3.oas.annotations.Operation;
@@ -37,14 +37,14 @@ public class ProductLikeController {
 		@ApiResponse(responseCode = "404", description = "좋아요한 상품이 없습니다.")
 	})
 	@SecurityRequirement(name = "bearerAuth")
-	public ResponseEntity<ApiResult> getProductLikes(@RequestHeader("Authorization") String token,
+	public ResponseEntity<ApiResult> getProductLikes(@AuthenticationPrincipal String authId,
 		@RequestParam(defaultValue = "0") int offset,
 		@RequestParam(defaultValue = "10") int limit) {
 		Pageable pageable = PageRequest.of(offset, limit);
 
-		ProductLikeDTO productLikePage = productLikeService.getProductLikes(token, pageable);
+		ProductLikeResponseDTO productLikePage = productLikeService.getProductLikes(authId, pageable);
 
-		if (productLikePage.getData().isEmpty()) {
+		if (productLikePage.data().isEmpty()) {
 			return ResponseEntity.status(404).body(new ApiResult(200, HttpStatus.OK, "좋아요한 상품이 없습니다.", productLikePage));
 		}
 		return ResponseEntity.ok(new ApiResult(200, HttpStatus.OK, "좋아요한 상품 목록 조회 성공", productLikePage));
