@@ -8,6 +8,7 @@ import org.springframework.transaction.annotation.Transactional;
 
 import com.example.lifeonhana.dto.response.AccountListResponseDTO;
 import com.example.lifeonhana.dto.response.AccountResponseDTO;
+import com.example.lifeonhana.dto.response.SalaryAccountResponseDTO;
 import com.example.lifeonhana.entity.Account;
 import com.example.lifeonhana.global.exception.NotFoundException;
 import com.example.lifeonhana.repository.AccountRepository;
@@ -38,6 +39,21 @@ public class AccountService {
 		AccountResponseDTO mainAccountDTO = toAccountResponseDTO(mainAccount);
 
 		return new AccountListResponseDTO(mainAccountDTO, otherAccounts);
+	}
+
+	@Transactional(readOnly = true)
+	public SalaryAccountResponseDTO getSalaryAccount(Long userId) {
+		Account salaryAccount = accountRepository.findByMydata_User_UserIdAndServiceAccount(
+			userId, Account.ServiceAccount.SALARY);
+		
+		if (salaryAccount == null) {
+			throw new NotFoundException("급여 계좌를 찾을 수 없습니다.");
+		}
+		
+		return new SalaryAccountResponseDTO(
+			salaryAccount.getAccountId(),
+			salaryAccount.getBalance()
+		);
 	}
 
 	private AccountResponseDTO toAccountResponseDTO(Account account) {
