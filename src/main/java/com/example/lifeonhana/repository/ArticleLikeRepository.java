@@ -1,5 +1,6 @@
 package com.example.lifeonhana.repository;
 
+import java.util.List;
 import java.util.Optional;
 
 import org.springframework.data.jpa.repository.JpaRepository;
@@ -10,7 +11,7 @@ import org.springframework.stereotype.Repository;
 import com.example.lifeonhana.entity.ArticleLike;
 
 @Repository
-public interface ArticleLikeRepository extends JpaRepository<ArticleLike, Long> {
+public interface ArticleLikeRepository extends JpaRepository<ArticleLike, ArticleLike.ArticleLikeId> {
 	Optional<ArticleLike> findByIdUserIdAndIdArticleId(Long userId, Long articleId);
 
 	@Query(value = """
@@ -25,4 +26,7 @@ public interface ArticleLikeRepository extends JpaRepository<ArticleLike, Long> 
 			LIMIT 1
 			""", nativeQuery = true)
 	Optional<String> findMostLikedCategory(@Param("authId") String authId);
+
+	@Query("SELECT al FROM ArticleLike al WHERE al.id.userId = :userId AND al.isLike = true")
+	List<ArticleLike> findByIdUserIdAndIsLikeTrue(@Param("userId") Long userId);
 }

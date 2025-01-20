@@ -27,6 +27,7 @@ import com.example.lifeonhana.dto.response.ArticleListItemResponse;
 import org.springframework.data.redis.core.RedisTemplate;
 import java.time.format.DateTimeFormatter;
 import com.example.lifeonhana.repository.UserRepository;
+import com.example.lifeonhana.repository.ArticleLikeRepository;
 
 @Service
 @RequiredArgsConstructor
@@ -39,6 +40,7 @@ public class ArticleService {
 	private static final Logger log = LoggerFactory.getLogger(ArticleService.class);
 	private final RedisTemplate<String, Object> redisTemplate;
 	private final UserRepository userRepository;
+	private final ArticleLikeRepository articleLikeRepository;
 
 	public ArticleDetailResponse getArticleDetails(Long articleId) {
 		// 1. 데이터베이스에서 기사 조회
@@ -110,15 +112,7 @@ public class ArticleService {
 		}
 		
 		// 사용자의 좋아요 정보 조회
-		final Set<Long> likedArticleIds = authId != null
-			? redisTemplate.opsForHash().entries("user:" + userRepository.findByAuthId(authId)
-				.orElseThrow(() -> new NotFoundException("사용자를 찾을 수 없습니다."))
-				.getUserId() + ":likes")
-				.entrySet().stream()
-				.filter(entry -> Boolean.TRUE.equals(entry.getValue()))
-				.map(entry -> Long.parseLong(entry.getKey().toString()))
-				.collect(Collectors.toSet())
-			: new HashSet<>();
+		final Set<Long> likedArticleIds = getLikedArticleIds(authId);
 		
 		List<ArticleListItemResponse> articleResponses = articlesPage.getContent().stream()
 			.map(article -> new ArticleListItemResponse(
@@ -138,5 +132,39 @@ public class ArticleService {
 			articlesPage.getTotalPages(),
 			articlesPage.getTotalElements()
 		);
+	}
+
+	private Set<Long> getLikedArticleIds(String authId) {
+		if (authId == null) {
+			return new HashSet<>();
+		}
+
+		Long userId = userRepository.findByAuthId(authId)
+			.orElseThrow(() -> new NotFoundException("사용자를 찾을 수 없습니다."))
+			.getUserId();
+		
+		String userLikesKey = "user:" + userId + ":likes";
+		Map<Object, Object> redisLikes = redisTemplate.opsForHash().entries(userLikesKey);
+		
+		// Redis에 데이터가 없는 경우 DB에서 조회
+		if (redisLikes.isEmpty()) {
+			Set<Long> dbLikedArticleIds = articleLikeRepository.findByIdUserIdAndIsLikeTrue(userId)
+				.stream()
+				.map(like -> like.getId().getArticleId())
+				.collect(Collectors.toSet());
+				
+			// DB 데이터를 Redis에 캐싱
+			dbLikedArticleIds.forEach(articleId -> 
+				redisTemplate.opsForHash().put(userLikesKey, articleId.toString(), true)
+			);
+			
+			return dbLikedArticleIds;
+		}
+		
+		// Redis 데이터 반환
+		return redisLikes.entrySet().stream()
+			.filter(entry -> Boolean.TRUE.equals(entry.getValue()))
+			.map(entry -> Long.parseLong(entry.getKey().toString()))
+			.collect(Collectors.toSet());
 	}
 }
