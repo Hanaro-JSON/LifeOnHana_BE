@@ -10,17 +10,18 @@ import com.example.lifeonhana.dto.response.AccountListResponseDTO;
 import com.example.lifeonhana.dto.response.AccountResponseDTO;
 import com.example.lifeonhana.dto.response.SalaryAccountResponseDTO;
 import com.example.lifeonhana.entity.Account;
+import com.example.lifeonhana.entity.User;
 import com.example.lifeonhana.global.exception.NotFoundException;
 import com.example.lifeonhana.repository.AccountRepository;
+import com.example.lifeonhana.repository.UserRepository;
+import lombok.RequiredArgsConstructor;
 
 @Service
+@RequiredArgsConstructor
 public class AccountService {
 
 	private final AccountRepository accountRepository;
-
-	public AccountService(AccountRepository accountRepository) {
-		this.accountRepository = accountRepository;
-	}
+	private final UserRepository userRepository;
 
 	@Transactional(readOnly = true)
 	public AccountListResponseDTO getAccounts(Long userId) {
@@ -42,10 +43,13 @@ public class AccountService {
 	}
 
 	@Transactional(readOnly = true)
-	public SalaryAccountResponseDTO getSalaryAccount(Long userId) {
+	public SalaryAccountResponseDTO getSalaryAccount(String authId) {
+		User user = userRepository.findByAuthId(authId)
+			.orElseThrow(() -> new NotFoundException("사용자를 찾을 수 없습니다."));
+			
 		Account salaryAccount = accountRepository.findByMydata_User_UserIdAndServiceAccount(
-			userId, Account.ServiceAccount.SALARY);
-		
+			user.getUserId(), Account.ServiceAccount.SALARY);
+			
 		if (salaryAccount == null) {
 			throw new NotFoundException("급여 계좌를 찾을 수 없습니다.");
 		}
