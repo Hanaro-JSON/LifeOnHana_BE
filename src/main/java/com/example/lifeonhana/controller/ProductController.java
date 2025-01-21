@@ -14,10 +14,7 @@ import com.example.lifeonhana.dto.response.LoanProductDetailResponseDTO;
 import com.example.lifeonhana.dto.response.ProductListResponseDTO;
 import com.example.lifeonhana.dto.response.SavingProductResponseDTO;
 import com.example.lifeonhana.dto.response.SimpleProductResponseDTO;
-import com.example.lifeonhana.service.LifeProductService;
-import com.example.lifeonhana.service.LoanProductService;
 import com.example.lifeonhana.service.ProductService;
-import com.example.lifeonhana.service.SavingProductService;
 
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.responses.ApiResponse;
@@ -33,9 +30,6 @@ import lombok.RequiredArgsConstructor;
 public class ProductController {
 
 	private final ProductService productService;
-	private final SavingProductService SavingProductService;
-	private final LoanProductService loanProductService;
-	private final LifeProductService lifeProductService;
 
 	@GetMapping("")
 	@Operation(summary = "상품 목록 조회", description = "상품 목록을 조회합니다.")
@@ -62,7 +56,7 @@ public class ProductController {
 	@SecurityRequirement(name = "bearerAuth")
 	public ResponseEntity<ApiResult> getSavings(
 		@PathVariable Long productId) {
-		SavingProductResponseDTO savingsResponse = SavingProductService.getSavingsProduct(productId);
+		SavingProductResponseDTO savingsResponse = productService.getSavingsProduct(productId);
 
 		return ResponseEntity.ok().body(new ApiResult(200, HttpStatus.OK, "예적금 상품 상세 조회 성공", savingsResponse));
 	}
@@ -77,7 +71,7 @@ public class ProductController {
 	public ResponseEntity<ApiResult> getLoans(
 		@PathVariable Long productId
 	) {
-		LoanProductDetailResponseDTO loanResponse = loanProductService.getLoanProduct(productId);
+		LoanProductDetailResponseDTO loanResponse = productService.getLoanProduct(productId);
 
 		return ResponseEntity.ok().body(new ApiResult(200, HttpStatus.OK, "대출 상품 상세 조회 성공" , loanResponse));
 	}
@@ -90,7 +84,7 @@ public class ProductController {
 	})
 	@SecurityRequirement(name = "bearerAuth")
 	public ResponseEntity<ApiResult> getLife(@PathVariable Long productId) {
-		LifeProductResponseDTO lifeResponse = lifeProductService.getLifeProduct(productId);
+		LifeProductResponseDTO lifeResponse = productService.getLifeProduct(productId);
 
 		return ResponseEntity.ok().body(new ApiResult(200, HttpStatus.OK, "라이프 상품 상세 조회 성공", lifeResponse));
 	}
