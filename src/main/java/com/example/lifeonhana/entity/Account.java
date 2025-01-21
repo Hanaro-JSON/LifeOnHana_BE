@@ -6,6 +6,8 @@ import lombok.NoArgsConstructor;
 import lombok.Setter;
 import java.math.BigDecimal;
 
+import com.example.lifeonhana.global.exception.InsufficientBalanceException;
+
 @Entity
 @Table(name = "account")
 @Getter @Setter
@@ -42,5 +44,13 @@ public class Account {
 
 	public enum ServiceAccount {
 		SALARY, WALLET, OTHER
+	}
+
+	public void withdraw(BigDecimal amount) {
+		this.balance = this.balance.subtract(amount);
+	}
+
+	public void deposit(BigDecimal amount) {
+		this.balance = this.balance.add(amount);
 	}
 }
