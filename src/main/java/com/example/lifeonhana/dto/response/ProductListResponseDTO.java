@@ -2,10 +2,11 @@ package com.example.lifeonhana.dto.response;
 
 import java.util.List;
 
-public record ProductLikeResponseDTO(
-	List<ProductResponseDTO> data,
+public record ProductListResponseDTO<T>(
+	List<T> products,
 	int page,
 	int size,
 	int totalPages,
-	long totalElements) {
+	long totalElements
+) {
 }

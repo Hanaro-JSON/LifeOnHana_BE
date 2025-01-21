@@ -11,7 +11,8 @@ import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
 import com.example.lifeonhana.ApiResult;
-import com.example.lifeonhana.dto.response.ProductLikeResponseDTO;
+import com.example.lifeonhana.dto.response.ProductListResponseDTO;
+import com.example.lifeonhana.dto.response.ProductResponseDTO;
 import com.example.lifeonhana.service.ProductLikeService;
 
 import io.swagger.v3.oas.annotations.Operation;
@@ -42,9 +43,9 @@ public class ProductLikeController {
 		@RequestParam(defaultValue = "10") int limit) {
 		Pageable pageable = PageRequest.of(offset, limit);
 
-		ProductLikeResponseDTO productLikePage = productLikeService.getProductLikes(authId, pageable);
+		ProductListResponseDTO<ProductResponseDTO> productLikePage = productLikeService.getProductLikes(authId, pageable);
 
-		if (productLikePage.data().isEmpty()) {
+		if (productLikePage.products().isEmpty()) {
 			return ResponseEntity.status(404).body(new ApiResult(200, HttpStatus.OK, "좋아요한 상품이 없습니다.", productLikePage));
 		}
 		return ResponseEntity.ok(new ApiResult(200, HttpStatus.OK, "좋아요한 상품 목록 조회 성공", productLikePage));

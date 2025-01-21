@@ -10,5 +10,4 @@ import com.example.lifeonhana.entity.Product;
 @Repository
 public interface LoanProductRepository extends JpaRepository<Product, Long> {
 	List<Product> findByCategory(Product.Category category);
-
 }
