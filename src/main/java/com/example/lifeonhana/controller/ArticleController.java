@@ -1,5 +1,6 @@
 package com.example.lifeonhana.controller;
 
+import com.example.lifeonhana.dto.response.ArticleListItemResponse;
 import io.swagger.v3.oas.annotations.Parameter;
 import lombok.RequiredArgsConstructor;
 
@@ -9,18 +10,36 @@ import org.springframework.web.bind.annotation.*;
 
 import com.example.lifeonhana.ApiResult;
 import com.example.lifeonhana.dto.response.ArticleDetailResponse;
-import com.example.lifeonhana.dto.response.ArticleListResponse;
 import com.example.lifeonhana.service.ArticleService;
 import com.example.lifeonhana.service.JwtService;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
+import com.example.lifeonhana.dto.response.ArticleSearchResponseDto;
+import com.example.lifeonhana.global.exception.UnauthorizedException;
+import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.responses.ApiResponse;
+import io.swagger.v3.oas.annotations.responses.ApiResponses;
+import io.swagger.v3.oas.annotations.security.SecurityRequirement;
+import io.swagger.v3.oas.annotations.tags.Tag;
+import jakarta.validation.constraints.Max;
+import jakarta.validation.constraints.Min;
+import lombok.extern.slf4j.Slf4j;
+import org.springframework.validation.annotation.Validated;
+import org.springframework.data.domain.Slice;
 
+import java.util.Map;
+import java.util.HashMap;
+
+@Tag(name = "Article", description = "기사 관련 API")
 @RestController
 @RequestMapping("/api/articles")
 @RequiredArgsConstructor
+@Validated
+@Slf4j
 public class ArticleController {
 
 	private final ArticleService articleService;
 	private final JwtService jwtService;
+	private static final int MAX_LIMIT = 200;
 
 	@GetMapping("/{articleId}")
 	public ResponseEntity<ApiResult> getArticleDetails(@PathVariable Long articleId) {
@@ -69,18 +88,17 @@ public class ArticleController {
 		@AuthenticationPrincipal String authId
 	) {
 		try {
-			ArticleListResponse response = articleService.getArticles(
-				category, 
-				page - 1, 
-				size,
-				authId
-			);
+			Slice<ArticleListItemResponse> response = articleService.getArticles(category, page - 1, size, authId);
 			
+			Map<String, Object> data = new HashMap<>();
+			data.put("articles", response.getContent());
+			data.put("hasNext", response.hasNext());
+
 			return ResponseEntity.ok(ApiResult.builder()
 				.code(200)
 				.status(HttpStatus.OK)
 				.message("기사 목록 조회 성공")
-				.data(response)
+				.data(data)
 				.build());
 			
 		} catch (Exception e) {
@@ -92,4 +110,47 @@ public class ArticleController {
 					.build());
 		}
 	}
+
+	@Operation(summary = "기사 검색", description = "키워드로 기사를 검색합니다.")
+	@ApiResponses({
+			@ApiResponse(responseCode = "200", description = "기사 검색 성공"),
+			@ApiResponse(responseCode = "400", description = "잘못된 요청"),
+			@ApiResponse(responseCode = "401", description = "인증이 필요합니다.")
+	})
+	@GetMapping("/search")
+	@SecurityRequirement(name = "bearerAuth")
+	public ResponseEntity<ApiResult> searchArticles(
+			@Parameter(description = "검색 키워드")
+			@RequestParam(name = "query", required = false) String query,
+			@Parameter(description = "페이지 번호", example = "0")
+			@RequestParam(defaultValue = "0") @Min(value = 0) int page,
+			@Parameter(description = "페이지 크기", example = "20")
+			@RequestParam(defaultValue = "20") @Min(value = 1) @Max(value = MAX_LIMIT) int size,
+			@Parameter(hidden = true) @AuthenticationPrincipal String authId
+	) {
+		validateAuthentication(authId);
+		Slice<ArticleSearchResponseDto> response = articleService.searchArticles(query, page, size, authId);
+		
+		Map<String, Object> data = new HashMap<>();
+		data.put("articles", response.getContent());
+		data.put("hasNext", response.hasNext());
+
+		return createSuccessResponse("기사 검색 성공", data);
+	}
+
+	private void validateAuthentication(String authId) {
+		if (authId == null || authId.isEmpty()) {
+			throw new UnauthorizedException("로그인이 필요한 서비스입니다.");
+		}
+	}
+
+	private ResponseEntity<ApiResult> createSuccessResponse(String message, Object data) {
+		return ResponseEntity.ok(ApiResult.builder()
+				.code(HttpStatus.OK.value())
+				.status(HttpStatus.OK)
+				.message(message)
+				.data(data)
+				.build());
+	}
 }
+
