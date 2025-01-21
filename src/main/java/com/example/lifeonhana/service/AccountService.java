@@ -3,14 +3,19 @@ package com.example.lifeonhana.service;
 import java.util.*;
 import java.util.stream.Collectors;
 
+import javax.security.auth.login.AccountNotFoundException;
+
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import com.example.lifeonhana.dto.request.AccountTransferRequest;
 import com.example.lifeonhana.dto.response.AccountListResponseDTO;
 import com.example.lifeonhana.dto.response.AccountResponseDTO;
+import com.example.lifeonhana.dto.response.AccountTransferResponse;
 import com.example.lifeonhana.dto.response.SalaryAccountResponseDTO;
 import com.example.lifeonhana.entity.Account;
 import com.example.lifeonhana.entity.User;
+import com.example.lifeonhana.global.exception.InsufficientBalanceException;
 import com.example.lifeonhana.global.exception.NotFoundException;
 import com.example.lifeonhana.repository.AccountRepository;
 import com.example.lifeonhana.repository.UserRepository;
@@ -57,6 +62,32 @@ public class AccountService {
 		return new SalaryAccountResponseDTO(
 			salaryAccount.getAccountId(),
 			salaryAccount.getBalance()
+		);
+	}
+
+	@Transactional
+	public AccountTransferResponse transfer(String authId, AccountTransferRequest request) {
+		Account fromAccount = accountRepository.findByAccountIdAndMydata_User_AuthId(
+			request.fromAccountId(), authId
+		).orElseThrow(() -> new NotFoundException("출금 계좌를 찾을 수 없습니다."));
+
+		Account toAccount = accountRepository.findById(request.toAccountId())
+			.orElseThrow(() -> new NotFoundException("입금 계좌를 찾을 수 없습니다."));
+
+		if (fromAccount.getBalance().compareTo(request.amount()) < 0) {
+			throw new InsufficientBalanceException("잔액이 부족합니다.");
+		}
+
+		fromAccount.withdraw(request.amount());
+		toAccount.deposit(request.amount());
+
+		accountRepository.save(fromAccount);
+		accountRepository.save(toAccount);
+
+		return new AccountTransferResponse(
+			request.amount(),
+			toAccountResponseDTO(fromAccount),
+			toAccountResponseDTO(toAccount)
 		);
 	}
 
