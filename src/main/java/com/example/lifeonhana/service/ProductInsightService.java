@@ -12,6 +12,7 @@ import com.example.lifeonhana.global.exception.NotFoundException;
 import com.example.lifeonhana.repository.ArticleRepository;
 import com.example.lifeonhana.repository.HistoryRepository;
 import com.example.lifeonhana.repository.LoanProductRepository;
+import com.example.lifeonhana.repository.ProductLikeRepository;
 import com.example.lifeonhana.repository.ProductRepository;
 import com.example.lifeonhana.repository.UserRepository;
 import lombok.RequiredArgsConstructor;
@@ -50,7 +51,15 @@ public class ProductInsightService {
 		String analysisResult = (String) flaskResponse.getOrDefault("analysisResult", "No analysis result provided");
 		String productLink = (String) flaskResponse.getOrDefault("productLink", "N/A");
 
-		return new ProductInsightResponse(analysisResult, productLink);
+		boolean isLiked = product.getProductLikes().stream()
+			.anyMatch(productLike -> productLike.getUser().getUserId().equals(user.getUserId()));
+
+		return new ProductInsightResponse(
+			analysisResult,
+			productLink,
+			product.getName(),
+			isLiked
+		);
 	}
 
 	private User getUser(String authId) {
