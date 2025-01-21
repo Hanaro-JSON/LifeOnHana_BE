@@ -17,15 +17,28 @@ import com.example.lifeonhana.dto.request.LoanRecommendationRequest;
 import com.example.lifeonhana.dto.response.LoanProductResponse;
 import com.example.lifeonhana.service.LoanRecommendationService;
 
+import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.media.Content;
+import io.swagger.v3.oas.annotations.responses.ApiResponse;
+import io.swagger.v3.oas.annotations.tags.Tag;
 import lombok.RequiredArgsConstructor;
 
 @RestController
 @RequiredArgsConstructor
 @RequestMapping("/api/anthropic/loans")
+@Tag(name = "Loan Recommendation API", description = "대출 상품 추천 API")
 public class LoanRecommendationController {
 
 	private final LoanRecommendationService loanRecommendationService;
 
+	@Operation(
+		summary = "대출 상품 추천",
+		description = "대출 사유와 금액, 마이데이터를 기반으로 대출 상품을 추천합니다.",
+		responses = {
+			@ApiResponse(responseCode = "200", description = "추천 성공", content = @Content(mediaType = "application/json")),
+			@ApiResponse(responseCode = "500", description = "서버 오류", content = @Content(mediaType = "application/json"))
+		}
+	)
 	@PostMapping
 	public ResponseEntity<ApiResult> recommendLoanProducts(
 		@RequestBody LoanRecommendationRequest request,

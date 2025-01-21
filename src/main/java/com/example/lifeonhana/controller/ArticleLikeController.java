@@ -20,6 +20,8 @@ import com.example.lifeonhana.service.ArticleLikeService;
 import com.example.lifeonhana.service.JwtService;
 
 import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.media.Content;
+import io.swagger.v3.oas.annotations.responses.ApiResponse;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import lombok.RequiredArgsConstructor;
 
@@ -31,7 +33,15 @@ public class ArticleLikeController {
 	private final JwtService jwtService;
 	private final ArticleLikeService articleLikeService;
 
-	@Operation(summary = "칼럼 좋아요 생성 && 취소", description = "칼럼 좋아요 생성 && 취소")
+	@Operation(
+		summary = "칼럼 좋아요 생성 및 취소",
+		description = "칼럼 좋아요를 생성하거나 취소합니다.",
+		responses = {
+			@ApiResponse(responseCode = "200", description = "요청 성공", content = @Content(mediaType = "application/json")),
+			@ApiResponse(responseCode = "400", description = "잘못된 요청", content = @Content(mediaType = "application/json")),
+			@ApiResponse(responseCode = "500", description = "서버 오류", content = @Content(mediaType = "application/json"))
+		}
+	)
 	@PostMapping("/{articleId}/like")
 	public ResponseEntity<ApiResult> toggleLike(
 		@PathVariable Long articleId,
@@ -52,7 +62,15 @@ public class ArticleLikeController {
 		);
 	}
 
-	@Operation(summary = "칼럼 좋아요 수 && 여부 조회", description = "칼럼 좋아요 수 && 여부 조회")
+	@Operation(
+		summary = "칼럼 좋아요 수 및 여부 조회",
+		description = "칼럼의 좋아요 수와 사용자의 좋아요 여부를 조회합니다.",
+		responses = {
+			@ApiResponse(responseCode = "200", description = "조회 성공", content = @Content(mediaType = "application/json")),
+			@ApiResponse(responseCode = "400", description = "잘못된 요청", content = @Content(mediaType = "application/json")),
+			@ApiResponse(responseCode = "500", description = "서버 오류", content = @Content(mediaType = "application/json"))
+		}
+	)
 	@GetMapping("/{articleId}/like")
 	public ResponseEntity<ApiResult> getLikeInfo(
 		@PathVariable Long articleId,
@@ -73,6 +91,15 @@ public class ArticleLikeController {
 		);
 	}
 
+	@Operation(
+		summary = "좋아요한 기사 목록 조회",
+		description = "사용자가 좋아요한 기사 목록을 조회합니다.",
+		responses = {
+			@ApiResponse(responseCode = "200", description = "조회 성공", content = @Content(mediaType = "application/json")),
+			@ApiResponse(responseCode = "400", description = "잘못된 요청", content = @Content(mediaType = "application/json")),
+			@ApiResponse(responseCode = "500", description = "서버 오류", content = @Content(mediaType = "application/json"))
+		}
+	)
 	@GetMapping("/liked")
 	public ResponseEntity<ApiResult> getLikedArticles(
 		@RequestHeader("Authorization") String token,
