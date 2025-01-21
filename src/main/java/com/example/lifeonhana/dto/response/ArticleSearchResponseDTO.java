@@ -6,7 +6,7 @@ import java.time.format.DateTimeFormatter;
 import java.util.List;
 import java.util.Map;
 
-public record ArticleSearchResponseDto(
+public record ArticleSearchResponseDTO(
     Long articleId,
     String title,
     String category,
@@ -14,8 +14,8 @@ public record ArticleSearchResponseDto(
     String publishedAt,
     Boolean isLiked
 ) {
-    public static ArticleSearchResponseDto from(Article article, boolean isLiked) {
-        return new ArticleSearchResponseDto(
+    public static ArticleSearchResponseDTO from(Article article, boolean isLiked) {
+        return new ArticleSearchResponseDTO(
             article.getArticleId(),
             article.getTitle(),
             article.getCategory().toString(),
@@ -25,7 +25,7 @@ public record ArticleSearchResponseDto(
         );
     }
 
-    public static List<ArticleSearchResponseDto> fromList(List<Article> articles, Map<Long, Boolean> likeStatusMap) {
+    public static List<ArticleSearchResponseDTO> fromList(List<Article> articles, Map<Long, Boolean> likeStatusMap) {
         return articles.stream()
             .map(article -> from(article, likeStatusMap.getOrDefault(article.getArticleId(), false)))
             .toList();
