@@ -39,7 +39,7 @@ public class ArticleController {
 
 	private final ArticleService articleService;
 	private final JwtService jwtService;
-	private static final int MAX_LIMIT = 100;
+	private static final int MAX_LIMIT = 200;
 
 	@GetMapping("/{articleId}")
 	public ResponseEntity<ApiResult> getArticleDetails(@PathVariable Long articleId) {
