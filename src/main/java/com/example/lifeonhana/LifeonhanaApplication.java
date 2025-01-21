@@ -6,7 +6,7 @@ import org.springframework.scheduling.annotation.EnableScheduling;
 
 @SpringBootApplication
 @EnableScheduling
-public class 	LifeonhanaApplication {
+public class LifeonhanaApplication {
 
 	public static void main(String[] args) {
 		SpringApplication.run(LifeonhanaApplication.class, args);

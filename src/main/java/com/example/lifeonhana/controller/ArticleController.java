@@ -1,5 +1,6 @@
 package com.example.lifeonhana.controller;
 
+import com.example.lifeonhana.dto.response.ArticleListItemResponse;
 import io.swagger.v3.oas.annotations.Parameter;
 import lombok.RequiredArgsConstructor;
 
@@ -9,7 +10,6 @@ import org.springframework.web.bind.annotation.*;
 
 import com.example.lifeonhana.ApiResult;
 import com.example.lifeonhana.dto.response.ArticleDetailResponse;
-import com.example.lifeonhana.dto.response.ArticleListResponse;
 import com.example.lifeonhana.service.ArticleService;
 import com.example.lifeonhana.service.JwtService;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
@@ -24,8 +24,10 @@ import jakarta.validation.constraints.Max;
 import jakarta.validation.constraints.Min;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.validation.annotation.Validated;
+import org.springframework.data.domain.Slice;
 
-import java.util.List;
+import java.util.Map;
+import java.util.HashMap;
 
 @Tag(name = "Article", description = "기사 관련 API")
 @RestController
@@ -86,18 +88,17 @@ public class ArticleController {
 		@AuthenticationPrincipal String authId
 	) {
 		try {
-			ArticleListResponse response = articleService.getArticles(
-				category, 
-				page - 1, 
-				size,
-				authId
-			);
+			Slice<ArticleListItemResponse> response = articleService.getArticles(category, page - 1, size, authId);
 			
+			Map<String, Object> data = new HashMap<>();
+			data.put("articles", response.getContent());
+			data.put("hasNext", response.hasNext());
+
 			return ResponseEntity.ok(ApiResult.builder()
 				.code(200)
 				.status(HttpStatus.OK)
 				.message("기사 목록 조회 성공")
-				.data(response)
+				.data(data)
 				.build());
 			
 		} catch (Exception e) {
@@ -121,29 +122,20 @@ public class ArticleController {
 	public ResponseEntity<ApiResult> searchArticles(
 			@Parameter(description = "검색 키워드")
 			@RequestParam(name = "query", required = false) String query,
-
-			@Parameter(description = "시작 위치", example = "0")
-			@RequestParam(defaultValue = "0")
-			@Min(value = 0, message = "offset은 0 이상이어야 합니다.")
-			int offset,
-
-			@Parameter(description = "가져올 항목 수", example = "10")
-			@RequestParam(defaultValue = "10")
-			@Min(value = 1, message = "limit는 1 이상이어야 합니다.")
-			@Max(value = MAX_LIMIT, message = "limit는 100 이하여야 합니다.")
-			int limit,
-
-			@Parameter(hidden = true)
-			@AuthenticationPrincipal String authId
+			@Parameter(description = "페이지 번호", example = "0")
+			@RequestParam(defaultValue = "0") @Min(value = 0) int page,
+			@Parameter(description = "페이지 크기", example = "20")
+			@RequestParam(defaultValue = "20") @Min(value = 1) @Max(value = MAX_LIMIT) int size,
+			@Parameter(hidden = true) @AuthenticationPrincipal String authId
 	) {
 		validateAuthentication(authId);
-		log.debug("Searching articles - query: {}, offset: {}, limit: {}",
-				query, offset, limit);
+		Slice<ArticleSearchResponseDto> response = articleService.searchArticles(query, page, size, authId);
+		
+		Map<String, Object> data = new HashMap<>();
+		data.put("articles", response.getContent());
+		data.put("hasNext", response.hasNext());
 
-		List<ArticleSearchResponseDto> articles = articleService.searchArticles(
-				query, offset, limit, authId);
-
-		return createSuccessResponse("기사 검색 성공", articles);
+		return createSuccessResponse("기사 검색 성공", data);
 	}
 
 	private void validateAuthentication(String authId) {

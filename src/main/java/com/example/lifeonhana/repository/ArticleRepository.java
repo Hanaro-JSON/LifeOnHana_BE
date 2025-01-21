@@ -7,16 +7,22 @@ import org.springframework.data.domain.Slice;
 import org.springframework.data.domain.Page;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.JpaSpecificationExecutor;
+import org.springframework.data.jpa.repository.Query;
 import org.springframework.stereotype.Repository;
 
 import com.example.lifeonhana.entity.Article;
+import org.springframework.data.jpa.domain.Specification;
 
 @Repository
-public interface ArticleRepository extends JpaRepository<Article, Long> , JpaSpecificationExecutor<Article> {
+public interface ArticleRepository extends JpaRepository<Article, Long>, JpaSpecificationExecutor<Article> {
 	Slice<Article> findByArticleIdIn(List<Long> articleIds, Pageable pageable);
 
 	Slice<Article> findByArticleIdInAndCategory(List<Long> articleIds, Article.Category category, Pageable pageable);
 
 	Page<Article> findByCategory(Article.Category category, Pageable pageable);
+
+	Slice<Article> findSliceByCategory(Article.Category category, Pageable pageable);
+
+	Slice<Article> findAllBy(Pageable pageable);
 }
 
