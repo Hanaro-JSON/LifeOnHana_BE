@@ -30,12 +30,13 @@ import org.springframework.data.domain.Sort;
 import java.util.HashSet;
 import java.util.Set;
 import java.util.stream.Collectors;
-import com.example.lifeonhana.dto.response.ArticleListResponse;
 import com.example.lifeonhana.dto.response.ArticleListItemResponse;
 import org.springframework.data.redis.core.RedisTemplate;
 import java.time.format.DateTimeFormatter;
 import com.example.lifeonhana.repository.UserRepository;
 import com.example.lifeonhana.repository.ArticleLikeRepository;
+import org.springframework.data.domain.Slice;
+import org.springframework.data.domain.SliceImpl;
 
 @Service
 @RequiredArgsConstructor
@@ -108,21 +109,21 @@ public class ArticleService {
 
 	}
 
-	public ArticleListResponse getArticles(String category, int page, int size, String authId) {
+	public Slice<ArticleListItemResponse> getArticles(String category, int page, int size, String authId) {
 		PageRequest pageRequest = PageRequest.of(page, size, Sort.by("publishedAt").descending());
 		
-		Page<Article> articlesPage;
+		Slice<Article> articlesSlice;
 		if (category != null && !category.isEmpty()) {
 			Article.Category articleCategory = Article.Category.valueOf(category.toUpperCase());
-			articlesPage = articleRepository.findByCategory(articleCategory, pageRequest);
+			articlesSlice = articleRepository.findSliceByCategory(articleCategory, pageRequest);
 		} else {
-			articlesPage = articleRepository.findAll(pageRequest);
+			articlesSlice = articleRepository.findAllBy(pageRequest);
 		}
 		
 		// 사용자의 좋아요 정보 조회
 		final Set<Long> likedArticleIds = getLikedArticleIds(authId);
 		
-		List<ArticleListItemResponse> articleResponses = articlesPage.getContent().stream()
+		List<ArticleListItemResponse> articleResponses = articlesSlice.getContent().stream()
 			.map(article -> new ArticleListItemResponse(
 				article.getArticleId(),
 				article.getTitle(),
@@ -133,13 +134,7 @@ public class ArticleService {
 			))
 			.toList();
 		
-		return new ArticleListResponse(
-			articleResponses,
-			page + 1,
-			size,
-			articlesPage.getTotalPages(),
-			articlesPage.getTotalElements()
-		);
+		return new SliceImpl<>(articleResponses, pageRequest, articlesSlice.hasNext());
 	}
 
 	private Set<Long> getLikedArticleIds(String authId) {
@@ -177,23 +172,35 @@ public class ArticleService {
 	}
 
 	@Transactional(readOnly = true)
-	public List<ArticleSearchResponseDto> searchArticles(String query, int offset, int limit, String authId) {
+	public Slice<ArticleSearchResponseDto> searchArticles(String query, int page, int size, String authId) {
 		User user = findUser(authId);
-		Page<Article> articles = searchArticlesWithPaging(query, offset, limit);
-
-		Map<Long, Boolean> likeStatusMap = getLikeStatusMap(articles.getContent(), user);
-		return ArticleSearchResponseDto.fromList(articles.getContent(), likeStatusMap);
-	}
-
-	private Page<Article> searchArticlesWithPaging(String query, int offset, int limit) {
-		Pageable pageable = PageRequest.of(offset / limit, limit);
-
+		// size + 1을 요청하여 다음 페이지 존재 여부를 확인
+		Pageable pageable = PageRequest.of(page, size + 1, Sort.by(Sort.Direction.DESC, "publishedAt"));
+		
+		Slice<Article> articlesSlice;
 		if (!StringUtils.hasText(query)) {
-			return articleRepository.findAll(pageable);
+			articlesSlice = articleRepository.findAllBy(pageable);
+		} else {
+			Specification<Article> spec = createSearchSpecification(createSearchPattern(query));
+			List<Article> articles = articleRepository.findAll(spec, pageable).getContent();
+			
+			// 다음 페이지 존재 여부 확인
+			boolean hasNext = articles.size() > size;
+			
+			// 실제로 필요한 개수만큼만 남기기
+			List<Article> content = hasNext ? articles.subList(0, size) : articles;
+			
+			articlesSlice = new SliceImpl<>(content, PageRequest.of(page, size), hasNext);
 		}
 
-		Specification<Article> spec = createSearchSpecification(createSearchPattern(query));
-		return articleRepository.findAll(spec, pageable);
+		Map<Long, Boolean> likeStatusMap = getLikeStatusMap(articlesSlice.getContent(), user);
+		
+		List<ArticleSearchResponseDto> articles = articlesSlice.getContent().stream()
+			.map(article -> ArticleSearchResponseDto.from(article, 
+				likeStatusMap.getOrDefault(article.getArticleId(), false)))
+			.toList();
+
+		return new SliceImpl<>(articles, PageRequest.of(page, size), articlesSlice.hasNext());
 	}
 
 	private String createSearchPattern(String query) {
