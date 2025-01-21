@@ -19,11 +19,8 @@ import com.example.lifeonhana.service.JwtService;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import com.example.lifeonhana.dto.response.ArticleSearchResponseDto;
 import com.example.lifeonhana.global.exception.UnauthorizedException;
-import io.swagger.v3.oas.annotations.Operation;
-import io.swagger.v3.oas.annotations.responses.ApiResponse;
 import io.swagger.v3.oas.annotations.responses.ApiResponses;
 import io.swagger.v3.oas.annotations.security.SecurityRequirement;
-import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.validation.constraints.Max;
 import jakarta.validation.constraints.Min;
 import lombok.extern.slf4j.Slf4j;
@@ -33,7 +30,6 @@ import org.springframework.data.domain.Slice;
 import java.util.Map;
 import java.util.HashMap;
 
-@Tag(name = "Article", description = "기사 관련 API")
 @RestController
 @RequestMapping("/api/articles")
 @RequiredArgsConstructor
