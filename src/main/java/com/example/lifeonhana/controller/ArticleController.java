@@ -1,7 +1,11 @@
 package com.example.lifeonhana.controller;
 
 import com.example.lifeonhana.dto.response.ArticleListItemResponse;
+import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.Parameter;
+import io.swagger.v3.oas.annotations.media.Content;
+import io.swagger.v3.oas.annotations.responses.ApiResponse;
+import io.swagger.v3.oas.annotations.tags.Tag;
 import lombok.RequiredArgsConstructor;
 
 import org.springframework.http.HttpStatus;
@@ -15,11 +19,8 @@ import com.example.lifeonhana.service.JwtService;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import com.example.lifeonhana.dto.response.ArticleSearchResponseDto;
 import com.example.lifeonhana.global.exception.UnauthorizedException;
-import io.swagger.v3.oas.annotations.Operation;
-import io.swagger.v3.oas.annotations.responses.ApiResponse;
 import io.swagger.v3.oas.annotations.responses.ApiResponses;
 import io.swagger.v3.oas.annotations.security.SecurityRequirement;
-import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.validation.constraints.Max;
 import jakarta.validation.constraints.Min;
 import lombok.extern.slf4j.Slf4j;
@@ -29,18 +30,27 @@ import org.springframework.data.domain.Slice;
 import java.util.Map;
 import java.util.HashMap;
 
-@Tag(name = "Article", description = "기사 관련 API")
 @RestController
 @RequestMapping("/api/articles")
 @RequiredArgsConstructor
 @Validated
 @Slf4j
+@Tag(name = "Article API", description = "기사 관련 API")
 public class ArticleController {
 
 	private final ArticleService articleService;
 	private final JwtService jwtService;
 	private static final int MAX_LIMIT = 200;
 
+	@Operation(
+		summary = "기사 상세 조회",
+		description = "기사의 세부 정보를 조회합니다.",
+		responses = {
+			@ApiResponse(responseCode = "200", description = "조회 성공", content = @Content(mediaType = "application/json")),
+			@ApiResponse(responseCode = "400", description = "잘못된 요청", content = @Content(mediaType = "application/json")),
+			@ApiResponse(responseCode = "500", description = "서버 오류", content = @Content(mediaType = "application/json"))
+		}
+	)
 	@GetMapping("/{articleId}")
 	public ResponseEntity<ApiResult> getArticleDetails(@PathVariable Long articleId) {
 		try {
@@ -153,4 +163,3 @@ public class ArticleController {
 				.build());
 	}
 }
-
