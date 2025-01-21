@@ -8,6 +8,6 @@ import org.springframework.stereotype.Repository;
 import com.example.lifeonhana.entity.Product;
 
 @Repository
-public interface SavingsProductRepository extends JpaRepository<Product, Long> {
+public interface SavingProductRepository extends JpaRepository<Product, Long> {
 	Optional<Product> findProductByProductId(Long productId);
 }
