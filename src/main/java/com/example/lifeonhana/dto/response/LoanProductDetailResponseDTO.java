@@ -31,7 +31,7 @@ public record LoanProductDetailResponseDTO(
 			product.getDescription(),
 			product.getFeature(),
 			product.getTarget(),
-			"https://example.com/products/loan" + product.getLink(),
+			product.getLink(),
 			new LoanProductDetailResponseDTO.LoanInfo(
 				product.getMinAmount(),
 				product.getMaxAmount(),

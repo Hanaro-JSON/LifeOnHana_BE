@@ -21,7 +21,7 @@ public record SavingProductResponseDTO(
 			product.getProductId(),
 			product.getName(),
 			product.getDescription(),
-			"https://example.com/products/savings/" + product.getLink(),
+			product.getLink(),
 			new SavingProductResponseDTO.SavingsInfo(
 				product.getBasicInterestRate(),
 				product.getMaxInterestRate()
