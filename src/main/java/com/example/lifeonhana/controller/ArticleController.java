@@ -1,5 +1,9 @@
 package com.example.lifeonhana.controller;
 
+import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.media.Content;
+import io.swagger.v3.oas.annotations.responses.ApiResponse;
+import io.swagger.v3.oas.annotations.tags.Tag;
 import lombok.RequiredArgsConstructor;
 
 import org.springframework.http.HttpStatus;
@@ -13,10 +17,20 @@ import com.example.lifeonhana.service.ArticleService;
 @RestController
 @RequestMapping("/api/articles")
 @RequiredArgsConstructor
+@Tag(name = "Article API", description = "기사 관련 API")
 public class ArticleController {
 
 	private final ArticleService articleService;
 
+	@Operation(
+		summary = "기사 상세 조회",
+		description = "기사의 세부 정보를 조회합니다.",
+		responses = {
+			@ApiResponse(responseCode = "200", description = "조회 성공", content = @Content(mediaType = "application/json")),
+			@ApiResponse(responseCode = "400", description = "잘못된 요청", content = @Content(mediaType = "application/json")),
+			@ApiResponse(responseCode = "500", description = "서버 오류", content = @Content(mediaType = "application/json"))
+		}
+	)
 	@GetMapping("/{articleId}")
 	public ResponseEntity<ApiResult> getArticleDetails(@PathVariable Long articleId) {
 		try {

@@ -19,6 +19,7 @@ import io.swagger.v3.oas.annotations.responses.ApiResponse;
 import io.swagger.v3.oas.annotations.responses.ApiResponses;
 import io.swagger.v3.oas.annotations.security.SecurityRequirement;
 import io.swagger.v3.oas.annotations.tags.Tag;
+import io.swagger.v3.oas.annotations.media.Content;
 import io.swagger.v3.oas.annotations.Parameter;
 import lombok.RequiredArgsConstructor;
 
@@ -30,7 +31,13 @@ public class AccountController {
 	private final JwtService jwtService;
 	private final AccountService accountService;
 
-	@Operation(summary = "계좌 목록 조회", description = "계좌 목록 조회")
+	@Operation(summary = "계좌 목록 조회",
+		description = "계좌 목록을 조회합니다.",
+		responses = {
+		@ApiResponse(responseCode = "200", description = "조회 성공", content = @Content(mediaType = "application/json")),
+		@ApiResponse(responseCode = "400", description = "잘못된 요청", content = @Content(mediaType = "application/json")),
+		@ApiResponse(responseCode = "500", description = "서버 오류", content = @Content(mediaType = "application/json"))
+	})
 	@GetMapping
 	public ResponseEntity<ApiResult> getAccounts(@RequestHeader("Authorization") String token) {
 
