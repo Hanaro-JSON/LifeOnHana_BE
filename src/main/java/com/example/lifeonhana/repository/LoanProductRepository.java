@@ -13,5 +13,4 @@ public interface LoanProductRepository extends JpaRepository<Product, Long> {
 	List<Product> findByCategory(Product.Category category);
 
 	Optional<Product> findByProductId(Long productId);
-
 }
