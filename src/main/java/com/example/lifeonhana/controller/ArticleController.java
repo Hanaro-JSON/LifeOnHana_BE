@@ -17,7 +17,7 @@ import com.example.lifeonhana.dto.response.ArticleDetailResponse;
 import com.example.lifeonhana.service.ArticleService;
 import com.example.lifeonhana.service.JwtService;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
-import com.example.lifeonhana.dto.response.ArticleSearchResponseDto;
+import com.example.lifeonhana.dto.response.ArticleSearchResponseDTO;
 import com.example.lifeonhana.global.exception.UnauthorizedException;
 import io.swagger.v3.oas.annotations.responses.ApiResponses;
 import io.swagger.v3.oas.annotations.security.SecurityRequirement;
@@ -139,7 +139,7 @@ public class ArticleController {
 			@Parameter(hidden = true) @AuthenticationPrincipal String authId
 	) {
 		validateAuthentication(authId);
-		Slice<ArticleSearchResponseDto> response = articleService.searchArticles(query, page, size, authId);
+		Slice<ArticleSearchResponseDTO> response = articleService.searchArticles(query, page, size, authId);
 		
 		Map<String, Object> data = new HashMap<>();
 		data.put("articles", response.getContent());
@@ -163,4 +163,3 @@ public class ArticleController {
 				.build());
 	}
 }
-

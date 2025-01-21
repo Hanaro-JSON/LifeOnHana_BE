@@ -1,7 +1,5 @@
 package com.example.lifeonhana.controller;
 
-import org.springframework.data.domain.PageRequest;
-import org.springframework.data.domain.Pageable;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
@@ -41,9 +39,8 @@ public class ProductLikeController {
 	public ResponseEntity<ApiResult> getProductLikes(@AuthenticationPrincipal String authId,
 		@RequestParam(defaultValue = "0") int offset,
 		@RequestParam(defaultValue = "10") int limit) {
-		Pageable pageable = PageRequest.of(offset, limit);
 
-		ProductListResponseDTO<ProductResponseDTO> productLikePage = productLikeService.getProductLikes(authId, pageable);
+		ProductListResponseDTO<ProductResponseDTO> productLikePage = productLikeService.getProductLikes(authId, offset, limit);
 
 		if (productLikePage.products().isEmpty()) {
 			return ResponseEntity.status(404).body(new ApiResult(200, HttpStatus.OK, "좋아요한 상품이 없습니다.", productLikePage));

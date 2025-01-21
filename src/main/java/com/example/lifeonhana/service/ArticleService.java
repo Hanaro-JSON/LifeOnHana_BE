@@ -1,5 +1,5 @@
 package com.example.lifeonhana.service;
-import com.example.lifeonhana.dto.response.ArticleSearchResponseDto;
+import com.example.lifeonhana.dto.response.ArticleSearchResponseDTO;
 import com.example.lifeonhana.entity.Article;
 import com.example.lifeonhana.entity.ArticleLike;
 import com.example.lifeonhana.entity.User;
@@ -24,7 +24,7 @@ import com.example.lifeonhana.dto.response.ArticleDetailResponse;
 import com.example.lifeonhana.repository.ArticleRepository;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
-import org.springframework.data.domain.Page;
+
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Sort;
 import java.util.HashSet;
@@ -172,7 +172,7 @@ public class ArticleService {
 	}
 
 	@Transactional(readOnly = true)
-	public Slice<ArticleSearchResponseDto> searchArticles(String query, int page, int size, String authId) {
+	public Slice<ArticleSearchResponseDTO> searchArticles(String query, int page, int size, String authId) {
 		User user = findUser(authId);
 		// size + 1을 요청하여 다음 페이지 존재 여부를 확인
 		Pageable pageable = PageRequest.of(page, size + 1, Sort.by(Sort.Direction.DESC, "publishedAt"));
@@ -195,8 +195,8 @@ public class ArticleService {
 
 		Map<Long, Boolean> likeStatusMap = getLikeStatusMap(articlesSlice.getContent(), user);
 		
-		List<ArticleSearchResponseDto> articles = articlesSlice.getContent().stream()
-			.map(article -> ArticleSearchResponseDto.from(article, 
+		List<ArticleSearchResponseDTO> articles = articlesSlice.getContent().stream()
+			.map(article -> ArticleSearchResponseDTO.from(article,
 				likeStatusMap.getOrDefault(article.getArticleId(), false)))
 			.toList();
 
@@ -261,8 +261,3 @@ public class ArticleService {
 				));
 	}
 }
-
-
-
-
-

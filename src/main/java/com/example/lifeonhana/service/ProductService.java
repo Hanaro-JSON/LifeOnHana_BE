@@ -2,9 +2,9 @@ package com.example.lifeonhana.service;
 
 import java.util.List;
 
-import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
+import org.springframework.data.domain.Slice;
 import org.springframework.stereotype.Service;
 
 import com.example.lifeonhana.dto.response.LifeProductResponseDTO;
@@ -26,19 +26,20 @@ public class ProductService {
 
 	public ProductListResponseDTO<SimpleProductResponseDTO> getProducts(String category, int page, int size) {
 		Pageable pageable = PageRequest.of(page - 1, size);
-		Page<Product> productPage;
+		Slice<Product> productSlice;
+
 		if (category != null && !category.isBlank()) {
 			Product.Category productCategory = Product.Category.valueOf(category.toUpperCase());
-			productPage = productRepository.findByCategory(productCategory, pageable);
+			productSlice = productRepository.findByCategory(productCategory, pageable);
 		} else {
-			productPage = productRepository.findAll(pageable);
+			productSlice = productRepository.findAll(pageable);
 		}
 
 		List<SimpleProductResponseDTO> products =
-			productPage.getContent().stream().map(SimpleProductResponseDTO::fromEntity).toList();
-		return new ProductListResponseDTO<>(
-			products, page,size, productPage.getTotalPages(), productPage.getTotalElements()
-		);
+			productSlice.getContent().stream().map(SimpleProductResponseDTO::fromEntity).toList();
+		boolean hasNext = productSlice.hasNext();
+
+		return new ProductListResponseDTO<>(products, hasNext);
 	}
 
 
