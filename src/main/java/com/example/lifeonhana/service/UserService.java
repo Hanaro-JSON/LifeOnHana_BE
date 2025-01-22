@@ -45,6 +45,7 @@ public class UserService {
             user.getUserId(),
             user.getName(),
             user.getAuthId(),
+            user.getBirthday(),
             user.getIsFirst()
         );
     }
