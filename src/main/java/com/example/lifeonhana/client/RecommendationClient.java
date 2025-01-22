@@ -23,7 +23,7 @@ public class RecommendationClient {
 	@Value("${recommendation.service.url:http://localhost:5001}")
 	private String recommendationServiceUrl;
 
-	@Value("${recommendation.service.size:20}")  // size 기본값 20으로 수정
+	@Value("${recommendation.service.size:106}")
 	private int defaultSize;
 
 	public List<Long> getRecommendedArticleIds(Long userId) {
