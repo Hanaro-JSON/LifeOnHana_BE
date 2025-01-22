@@ -1,6 +1,8 @@
 package com.example.lifeonhana.entity;
 
 import jakarta.persistence.*;
+import lombok.AllArgsConstructor;
+import lombok.Builder;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
@@ -11,6 +13,8 @@ import java.time.LocalDateTime;
 @Table(name = "lump_sum")
 @Getter @Setter
 @NoArgsConstructor
+@AllArgsConstructor
+@Builder
 public class LumpSum {
 	@Id
 	@GeneratedValue(strategy = GenerationType.IDENTITY)
