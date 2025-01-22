@@ -64,15 +64,21 @@ class AuthIntegrationTest {
 		userRepository.delete(testUser);
 	}
 
+	@BeforeEach
+	void resetUser() {
+		testUser.setIsFirst(true);
+		userRepository.save(testUser);
+	}
+
 	@Test
-	@DisplayName("SignIn Success Test")
-	void signInSuccess() throws Exception {
+	@DisplayName("First SignIn Success Test - Should return isFirst true")
+	void firstSignInSuccess() throws Exception {
 		// Prepare request
 		AuthRequestDTO request = new AuthRequestDTO();
 		request.setAuthId(TEST_AUTH_ID);
 		request.setPassword(TEST_PASSWORD);
 
-		// Perform sign in request
+		// Perform first sign in request
 		MvcResult result = mockMvc.perform(post("/api/auth/signin")
 				.contentType(MediaType.APPLICATION_JSON)
 				.content(objectMapper.writeValueAsString(request)))
@@ -82,6 +88,7 @@ class AuthIntegrationTest {
 			.andExpect(jsonPath("$.data.userId").value(testUser.getUserId().toString()))
 			.andExpect(jsonPath("$.data.accessToken").exists())
 			.andExpect(jsonPath("$.data.refreshToken").exists())
+			.andExpect(jsonPath("$.data.isFirst").value(true))  // 첫 로그인이므로 true
 			.andReturn();
 
 		// Extract tokens for further tests
@@ -93,6 +100,40 @@ class AuthIntegrationTest {
 		);
 		assertNotNull(response.getAccessToken());
 		assertNotNull(response.getRefreshToken());
+		assertTrue(response.getIsFirst());  // isFirst가 true인지 확인
+	}
+
+	@Test
+	@DisplayName("Second SignIn Success Test - Should return isFirst false")
+	void secondSignInSuccess() throws Exception {
+		// First sign in to change isFirst to false
+		AuthRequestDTO firstRequest = new AuthRequestDTO();
+		firstRequest.setAuthId(TEST_AUTH_ID);
+		firstRequest.setPassword(TEST_PASSWORD);
+
+		mockMvc.perform(post("/api/auth/signin")
+				.contentType(MediaType.APPLICATION_JSON)
+				.content(objectMapper.writeValueAsString(firstRequest)))
+			.andExpect(status().isOk());
+
+		// Second sign in should return isFirst as false
+		MvcResult secondResult = mockMvc.perform(post("/api/auth/signin")
+				.contentType(MediaType.APPLICATION_JSON)
+				.content(objectMapper.writeValueAsString(firstRequest)))
+			.andExpect(status().isOk())
+			.andExpect(jsonPath("$.code").value(200))
+			.andExpect(jsonPath("$.message").value("로그인 성공"))
+			.andExpect(jsonPath("$.data.userId").value(testUser.getUserId().toString()))
+			.andExpect(jsonPath("$.data.isFirst").value(false))  // 두 번째 로그인이므로 false
+			.andReturn();
+
+		AuthResponseDTO response = objectMapper.readValue(
+			objectMapper.readTree(secondResult.getResponse().getContentAsString())
+				.get("data")
+				.toString(),
+			AuthResponseDTO.class
+		);
+		assertFalse(response.getIsFirst());  // isFirst가 false인지 확인
 	}
 
 	@Test

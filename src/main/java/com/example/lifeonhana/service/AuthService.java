@@ -12,6 +12,7 @@ import com.example.lifeonhana.global.exception.UnauthorizedException;
 import com.example.lifeonhana.entity.User;
 import com.example.lifeonhana.repository.UserRepository;
 
+import jakarta.transaction.Transactional;
 import lombok.RequiredArgsConstructor;
 
 @Service
@@ -25,6 +26,7 @@ public class AuthService {
 	@Value("${jwt.refresh.token.expiration}")
 	private Long refreshTokenExpiration;
 
+	@Transactional
 	public AuthResponseDTO signIn(AuthRequestDTO request) {
 		User user = userRepository.findByAuthId(request.getAuthId())
 			.orElseThrow(() -> new NotFoundException("사용자를 찾을 수 없습니다."));
@@ -33,7 +35,14 @@ public class AuthService {
 			throw new UnauthorizedException("잘못된 비밀번호입니다.");
 		}
 
-		return generateTokens(user);
+		Boolean isFirstLogin = user.getIsFirst();
+
+		if (isFirstLogin) {
+			user.setIsFirst(false);
+			userRepository.save(user);
+		}
+
+		return generateTokens(user, isFirstLogin);
 	}
 
 	public AuthResponseDTO refreshToken(String refreshToken) {
@@ -52,7 +61,7 @@ public class AuthService {
 		User user = userRepository.findByAuthId(authId)
 			.orElseThrow(() -> new NotFoundException("사용자를 찾을 수 없습니다."));
 
-		return generateTokens(user);
+		return generateTokens(user, user.getIsFirst());
 	}
 
 	public void signOut(String token) {
@@ -68,7 +77,7 @@ public class AuthService {
 		}
 	}
 
-	private AuthResponseDTO generateTokens(User user) {
+	private AuthResponseDTO generateTokens(User user, Boolean isFirstLogin) {
 		String accessToken = jwtService.generateAccessToken(user.getAuthId(), user.getUserId());
 		String refreshToken = jwtService.generateRefreshToken(user.getAuthId(), user.getUserId());
 
@@ -78,6 +87,7 @@ public class AuthService {
 			.accessToken(accessToken)
 			.refreshToken(refreshToken)
 			.userId(String.valueOf(user.getUserId()))
+			.isFirst(isFirstLogin)
 			.build();
 	}
 }
