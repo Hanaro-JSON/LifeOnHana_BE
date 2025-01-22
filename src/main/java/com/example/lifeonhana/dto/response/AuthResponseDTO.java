@@ -15,4 +15,5 @@ public class AuthResponseDTO {
 	private String accessToken;
 	private String refreshToken;
 	private String userId;
+	private Boolean isFirst;
 }

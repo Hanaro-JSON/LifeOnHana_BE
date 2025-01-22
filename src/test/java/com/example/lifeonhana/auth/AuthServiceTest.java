@@ -1,10 +1,8 @@
 package com.example.lifeonhana.auth;
 
-import static org.mockito.ArgumentMatchers.anyLong;
-import static org.mockito.ArgumentMatchers.anyString;
-import static org.mockito.Mockito.verify;
-import static org.mockito.Mockito.when;
+import static org.mockito.ArgumentMatchers.*;
 import static org.junit.jupiter.api.Assertions.*;
+import static org.mockito.Mockito.*;
 
 import java.util.Optional;
 
@@ -54,6 +52,7 @@ public class AuthServiceTest {
 		testUser.setUserId(1L);
 		testUser.setAuthId("test@example.com");
 		testUser.setPassword("hashedPassword");
+		testUser.setIsFirst(true);
 
 		testRequest = new AuthRequestDTO();
 		testRequest.setAuthId("test@example.com");
@@ -63,8 +62,9 @@ public class AuthServiceTest {
 	}
 
 	@Test
-	void signIn_Success() {
+	void firstSignInSuccess() {
 		// Given
+		testUser.setIsFirst(true);
 		when(userRepository.findByAuthId(anyString())).thenReturn(Optional.of(testUser));
 		when(passwordEncoder.matches(anyString(), anyString())).thenReturn(true);
 		when(jwtService.generateAccessToken(anyString(), anyLong())).thenReturn("access-token");
@@ -78,8 +78,31 @@ public class AuthServiceTest {
 		assertEquals("access-token", response.getAccessToken());
 		assertEquals("refresh-token", response.getRefreshToken());
 		assertEquals("1", response.getUserId());
+		assertTrue(response.getIsFirst());
 
-		verify(redisService).saveRefreshToken(anyString(), anyString(), anyLong());
+		verify(userRepository).save(argThat(user -> !user.getIsFirst()));
+	}
+
+	@Test
+	void secondSignInSuccess() {
+		// Given
+		testUser.setIsFirst(false);
+		when(userRepository.findByAuthId(anyString())).thenReturn(Optional.of(testUser));
+		when(passwordEncoder.matches(anyString(), anyString())).thenReturn(true);
+		when(jwtService.generateAccessToken(anyString(), anyLong())).thenReturn("access-token");
+		when(jwtService.generateRefreshToken(anyString(), anyLong())).thenReturn("refresh-token");
+
+		// When
+		AuthResponseDTO response = authService.signIn(testRequest);
+
+		// Then
+		assertNotNull(response);
+		assertEquals("access-token", response.getAccessToken());
+		assertEquals("refresh-token", response.getRefreshToken());
+		assertEquals("1", response.getUserId());
+		assertFalse(response.getIsFirst());
+
+		verify(userRepository, never()).save(any(User.class));
 	}
 
 	@Test
