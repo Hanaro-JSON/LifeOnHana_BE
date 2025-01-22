@@ -1,5 +1,6 @@
 package com.example.lifeonhana.service;
 import com.example.lifeonhana.dto.response.ArticleSearchResponseDTO;
+import com.example.lifeonhana.dto.response.LikeResponseDto;
 import com.example.lifeonhana.entity.Article;
 import com.example.lifeonhana.entity.ArticleLike;
 import com.example.lifeonhana.entity.User;
@@ -15,6 +16,7 @@ import org.springframework.util.StringUtils;
 import org.springframework.web.client.HttpClientErrorException;
 import org.springframework.web.client.RestTemplate;
 
+import java.time.Duration;
 import java.util.List;
 import java.util.Map;
 import org.slf4j.Logger;
@@ -50,12 +52,18 @@ public class ArticleService {
 	private final RedisTemplate<String, Object> redisTemplate;
 	private final UserRepository userRepository;
 	private final ArticleLikeRepository articleLikeRepository;
+	private final ArticleLikeService articleLikeService;
 
-	public ArticleDetailResponse getArticleDetails(Long articleId) {
+	public ArticleDetailResponse getArticleDetails(Long articleId, String authId) {
+		User user = findUser(authId);
+		
 		// 1. 데이터베이스에서 기사 조회
 		var article = articleRepository.findById(articleId)
 			.orElseThrow(() -> new IllegalArgumentException("존재하지 않는 ID입니다."));
 
+		// 2. Redis에서 좋아요 정보 조회
+		LikeResponseDto likeInfo = articleLikeService.getLikeInfo(user.getUserId(), articleId);
+		
 		try {
 			// `content` 데이터를 JSON 배열로 변환
 			ObjectMapper objectMapper = new ObjectMapper();
@@ -85,8 +93,8 @@ public class ArticleService {
 				article.getThumbnailS3Key(),
 				article.getContent(),
 				article.getPublishedAt().toString(),
-				false,
-				article.getLikeCount(),
+				likeInfo.isLiked(),
+				likeInfo.likeCount(),
 				relatedProducts.stream()
 					.map(product -> new ArticleDetailResponse.RelatedProduct(
 						Long.parseLong(product.get("product_id").toString()),
@@ -106,12 +114,11 @@ public class ArticleService {
 			log.error("Unexpected error occurred: {}", e.getMessage(), e);
 			throw new RuntimeException("예상치 못한 오류가 발생했습니다.", e);
 		}
-
 	}
 
 	public Slice<ArticleListItemResponse> getArticles(String category, int page, int size, String authId) {
 		PageRequest pageRequest = PageRequest.of(page, size, Sort.by("publishedAt").descending());
-		
+
 		Slice<Article> articlesSlice;
 		if (category != null && !category.isEmpty()) {
 			Article.Category articleCategory = Article.Category.valueOf(category.toUpperCase());
@@ -119,10 +126,10 @@ public class ArticleService {
 		} else {
 			articlesSlice = articleRepository.findAllBy(pageRequest);
 		}
-		
+
 		// 사용자의 좋아요 정보 조회
 		final Set<Long> likedArticleIds = getLikedArticleIds(authId);
-		
+
 		List<ArticleListItemResponse> articleResponses = articlesSlice.getContent().stream()
 			.map(article -> new ArticleListItemResponse(
 				article.getArticleId(),
@@ -133,7 +140,7 @@ public class ArticleService {
 				likedArticleIds.contains(article.getArticleId())
 			))
 			.toList();
-		
+
 		return new SliceImpl<>(articleResponses, pageRequest, articlesSlice.hasNext());
 	}
 
@@ -145,25 +152,25 @@ public class ArticleService {
 		Long userId = userRepository.findByAuthId(authId)
 			.orElseThrow(() -> new NotFoundException("사용자를 찾을 수 없습니다."))
 			.getUserId();
-		
+
 		String userLikesKey = "user:" + userId + ":likes";
 		Map<Object, Object> redisLikes = redisTemplate.opsForHash().entries(userLikesKey);
-		
+
 		// Redis에 데이터가 없는 경우 DB에서 조회
 		if (redisLikes.isEmpty()) {
 			Set<Long> dbLikedArticleIds = articleLikeRepository.findByIdUserIdAndIsLikeTrue(userId)
 				.stream()
 				.map(like -> like.getId().getArticleId())
 				.collect(Collectors.toSet());
-				
+
 			// DB 데이터를 Redis에 캐싱
-			dbLikedArticleIds.forEach(articleId -> 
+			dbLikedArticleIds.forEach(articleId ->
 				redisTemplate.opsForHash().put(userLikesKey, articleId.toString(), true)
 			);
-			
+
 			return dbLikedArticleIds;
 		}
-		
+
 		// Redis 데이터 반환
 		return redisLikes.entrySet().stream()
 			.filter(entry -> Boolean.TRUE.equals(entry.getValue()))
@@ -176,25 +183,25 @@ public class ArticleService {
 		User user = findUser(authId);
 		// size + 1을 요청하여 다음 페이지 존재 여부를 확인
 		Pageable pageable = PageRequest.of(page, size + 1, Sort.by(Sort.Direction.DESC, "publishedAt"));
-		
+
 		Slice<Article> articlesSlice;
 		if (!StringUtils.hasText(query)) {
 			articlesSlice = articleRepository.findAllBy(pageable);
 		} else {
 			Specification<Article> spec = createSearchSpecification(createSearchPattern(query));
 			List<Article> articles = articleRepository.findAll(spec, pageable).getContent();
-			
+
 			// 다음 페이지 존재 여부 확인
 			boolean hasNext = articles.size() > size;
-			
+
 			// 실제로 필요한 개수만큼만 남기기
 			List<Article> content = hasNext ? articles.subList(0, size) : articles;
-			
+
 			articlesSlice = new SliceImpl<>(content, PageRequest.of(page, size), hasNext);
 		}
 
 		Map<Long, Boolean> likeStatusMap = getLikeStatusMap(articlesSlice.getContent(), user);
-		
+
 		List<ArticleSearchResponseDTO> articles = articlesSlice.getContent().stream()
 			.map(article -> ArticleSearchResponseDTO.from(article,
 				likeStatusMap.getOrDefault(article.getArticleId(), false)))
