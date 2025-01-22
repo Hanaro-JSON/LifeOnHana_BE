@@ -6,14 +6,16 @@ public record LifeProductResponseDTO(
 	Long productId,
 	String name,
 	String description,
-	String link
+	String link,
+	boolean isLike
 ) {
-	public static LifeProductResponseDTO fromEntity(Product product) {
+	public static LifeProductResponseDTO fromEntity(Product product, boolean isLike) {
 		return new LifeProductResponseDTO(
 			product.getProductId(),
 			product.getName(),
 			product.getDescription(),
-			product.getLink()
+			product.getLink(),
+			isLike
 		);
 	}
 }

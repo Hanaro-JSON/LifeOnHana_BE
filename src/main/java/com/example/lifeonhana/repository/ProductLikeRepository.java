@@ -15,5 +15,7 @@ import com.example.lifeonhana.entity.User;
 public interface ProductLikeRepository extends JpaRepository<ProductLike, Long> {
 	Slice<ProductLike> findByUser_AuthIdAndIsLikeTrue(String authId, Pageable pageable);
 
+	boolean existsById_ProductIdAndIsLikeTrue(Long productId);
+
 	Optional<ProductLike> findByUserAndProduct(User user, Product product);
 }
