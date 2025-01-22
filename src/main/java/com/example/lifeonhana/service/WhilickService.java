@@ -57,18 +57,16 @@ public class WhilickService {
 
 		List<Long> pageArticleIds = recommendedArticleIds.subList(start, end);
 
-		// 각각 따로 조회하여 MultipleBagFetchException 방지
 		Set<Article> articlesWithWhilicks = whilickRepository.findArticlesWithWhilicksByIdIn(pageArticleIds);
 		Set<Article> articlesWithLikes = whilickRepository.findArticlesWithLikesByIdIn(pageArticleIds, userId);
 
-		// 데이터 병합을 위한 Map 생성
 		Map<Long, Article> whilicksMap = articlesWithWhilicks.stream()
 			.collect(Collectors.toMap(Article::getArticleId, a -> a));
 
 		Map<Long, Article> likesMap = articlesWithLikes.stream()
 			.collect(Collectors.toMap(Article::getArticleId, a -> a));
 
-		// 정렬된 결과 생성
+
 		List<Article> sortedArticles = pageArticleIds.stream()
 			.map(id -> {
 				Article articleWithWhilicks = whilicksMap.get(id);
@@ -94,8 +92,7 @@ public class WhilickService {
 				(int) Math.ceil((double) recommendedArticleIds.size() / size),
 				recommendedArticleIds.size(),
 				page == 0,
-				(page + 1) * size >= recommendedArticleIds.size(),
-				contents.isEmpty()
+				(page + 1) * size >= recommendedArticleIds.size()
 			)
 		);
 	}
@@ -117,8 +114,7 @@ public class WhilickService {
 				articlesPage.getTotalPages(),
 				articlesPage.getTotalElements(),
 				articlesPage.isFirst(),
-				articlesPage.isLast(),
-				articlesPage.isEmpty()
+				articlesPage.isLast()
 			)
 		);
 	}
@@ -149,7 +145,6 @@ public class WhilickService {
 
 		boolean isLiked = articleLikeRepository.existsByArticleAndUserId(article, userId);
 
-		// Whilicks가 비어있는 경우를 안전하게 처리
 		Float totalDuration = article.getWhilicks().stream()
 			.findFirst()
 			.map(Whilick::getTotalDuration)
@@ -160,7 +155,7 @@ public class WhilickService {
 			.title(article.getTitle())
 			.text(texts)
 			.ttsUrl(article.getTtsS3Key())
-			.totalDuration(totalDuration)  // 안전하게 처리된 totalDuration 사용
+			.totalDuration(totalDuration)
 			.likeCount(article.getLikeCount())
 			.isLiked(isLiked)
 			.build();

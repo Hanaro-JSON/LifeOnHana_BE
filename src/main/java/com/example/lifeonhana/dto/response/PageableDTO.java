@@ -6,6 +6,5 @@ public record PageableDTO(
 	int totalPages,
 	long totalElements,
 	boolean first,
-	boolean last,
-	boolean empty
+	boolean last
 ) {}
