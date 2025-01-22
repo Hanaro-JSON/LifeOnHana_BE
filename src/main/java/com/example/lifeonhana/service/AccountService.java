@@ -93,6 +93,7 @@ public class AccountService {
 
 	private AccountResponseDTO toAccountResponseDTO(Account account) {
 		return new AccountResponseDTO(
+			account.getAccountId(),
 			account.getBank().name(),
 			account.getAccountNumber(),
 			account.getAccountName(),
