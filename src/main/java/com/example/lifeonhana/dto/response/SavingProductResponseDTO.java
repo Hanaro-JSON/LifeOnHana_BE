@@ -9,6 +9,7 @@ public record SavingProductResponseDTO(
 	String name,
 	String description,
 	String link,
+	boolean isLike,
 	SavingsInfo savingsInfo
 ) {
 	public record SavingsInfo(
@@ -16,12 +17,13 @@ public record SavingProductResponseDTO(
 		BigDecimal maxInterestRate) {
 	}
 
-	public static SavingProductResponseDTO fromEntity(Product product) {
+	public static SavingProductResponseDTO fromEntity(Product product, boolean isLike) {
 		return new SavingProductResponseDTO(
 			product.getProductId(),
 			product.getName(),
 			product.getDescription(),
 			product.getLink(),
+			isLike,
 			new SavingProductResponseDTO.SavingsInfo(
 				product.getBasicInterestRate(),
 				product.getMaxInterestRate()
