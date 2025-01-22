@@ -27,10 +27,8 @@ public class WalletService {
 	}
 
 	public WalletResponseDTO getUserWallet(String authId) {
-		Wallet wallet = walletRepository.findWalletIdByUserAuthId(authId);
-		if (wallet == null) {
-			throw new NotFoundException("하나지갑이 존재하지 않습니다.");
-		}
+		Wallet wallet = walletRepository.findWalletIdByUserAuthId(authId)
+			.orElseThrow(() -> new NotFoundException("하나지갑이 존재하지 않습니다."));
 
 		return new WalletResponseDTO(
 			wallet.getWalletId(),
@@ -43,7 +41,7 @@ public class WalletService {
 
 	public WalletResponseDTO creatWallet(WalletRequestDTO wallet, String authId) {
 		User user = userRepository.getUserByAuthId(authId);
-		if (walletRepository.findWalletIdByUserAuthId(authId) != null) {
+		if (walletRepository.findWalletIdByUserAuthId(authId).isPresent()) {
 			throw new BadRequestException("이미 하나지갑 정보가 존재합니다.");
 		}
 		Wallet newWallet = new Wallet();
@@ -52,10 +50,8 @@ public class WalletService {
 	}
 
 	public WalletResponseDTO updateWallet(WalletRequestDTO walletDTO, String authId) {
-		Wallet wallet = walletRepository.findWalletIdByUserAuthId(authId);
-		if (wallet == null) {
-			throw new NotFoundException("하나지갑이 존재하지 않습니다.");
-		}
+		Wallet wallet = walletRepository.findWalletIdByUserAuthId(authId)
+			.orElseThrow(() -> new NotFoundException("하나지갑이 존재하지 않습니다."));
 		return setWallet(walletDTO, wallet);
 
 	}
