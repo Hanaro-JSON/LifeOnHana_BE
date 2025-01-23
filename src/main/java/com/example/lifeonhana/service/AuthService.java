@@ -28,10 +28,10 @@ public class AuthService {
 
 	@Transactional
 	public AuthResponseDTO signIn(AuthRequestDTO request) {
-		User user = userRepository.findByAuthId(request.getAuthId())
+		User user = userRepository.findByAuthId(request.authId())
 			.orElseThrow(() -> new NotFoundException("사용자를 찾을 수 없습니다."));
 
-		if (!passwordEncoder.matches(request.getPassword(), user.getPassword())) {
+		if (!passwordEncoder.matches(request.password(), user.getPassword())) {
 			throw new UnauthorizedException("잘못된 비밀번호입니다.");
 		}
 
@@ -83,11 +83,11 @@ public class AuthService {
 
 		redisService.saveRefreshToken(user.getAuthId(), refreshToken, refreshTokenExpiration);
 
-		return AuthResponseDTO.builder()
-			.accessToken(accessToken)
-			.refreshToken(refreshToken)
-			.userId(String.valueOf(user.getUserId()))
-			.isFirst(isFirstLogin)
-			.build();
+		return new AuthResponseDTO(
+			accessToken,
+			refreshToken,
+			String.valueOf(user.getUserId()),
+			isFirstLogin
+		);
 	}
 }

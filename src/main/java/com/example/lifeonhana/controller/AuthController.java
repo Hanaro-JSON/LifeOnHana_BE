@@ -60,7 +60,7 @@ public class AuthController {
 	@PostMapping("/refresh")
 	public ResponseEntity<ApiResult> refreshToken(@RequestBody RefreshTokenRequestDTO request) {
 		try {
-			AuthResponseDTO newTokens = authService.refreshToken(request.getRefreshToken());
+			AuthResponseDTO newTokens = authService.refreshToken(request.refreshToken());
 			return ResponseEntity.ok(ApiResult.builder()
 				.code(HttpStatus.OK.value())
 				.status(HttpStatus.OK)

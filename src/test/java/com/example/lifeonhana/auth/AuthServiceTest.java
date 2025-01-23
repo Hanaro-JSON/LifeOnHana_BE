@@ -54,9 +54,7 @@ public class AuthServiceTest {
 		testUser.setPassword("hashedPassword");
 		testUser.setIsFirst(true);
 
-		testRequest = new AuthRequestDTO();
-		testRequest.setAuthId("test@example.com");
-		testRequest.setPassword("password123");
+		testRequest = new AuthRequestDTO("test@example.com", "password123");
 
 		ReflectionTestUtils.setField(authService, "refreshTokenExpiration", 604800000L);
 	}
@@ -75,10 +73,10 @@ public class AuthServiceTest {
 
 		// Then
 		assertNotNull(response);
-		assertEquals("access-token", response.getAccessToken());
-		assertEquals("refresh-token", response.getRefreshToken());
-		assertEquals("1", response.getUserId());
-		assertTrue(response.getIsFirst());
+		assertEquals("access-token", response.accessToken());
+		assertEquals("refresh-token", response.refreshToken());
+		assertEquals("1", response.userId());
+		assertTrue(response.isFirst());
 
 		verify(userRepository).save(argThat(user -> !user.getIsFirst()));
 	}
@@ -97,10 +95,10 @@ public class AuthServiceTest {
 
 		// Then
 		assertNotNull(response);
-		assertEquals("access-token", response.getAccessToken());
-		assertEquals("refresh-token", response.getRefreshToken());
-		assertEquals("1", response.getUserId());
-		assertFalse(response.getIsFirst());
+		assertEquals("access-token", response.accessToken());
+		assertEquals("refresh-token", response.refreshToken());
+		assertEquals("1", response.userId());
+		assertFalse(response.isFirst());
 
 		verify(userRepository, never()).save(any(User.class));
 	}
@@ -141,8 +139,8 @@ public class AuthServiceTest {
 
 		// Then
 		assertNotNull(response);
-		assertEquals("new-access-token", response.getAccessToken());
-		assertEquals("new-refresh-token", response.getRefreshToken());
+		assertEquals("new-access-token", response.accessToken());
+		assertEquals("new-refresh-token", response.refreshToken());
 	}
 
 	@Test
