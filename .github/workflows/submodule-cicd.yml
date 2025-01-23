@@ -19,6 +19,6 @@ jobs:
           "event_type": "submodule-update",
           "client_payload": {
             "module": "LifeOnHana_BE",
-            "branch": "main"
+            "branch": "JSON-41--develop"
           }
         }'
