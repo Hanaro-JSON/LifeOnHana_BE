@@ -15,6 +15,7 @@ import java.util.Set;
 
 @Repository
 public interface WhilickRepository extends JpaRepository<Whilick, Long> {
+
 	@Query("SELECT DISTINCT a FROM Article a " +
 		"LEFT JOIN FETCH a.whilicks w " +
 		"WHERE a.articleId IN :articleIds")
@@ -29,4 +30,9 @@ public interface WhilickRepository extends JpaRepository<Whilick, Long> {
 	@Query("SELECT DISTINCT a FROM Article a " +
 		"ORDER BY a.publishedAt DESC")
 	Page<Article> findAllArticles(Pageable pageable);
+
+	@Query("SELECT DISTINCT a FROM Article a " +
+		"WHERE a.articleId != :articleId " +
+		"ORDER BY a.publishedAt DESC")
+	Page<Article> findAllArticlesExcept(@Param("articleId") Long articleId, Pageable pageable);
 }
