@@ -52,10 +52,10 @@ public class ArticleController {
 		}
 	)
 	@GetMapping("/{articleId}")
-	public ResponseEntity<ApiResult> getArticleDetails(@PathVariable Long articleId) {
+	public ResponseEntity<ApiResult> getArticleDetails(@PathVariable Long articleId ,@AuthenticationPrincipal String authId) {
 		try {
 			// Service에서 기사 상세 데이터 가져오기
-			ArticleDetailResponse articleResponse = articleService.getArticleDetails(articleId);
+			ArticleDetailResponse articleResponse = articleService.getArticleDetails(articleId,authId);
 
 			// 성공 응답 생성
 			ApiResult result = ApiResult.builder()

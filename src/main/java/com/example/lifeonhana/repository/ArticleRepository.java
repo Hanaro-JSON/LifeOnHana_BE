@@ -8,6 +8,7 @@ import org.springframework.data.domain.Page;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.JpaSpecificationExecutor;
 import org.springframework.data.jpa.repository.Query;
+import org.springframework.data.repository.query.Param;
 import org.springframework.stereotype.Repository;
 
 import com.example.lifeonhana.entity.Article;
@@ -24,5 +25,11 @@ public interface ArticleRepository extends JpaRepository<Article, Long>, JpaSpec
 	Slice<Article> findSliceByCategory(Article.Category category, Pageable pageable);
 
 	Slice<Article> findAllBy(Pageable pageable);
+
+	@Query("SELECT COUNT(al) FROM ArticleLike al WHERE al.id.articleId = :articleId AND al.isLike = true")
+	Integer findLikeCountByArticleId(@Param("articleId") Long articleId);
+
+	@Query("SELECT CASE WHEN COUNT(al) > 0 THEN true ELSE false END FROM ArticleLike al WHERE al.id.articleId = :articleId AND al.id.userId = :userId AND al.isLike = true")
+	Boolean isUserLikedArticle(@Param("articleId") Long articleId, @Param("userId") Long userId);
 }
 

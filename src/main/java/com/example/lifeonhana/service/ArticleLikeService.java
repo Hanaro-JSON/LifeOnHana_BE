@@ -1,5 +1,6 @@
 package com.example.lifeonhana.service;
 
+import java.time.Duration;
 import java.util.Collections;
 import java.util.List;
 import java.util.Map;
@@ -20,12 +21,15 @@ import com.example.lifeonhana.global.exception.NotFoundException;
 import com.example.lifeonhana.repository.ArticleRepository;
 
 import lombok.RequiredArgsConstructor;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 @Service
 @RequiredArgsConstructor
 public class ArticleLikeService {
 	private final RedisTemplate<String, Object> redisTemplate;
 	private final ArticleRepository articleRepository;
+	private static final Logger log = LoggerFactory.getLogger(ArticleLikeService.class);
 
 	public LikeResponseDto toggleLike(Long userId, Long articleId) {
 		String articleLikeCountKey = "article:" + articleId + ":likeCount";
@@ -58,10 +62,25 @@ public class ArticleLikeService {
 		String articleLikeCountKey = "article:" + articleId + ":likeCount";
 		String userLikesKey = "user:" + userId + ":likes";
 
-		Integer likeCount = getOrInitializeLikeCount(articleId, articleLikeCountKey);
+		// 1. 좋아요 수 조회
+		Integer likeCount = (Integer) redisTemplate.opsForValue().get(articleLikeCountKey);
+		if (likeCount == null) {
+			// DB에서 조회
+			likeCount = articleRepository.findLikeCountByArticleId(articleId);
+			// Redis에 저장 (1시간 유효)
+			redisTemplate.opsForValue().set(articleLikeCountKey, likeCount, Duration.ofHours(1));
+			log.info("Like count loaded from DB for articleId {}: {}", articleId, likeCount);
+		}
 
+		// 2. 사용자의 좋아요 상태 조회
 		Boolean isLiked = (Boolean) redisTemplate.opsForHash().get(userLikesKey, articleId.toString());
-		if (isLiked == null) isLiked = false;
+		if (isLiked == null) {
+			// DB에서 조회
+			isLiked = articleRepository.isUserLikedArticle(articleId, userId);
+			// Redis에 저장
+			redisTemplate.opsForHash().put(userLikesKey, articleId.toString(), isLiked);
+			log.info("User like status loaded from DB for userId {}, articleId {}: {}", userId, articleId, isLiked);
+		}
 
 		return LikeResponseDto.builder()
 			.isLiked(isLiked)
