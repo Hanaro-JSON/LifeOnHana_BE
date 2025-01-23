@@ -26,7 +26,7 @@ import java.util.Optional;
 @RequiredArgsConstructor
 public class LoanRecommendationService {
 
-	private static final String flaskUrl = "Http://127.0.0.1:5000/recommend_loan_products";
+	private static final String flaskUrl = "https://lifeonhana-ai.topician.com/recommend_loan_products";
 
 	private final LoanProductRepository loanProductRepository;
 	private final UserRepository userRepository;

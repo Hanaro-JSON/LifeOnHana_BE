@@ -12,7 +12,7 @@ import java.util.Map;
 @Service
 public class FlaskService {
 
-	private static final String flaskUrl = "http://127.0.0.1:5000/api/ask_claude";
+	private static final String flaskUrl = "https://lifeonhana-ai.topician.com/api/ask_claude";
 
 	private final RestTemplate restTemplate;
 

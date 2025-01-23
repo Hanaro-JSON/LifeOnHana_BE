@@ -44,7 +44,7 @@ import org.springframework.data.domain.SliceImpl;
 @RequiredArgsConstructor
 public class ArticleService {
 
-	private static final String flaskUrl = "http://127.0.0.1:5000/related_products";
+	private static final String flaskUrl = "https://lifeonhana-ai.topician.com/related_products";
 
 	private final ArticleRepository articleRepository;
 	private final RestTemplate restTemplate;

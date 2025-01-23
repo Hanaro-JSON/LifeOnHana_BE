@@ -32,7 +32,7 @@ import java.util.stream.Collectors;
 @RequiredArgsConstructor
 public class ProductInsightService {
 
-	private static final String FLASK_URL = "http://127.0.0.1:5000/effect";
+	private static final String FLASK_URL = "https://lifeonhana-ai.topician.com/effect";
 	private final RestTemplate restTemplate;
 	private final UserRepository userRepository;
 	private final ArticleRepository articleRepository;
