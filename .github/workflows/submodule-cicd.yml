@@ -11,9 +11,14 @@ jobs:
 
     steps:
     - name: Trigger Main Repository Workflow
-      uses: peter-evans/repository-dispatch@v2
-      with:
-        token: ${{ secrets.GH_ACCESS_TOKEN }}
-        repository: Hanaro-JSON/LifeOnHana
-        event-type: submodule-update
-        client-payload: '{"ref": "${{ github.ref }}", "sha": "${{ github.sha }}"}'
+      run: |
+        curl -X POST -H "Accept: application/vnd.github.v3+json" \
+          -H "Authorization: Bearer ${{ secrets.GH_ACCESS_TOKEN }}" \
+          https://api.github.com/repos/Hanaro-JSON/LifeOnHana/dispatches \
+          -d '{
+          "event_type": "submodule-update",
+          "client_payload": {
+            "module": "LifeOnHana_BE",
+            "branch": "develop"
+          }
+        }'
