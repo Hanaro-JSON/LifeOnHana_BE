@@ -20,7 +20,7 @@ public class RecommendationClient {
 	private final RestTemplate restTemplate;
 	private final Random random = new Random();
 
-	@Value("${recommendation.service.url:http://localhost:5001}")
+	@Value("${recommendation.service.url:https://lifeonhana-ai.topician.com/}")
 	private String recommendationServiceUrl;
 
 	@Value("${recommendation.service.size:106}")
