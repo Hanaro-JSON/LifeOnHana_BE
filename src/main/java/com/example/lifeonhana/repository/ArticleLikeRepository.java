@@ -8,6 +8,7 @@ import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
 import org.springframework.stereotype.Repository;
 
+import com.example.lifeonhana.entity.Article;
 import com.example.lifeonhana.entity.ArticleLike;
 
 @Repository
@@ -31,4 +32,9 @@ public interface ArticleLikeRepository extends JpaRepository<ArticleLike, Articl
 	List<ArticleLike> findByIdUserIdAndIsLikeTrue(@Param("userId") Long userId);
 	@Query("SELECT al FROM ArticleLike al WHERE al.id.userId = :userId AND al.id.articleId IN :articleIds")
 	List<ArticleLike> findByUserAndArticleIds(@Param("userId") Long userId, @Param("articleIds") List<Long> articleIds);
+
+	@Query("SELECT CASE WHEN COUNT(al) > 0 THEN true ELSE false END " +
+		"FROM ArticleLike al " +
+		"WHERE al.id.articleId = :#{#article.articleId} AND al.id.userId = :userId AND al.isLike = true")
+	boolean existsByArticleAndUserId(@Param("article") Article article, @Param("userId") Long userId);
 }

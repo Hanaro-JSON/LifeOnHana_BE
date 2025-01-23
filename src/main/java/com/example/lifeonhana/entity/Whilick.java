@@ -26,8 +26,11 @@ public class Whilick {
 	private String paragraph;
 
 	@Column(nullable = false)
-	private LocalDateTime startTime;
+	private Float startTime;
 
 	@Column(nullable = false)
-	private LocalDateTime endTime;
+	private Float endTime;
+
+	@Column(nullable = false)
+	private Float totalDuration;
 }
