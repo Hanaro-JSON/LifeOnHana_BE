@@ -2,16 +2,15 @@ package com.example.lifeonhana.service;
 
 import com.example.lifeonhana.dto.response.UserResponseDTO;
 import com.example.lifeonhana.dto.response.MyDataResponseDTO;
-import com.example.lifeonhana.entity.User;
-import com.example.lifeonhana.entity.Mydata;
-import com.example.lifeonhana.entity.Account;
+import com.example.lifeonhana.entity.*;
 import com.example.lifeonhana.repository.ArticleLikeRepository;
 import com.example.lifeonhana.repository.UserRepository;
 import com.example.lifeonhana.global.exception.NotFoundException;
-import com.example.lifeonhana.entity.History;
 import com.example.lifeonhana.repository.HistoryRepository;
 import com.example.lifeonhana.dto.response.UserNicknameResponseDTO;
 import com.example.lifeonhana.entity.enums.ArticleCategory;
+import com.example.lifeonhana.repository.ArticleRepository;
+import org.springframework.data.redis.core.RedisTemplate;
 
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
@@ -24,6 +23,7 @@ import java.time.YearMonth;
 import java.util.List;
 import java.util.Map;
 import java.util.stream.Collectors;
+import java.util.Optional;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -34,6 +34,8 @@ public class UserService {
     private final UserRepository userRepository;
     private final HistoryRepository historyRepository;
     private final ArticleLikeRepository articleLikeRepository;
+    private final ArticleRepository articleRepository;
+    private final RedisTemplate<String, Object> redisTemplate;
     private static final Logger log = LoggerFactory.getLogger(UserService.class);
 
     @Transactional(readOnly = true)
@@ -143,14 +145,70 @@ public class UserService {
         User user = userRepository.findByAuthId(authId)
             .orElseThrow(() -> new NotFoundException("사용자를 찾을 수 없습니다."));
 
-        // 2. 사용자의 좋아요가 가장 많은 카테고리 조회
-        String categoryStr = articleLikeRepository.findMostLikedCategory(authId)
-            .orElseThrow(() -> new NotFoundException("좋아요 기록이 없습니다."));
+        String userLikesKey = "user:" + user.getUserId() + ":likes";
         
-        // 3. String을 Enum으로 변환
-        ArticleCategory topCategory = ArticleCategory.valueOf(categoryStr);
+        // 2. Redis에서 사용자의 좋아요 정보 조회
+        Map<Object, Object> likedArticlesMap = redisTemplate.opsForHash().entries(userLikesKey);
+        
+        if (likedArticlesMap.isEmpty()) {
+            // Redis에 데이터가 없으면 DB에서 조회하고 캐싱
+            List<Article> articles = articleRepository.findAll();
+            for (Article article : articles) {
+                Boolean isLiked = articleRepository.isUserLikedArticle(article.getArticleId(), user.getUserId());
+                if (isLiked) {
+                    redisTemplate.opsForHash().put(userLikesKey, article.getArticleId().toString(), true);
+                }
+            }
+            
+            // DB에서 가장 많이 좋아요한 카테고리 조회
+            Optional<String> categoryStrOpt = articleLikeRepository.findMostLikedCategory(authId);
+            if (categoryStrOpt.isEmpty()) {
+                return UserNicknameResponseDTO.builder()
+                    .nickname("좋아요한 칼럼이 없습니다.")
+                    .build();
+            }
+            
+            ArticleCategory topCategory = ArticleCategory.valueOf(categoryStrOpt.get());
+            String nickname = topCategory.generateNickname(user.getName());
+            return UserNicknameResponseDTO.builder()
+                .nickname(nickname)
+                .category(topCategory)
+                .build();
+        } 
 
-        // 4. 칭호 생성
+        // Redis 데이터로 카테고리 계산
+        List<Long> likedArticleIds = likedArticlesMap.entrySet().stream()
+            .filter(entry -> Boolean.TRUE.equals(entry.getValue()))
+            .map(entry -> Long.parseLong(entry.getKey().toString()))
+            .collect(Collectors.toList());
+
+        if (likedArticleIds.isEmpty()) {
+            return UserNicknameResponseDTO.builder()
+                .nickname("좋아요한 칼럼이 없습니다.")
+                .build();
+        }
+
+        Map<Article.Category, Long> categoryCount = articleRepository.findAllByArticleIdIn(likedArticleIds)
+            .stream()
+            .collect(Collectors.groupingBy(
+                Article::getCategory,
+                Collectors.counting()
+            ));
+
+        Article.Category dbTopCategory = categoryCount.entrySet().stream()
+            .max(Map.Entry.comparingByValue())
+            .map(Map.Entry::getKey)
+            .orElseGet(() -> {
+                return null;  // 여기도 빈 응답 처리
+            });
+            
+        if (dbTopCategory == null) {
+            return UserNicknameResponseDTO.builder()
+                .nickname("좋아요한 칼럼이 없습니다.")
+                .build();
+        }
+
+        ArticleCategory topCategory = ArticleCategory.valueOf(dbTopCategory.name());
         String nickname = topCategory.generateNickname(user.getName());
 
         return UserNicknameResponseDTO.builder()

@@ -1,5 +1,6 @@
 package com.example.lifeonhana.repository;
 
+import java.util.List;
 import java.util.Optional;
 
 import org.springframework.data.domain.Pageable;
@@ -18,4 +19,6 @@ public interface ProductLikeRepository extends JpaRepository<ProductLike, Long> 
 	boolean existsById_ProductIdAndIsLikeTrue(Long productId);
 
 	Optional<ProductLike> findByUserAndProduct(User user, Product product);
+
+	List<ProductLike> findByUserAndIsLikeTrue(User user);
 }

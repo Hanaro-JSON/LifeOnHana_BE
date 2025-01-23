@@ -19,6 +19,8 @@ import com.example.lifeonhana.dto.response.LikeResponseDto;
 import com.example.lifeonhana.entity.Article;
 import com.example.lifeonhana.global.exception.NotFoundException;
 import com.example.lifeonhana.repository.ArticleRepository;
+import com.example.lifeonhana.entity.ArticleLike;
+import com.example.lifeonhana.repository.ArticleLikeRepository;
 
 import lombok.RequiredArgsConstructor;
 import org.slf4j.Logger;
@@ -29,32 +31,56 @@ import org.slf4j.LoggerFactory;
 public class ArticleLikeService {
 	private final RedisTemplate<String, Object> redisTemplate;
 	private final ArticleRepository articleRepository;
+	private final ArticleLikeRepository articleLikeRepository;
 	private static final Logger log = LoggerFactory.getLogger(ArticleLikeService.class);
 
 	public LikeResponseDto toggleLike(Long userId, Long articleId) {
 		String articleLikeCountKey = "article:" + articleId + ":likeCount";
 		String userLikesKey = "user:" + userId + ":likes";
-
-		Integer likeCount = getOrInitializeLikeCount(articleId, articleLikeCountKey);
+		Integer likeCount;
 
 		Boolean isLiked = (Boolean) redisTemplate.opsForHash().get(userLikesKey, articleId.toString());
-		if (isLiked == null) isLiked = false;
+		if (isLiked == null) {
+			// DB에서 좋아요 상태와 수 확인
+			isLiked = articleRepository.isUserLikedArticle(articleId, userId);
+			if (isLiked == null) isLiked = false;  // null 처리 추가
+			Integer dbLikeCount = articleRepository.findLikeCountByArticleId(articleId);
+			
+			// Redis에 둘 다 저장
+			redisTemplate.opsForHash().put(userLikesKey, articleId.toString(), isLiked);
+			redisTemplate.opsForValue().set(articleLikeCountKey, dbLikeCount);
+			likeCount = dbLikeCount;
+		} else {
+			likeCount = getOrInitializeLikeCount(articleId, articleLikeCountKey);
+		}
+
+		// 새로운 상태 (토글 후)
+		boolean newIsLiked = !isLiked;
 
 		if (isLiked) {
-			redisTemplate.opsForHash().put(userLikesKey, articleId.toString(), false);
-			redisTemplate.opsForValue().decrement(articleLikeCountKey);
-			likeCount--;
+			// 좋아요 취소 시 현재 카운트가 0 이상인지 확인
+			if (likeCount > 0) {
+				redisTemplate.opsForHash().put(userLikesKey, articleId.toString(), false);
+				redisTemplate.opsForValue().decrement(articleLikeCountKey);
+				likeCount--;
+			} else {
+				// 좋아요 수가 0이면 취소하지 않음
+				redisTemplate.opsForHash().put(userLikesKey, articleId.toString(), false);
+			}
 		} else {
 			redisTemplate.opsForHash().put(userLikesKey, articleId.toString(), true);
 			redisTemplate.opsForValue().increment(articleLikeCountKey);
 			likeCount++;
 		}
 
-		redisTemplate.opsForSet().add("changedArticles", articleId.toString());
+		// 변경된 좋아요 상태를 동기화 대상으로 표시
+		redisTemplate.opsForSet().add("changedArticleLikes", userId + ":" + articleId);
+		// 변경된 좋아요 수를 동기화 대상으로 표시
+		redisTemplate.opsForSet().add("changedArticleLikeCount", articleId.toString());
 
 		return LikeResponseDto.builder()
-			.isLiked(!isLiked)
-			.likeCount(likeCount)
+			.isLiked(newIsLiked)
+			.likeCount(Math.max(0, likeCount))  // 음수 방지
 			.build();
 	}
 
@@ -92,9 +118,9 @@ public class ArticleLikeService {
 		Integer likeCount = (Integer) redisTemplate.opsForValue().get(articleLikeCountKey);
 
 		if (likeCount == null) {
-			Article article = articleRepository.findById(articleId)
-				.orElseThrow(() -> new NotFoundException("해당 기사를 찾을 수 없습니다."));
-			likeCount = article.getLikeCount();
+			// DB에서 실제 좋아요 수 조회
+			likeCount = articleRepository.findLikeCountByArticleId(articleId);
+			// Redis에 저장
 			redisTemplate.opsForValue().set(articleLikeCountKey, likeCount);
 		}
 
@@ -104,6 +130,19 @@ public class ArticleLikeService {
 	public Slice<ArticleResponse> getLikedArticles(Long userId, int page, int size, String category) {
 		String userLikesKey = "user:" + userId + ":likes";
 		Map<Object, Object> likedArticlesMap = redisTemplate.opsForHash().entries(userLikesKey);
+
+		// Redis에 데이터가 없으면 DB에서 조회하고 캐싱
+		if (likedArticlesMap.isEmpty()) {
+			List<ArticleLike> likes = articleLikeRepository.findByIdUserIdAndIsLikeTrue(userId);
+			for (ArticleLike like : likes) {
+				Long articleId = like.getArticle().getArticleId();
+				redisTemplate.opsForHash().put(userLikesKey, articleId.toString(), true);
+				// 변경된 좋아요 상태를 동기화 대상으로 표시
+				redisTemplate.opsForSet().add("changedArticleLikes", userId + ":" + articleId);
+			}
+			likedArticlesMap = redisTemplate.opsForHash().entries(userLikesKey);
+			log.info("Liked articles loaded from DB for userId {}", userId);
+		}
 
 		List<Long> likedArticleIds = likedArticlesMap.entrySet().stream()
 			.filter(entry -> Boolean.TRUE.equals(entry.getValue()))

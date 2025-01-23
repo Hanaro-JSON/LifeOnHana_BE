@@ -31,5 +31,8 @@ public interface ArticleRepository extends JpaRepository<Article, Long>, JpaSpec
 
 	@Query("SELECT CASE WHEN COUNT(al) > 0 THEN true ELSE false END FROM ArticleLike al WHERE al.id.articleId = :articleId AND al.id.userId = :userId AND al.isLike = true")
 	Boolean isUserLikedArticle(@Param("articleId") Long articleId, @Param("userId") Long userId);
+
+	@Query("SELECT a FROM Article a WHERE a.articleId IN :articleIds")
+	List<Article> findAllByArticleIdIn(@Param("articleIds") List<Long> articleIds);
 }
 
