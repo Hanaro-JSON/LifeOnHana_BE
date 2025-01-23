@@ -20,7 +20,7 @@ public class RecommendationClient {
 	private final RestTemplate restTemplate;
 	private final Random random = new Random();
 
-	@Value("${recommendation.service.url:https://lifeonhana-ai.topician.com/}")
+	@Value("${recommendation.service.url:https://lifeonhana-ai.topician.com}")
 	private String recommendationServiceUrl;
 
 	@Value("${recommendation.service.size:106}")
@@ -31,7 +31,7 @@ public class RecommendationClient {
 
 		String url = UriComponentsBuilder
 			.fromUriString(recommendationServiceUrl)
-			.path("/api/articles/recommendations")
+			.path("recommendations")
 			.queryParam("userId", userId)
 			.queryParam("size", defaultSize)
 			.queryParam("seed", randomSeed)

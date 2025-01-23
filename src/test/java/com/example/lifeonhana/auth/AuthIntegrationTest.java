@@ -74,9 +74,7 @@ class AuthIntegrationTest {
 	@DisplayName("First SignIn Success Test - Should return isFirst true")
 	void firstSignInSuccess() throws Exception {
 		// Prepare request
-		AuthRequestDTO request = new AuthRequestDTO();
-		request.setAuthId(TEST_AUTH_ID);
-		request.setPassword(TEST_PASSWORD);
+		AuthRequestDTO request = new AuthRequestDTO(TEST_AUTH_ID, TEST_PASSWORD);
 
 		// Perform first sign in request
 		MvcResult result = mockMvc.perform(post("/api/auth/signin")
@@ -98,18 +96,16 @@ class AuthIntegrationTest {
 				.toString(),
 			AuthResponseDTO.class
 		);
-		assertNotNull(response.getAccessToken());
-		assertNotNull(response.getRefreshToken());
-		assertTrue(response.getIsFirst());  // isFirst가 true인지 확인
+		assertNotNull(response.accessToken());
+		assertNotNull(response.refreshToken());
+		assertTrue(response.isFirst());
 	}
 
 	@Test
 	@DisplayName("Second SignIn Success Test - Should return isFirst false")
 	void secondSignInSuccess() throws Exception {
-		// First sign in to change isFirst to false
-		AuthRequestDTO firstRequest = new AuthRequestDTO();
-		firstRequest.setAuthId(TEST_AUTH_ID);
-		firstRequest.setPassword(TEST_PASSWORD);
+
+		AuthRequestDTO firstRequest = new AuthRequestDTO(TEST_AUTH_ID, TEST_PASSWORD);
 
 		mockMvc.perform(post("/api/auth/signin")
 				.contentType(MediaType.APPLICATION_JSON)
@@ -133,15 +129,14 @@ class AuthIntegrationTest {
 				.toString(),
 			AuthResponseDTO.class
 		);
-		assertFalse(response.getIsFirst());  // isFirst가 false인지 확인
+		assertFalse(response.isFirst());
 	}
 
 	@Test
 	@DisplayName("SignIn Failure - Wrong Password Test")
 	void signInFailureWrongPassword() throws Exception {
-		AuthRequestDTO request = new AuthRequestDTO();
-		request.setAuthId(TEST_AUTH_ID);
-		request.setPassword("wrongpassword");
+
+		AuthRequestDTO request = new AuthRequestDTO(TEST_AUTH_ID, "wrongpassword");
 
 		mockMvc.perform(post("/api/auth/signin")
 				.contentType(MediaType.APPLICATION_JSON)
@@ -153,9 +148,7 @@ class AuthIntegrationTest {
 	@Test
 	@DisplayName("SignIn Failure - User Not Found Test")
 	void signInFailureUserNotFound() throws Exception {
-		AuthRequestDTO request = new AuthRequestDTO();
-		request.setAuthId("nonexistent@example.com");
-		request.setPassword(TEST_PASSWORD);
+		AuthRequestDTO request = new AuthRequestDTO("nonexistent@example.com", TEST_PASSWORD);
 
 		mockMvc.perform(post("/api/auth/signin")
 				.contentType(MediaType.APPLICATION_JSON)
@@ -167,10 +160,8 @@ class AuthIntegrationTest {
 	@Test
 	@DisplayName("Refresh Token Test")
 	void refreshTokenTest() throws Exception {
-		// First, sign in to get tokens
-		AuthRequestDTO signInRequest = new AuthRequestDTO();
-		signInRequest.setAuthId(TEST_AUTH_ID);
-		signInRequest.setPassword(TEST_PASSWORD);
+
+		AuthRequestDTO signInRequest = new AuthRequestDTO(TEST_AUTH_ID, TEST_PASSWORD);
 
 		MvcResult signInResult = mockMvc.perform(post("/api/auth/signin")
 				.contentType(MediaType.APPLICATION_JSON)
@@ -186,8 +177,7 @@ class AuthIntegrationTest {
 		);
 
 		// Then, try to refresh token
-		RefreshTokenRequestDTO refreshRequest = new RefreshTokenRequestDTO();
-		refreshRequest.setRefreshToken(signInResponse.getRefreshToken());
+		RefreshTokenRequestDTO refreshRequest = new RefreshTokenRequestDTO(signInResponse.refreshToken());
 
 		mockMvc.perform(post("/api/auth/refresh")
 				.contentType(MediaType.APPLICATION_JSON)
@@ -201,10 +191,8 @@ class AuthIntegrationTest {
 	@Test
 	@DisplayName("SignOut Success Test")
 	void signOutSuccess() throws Exception {
-		// First, sign in to get tokens
-		AuthRequestDTO signInRequest = new AuthRequestDTO();
-		signInRequest.setAuthId(TEST_AUTH_ID);
-		signInRequest.setPassword(TEST_PASSWORD);
+
+		AuthRequestDTO signInRequest = new AuthRequestDTO(TEST_AUTH_ID, TEST_PASSWORD);
 
 		MvcResult signInResult = mockMvc.perform(post("/api/auth/signin")
 				.contentType(MediaType.APPLICATION_JSON)
@@ -221,13 +209,13 @@ class AuthIntegrationTest {
 
 		// Then, try to sign out
 		mockMvc.perform(post("/api/auth/signout")
-				.header("Authorization", "Bearer " + signInResponse.getAccessToken()))
+				.header("Authorization", "Bearer " + signInResponse.accessToken()))
 			.andExpect(status().isOk())
 			.andExpect(jsonPath("$.code").value(200))
 			.andExpect(jsonPath("$.message").value("로그아웃 성공"));
 
 		// Verify token is blacklisted
-		assertTrue(redisService.isBlacklisted(signInResponse.getAccessToken()));
+		assertTrue(redisService.isBlacklisted(signInResponse.accessToken()));
 	}
 
 	// @Test
