@@ -3,7 +3,7 @@ name: Trigger Main Repository CI/CD
 on:
   push:
     branches:
-      - main
+      - JSON-41--develop
 
 jobs:
   trigger-main:
