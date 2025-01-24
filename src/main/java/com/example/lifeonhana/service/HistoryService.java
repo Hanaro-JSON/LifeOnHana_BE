@@ -16,6 +16,7 @@ import com.example.lifeonhana.repository.WalletRepository;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Slice;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -71,13 +72,13 @@ public class HistoryService {
 		YearMonth ym = parseYearMonth(yearMonth);
 		LocalDateTime[] dateRange = getDateRange(ym);
 
-		Page<History> historiesPage = historyRepository.findAllByUserAndYearMonth(
+		Slice<History> historiesSlice = historyRepository.findAllByUserAndYearMonth(
 			user, dateRange[0], dateRange[1], PageRequest.of(page - 1, size));
 
 		BigDecimal totalIncome = historyRepository.calculateTotalIncome(user, dateRange[0], dateRange[1]);
 		BigDecimal totalExpense = historyRepository.calculateTotalExpense(user, dateRange[0], dateRange[1]);
 
-		List<HistoryDetailResponseDTO> historyDTOs = historiesPage.getContent().stream()
+		List<HistoryDetailResponseDTO> historyDTOs = historiesSlice.getContent().stream()
 			.map(this::convertToHistoryDTO)
 			.collect(Collectors.toList());
 
@@ -86,10 +87,7 @@ public class HistoryService {
 			totalIncome,
 			totalExpense,
 			historyDTOs,
-			page,
-			size,
-			historiesPage.getTotalPages(),
-			historiesPage.getTotalElements()
+			historiesSlice.hasNext()
 		);
 	}
 
@@ -172,6 +170,8 @@ public class HistoryService {
 				);
 			})
 			.collect(Collectors.toList());
+
+		String formattedYearMonth = ym.format(DateTimeFormatter.ofPattern("yyyy-MM"));
 
 		return new StatisticsResponseDTO(
 			yearMonth,

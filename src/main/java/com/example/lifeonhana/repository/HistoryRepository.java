@@ -8,6 +8,7 @@ import com.example.lifeonhana.entity.History;
 import com.example.lifeonhana.entity.User;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
+import org.springframework.data.domain.Slice;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
@@ -20,7 +21,7 @@ public interface HistoryRepository extends JpaRepository<History, Long> {
 		"WHERE h.user = :user " +
 		"AND h.historyDatetime BETWEEN :startDate AND :endDate " +
 		"ORDER BY h.historyDatetime DESC")
-	Page<History> findAllByUserAndYearMonth(
+	Slice<History> findAllByUserAndYearMonth(
 		@Param("user") User user,
 		@Param("startDate") LocalDateTime startDate,
 		@Param("endDate") LocalDateTime endDate,
