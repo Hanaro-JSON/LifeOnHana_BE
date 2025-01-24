@@ -14,6 +14,9 @@ import com.example.lifeonhana.dto.response.LumpSumResponseDTO;
 import com.example.lifeonhana.service.LumpSumService;
 
 import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.media.Content;
+import io.swagger.v3.oas.annotations.media.ExampleObject;
+import io.swagger.v3.oas.annotations.media.Schema;
 import io.swagger.v3.oas.annotations.responses.ApiResponse;
 import io.swagger.v3.oas.annotations.responses.ApiResponses;
 import io.swagger.v3.oas.annotations.security.SecurityRequirement;
@@ -28,9 +31,33 @@ public class LumpSumController {
 	private final LumpSumService lumpSumService;
 
 	@PostMapping("")
-	@Operation(summary = "목돈 신청", description = "목돈 신청을 처리합니다.")
+	@Operation(summary = "목돈 신청", description = "목돈 신청을 처리합니다.",
+		requestBody = @io.swagger.v3.oas.annotations.parameters.RequestBody(
+			description = "목돈 인출 요청 정보",
+			content = @Content(
+				mediaType = "application/json",
+				schema = @Schema(implementation = LumpSumRequestDTO.class)
+			)))
 	@ApiResponses(value = {
-		@ApiResponse(responseCode = "200", description = "목돈 인출 신청 성공"),
+		@ApiResponse(responseCode = "200", description = "목돈 인출 신청 성공",
+			content = @Content(
+				mediaType = "application/json",
+				schema = @Schema(implementation = LumpSumResponseDTO.class),
+				examples = @ExampleObject(
+					value = """
+                    {
+                    	"code": 200,
+                        "status": "OK",
+                        "message": "목돈 인출 신청 성공",
+                        "data": {
+                            "lumpSumId": "1",
+                            "balance": 10000,
+                            "requestedAt": "2025-01-24T15:00:00"
+                        }
+                    }
+                    """
+				)
+			)),
 		@ApiResponse(responseCode = "400", description = "잘못된 요청입니다.")
 	})
 	@SecurityRequirement(name = "bearerAuth")
