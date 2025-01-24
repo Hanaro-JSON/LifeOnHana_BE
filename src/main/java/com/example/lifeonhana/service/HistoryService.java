@@ -16,6 +16,7 @@ import com.example.lifeonhana.repository.WalletRepository;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Slice;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -43,10 +44,14 @@ public class HistoryService {
 
 	private YearMonth parseYearMonth(String yearMonth) {
 		try {
-			return YearMonth.parse(yearMonth, DateTimeFormatter.ofPattern("yyyyMM"));
+			return YearMonth.parse(yearMonth); // ISO 형식 (YYYY-MM)은 기본 파싱 지원
 		} catch (DateTimeParseException e) {
-			throw new BadRequestException("올바른 년월 형식이 아닙니다. (YYYYMM)");
+			throw new BadRequestException("올바른 년월 형식이 아닙니다. (YYYY-MM)");
 		}
+	}
+
+	private String convertToISOFormat(String yyyymm) {
+		return yyyymm.substring(0, 4) + "-" + yyyymm.substring(4);
 	}
 
 	private LocalDateTime[] getDateRange(YearMonth ym) {
@@ -71,13 +76,13 @@ public class HistoryService {
 		YearMonth ym = parseYearMonth(yearMonth);
 		LocalDateTime[] dateRange = getDateRange(ym);
 
-		Page<History> historiesPage = historyRepository.findAllByUserAndYearMonth(
+		Slice<History> historiesSlice = historyRepository.findAllByUserAndYearMonth(
 			user, dateRange[0], dateRange[1], PageRequest.of(page - 1, size));
 
 		BigDecimal totalIncome = historyRepository.calculateTotalIncome(user, dateRange[0], dateRange[1]);
 		BigDecimal totalExpense = historyRepository.calculateTotalExpense(user, dateRange[0], dateRange[1]);
 
-		List<HistoryDetailResponseDTO> historyDTOs = historiesPage.getContent().stream()
+		List<HistoryDetailResponseDTO> historyDTOs = historiesSlice.getContent().stream()
 			.map(this::convertToHistoryDTO)
 			.collect(Collectors.toList());
 
@@ -86,10 +91,7 @@ public class HistoryService {
 			totalIncome,
 			totalExpense,
 			historyDTOs,
-			page,
-			size,
-			historiesPage.getTotalPages(),
-			historiesPage.getTotalElements()
+			historiesSlice.hasNext()
 		);
 	}
 
@@ -113,25 +115,20 @@ public class HistoryService {
 		LocalDateTime endDate = currentMonth.atEndOfMonth().atTime(23, 59, 59);
 		LocalDateTime startDate = currentMonth.minusMonths(4).atDay(1).atStartOfDay();
 
-		// DB에서 실제 데이터 조회
 		List<Object[]> monthlyExpensesRaw = historyRepository.findMonthlyExpenses(user, startDate, endDate);
 
-		// 실제 데이터를 Map으로 변환 (month -> totalExpense)
 		Map<String, Integer> expensesByMonth = monthlyExpensesRaw.stream()
 			.collect(Collectors.toMap(
-				row -> (String) row[0],
+				row -> (String) row[0],  // 이미 YYYY-MM 형식으로 반환됨
 				row -> (Integer) row[1]
 			));
 
-		// 모든 월 목록 생성 (최근 5개월)
 		List<MonthlyExpenseDetailResponseDTO> monthlyExpenses = new ArrayList<>();
 		for (int i = 0; i < 5; i++) {
 			YearMonth month = currentMonth.minusMonths(i);
-			String monthStr = month.format(DateTimeFormatter.ofPattern("yyyyMM"));
+			String monthStr = month.format(DateTimeFormatter.ofPattern("yyyy-MM"));
 
-			// 해당 월의 데이터가 있으면 그 값을, 없으면 0을 사용
 			Integer expense = expensesByMonth.getOrDefault(monthStr, 0);
-
 			monthlyExpenses.add(new MonthlyExpenseDetailResponseDTO(
 				monthStr,
 				expense
@@ -172,6 +169,8 @@ public class HistoryService {
 				);
 			})
 			.collect(Collectors.toList());
+
+		String formattedYearMonth = ym.format(DateTimeFormatter.ofPattern("yyyy-MM"));
 
 		return new StatisticsResponseDTO(
 			yearMonth,

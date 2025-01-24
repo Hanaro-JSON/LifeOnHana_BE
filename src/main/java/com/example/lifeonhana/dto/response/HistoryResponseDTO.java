@@ -9,8 +9,5 @@ public record HistoryResponseDTO(
 	@JsonProperty("totalIncome") BigDecimal totalIncome,
 	@JsonProperty("totalExpense") BigDecimal totalExpense,
 	@JsonProperty("histories") List<HistoryDetailResponseDTO> histories,
-	@JsonProperty("page") int page,
-	@JsonProperty("size") int size,
-	@JsonProperty("totalPages") int totalPages,
-	@JsonProperty("totalElements") long totalElements
+	@JsonProperty("hasNext") boolean hasNext
 ) {}
