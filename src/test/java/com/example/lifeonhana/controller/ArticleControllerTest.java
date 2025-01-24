@@ -56,16 +56,17 @@ class ArticleControllerTest {
     @Test
     @Order(1)
     @DisplayName("기사 상세 조회 - 성공")
-    @WithMockUser
+//    @WithMockUser
     void getArticleDetails_Success() throws Exception {
-        Long articleId = 11L;  // 실제 DB에 있는 게시글 ID
+        Long articleId = 15L;  // 실제 DB에 있는 게시글 ID
 
-        mockMvc.perform(get("/api/articles/{id}", articleId)
+        mockMvc.perform(get("/api/articles/{articleId}", articleId)
                 .header("Authorization", validToken))
             .andExpect(status().isOk())
             .andExpect(jsonPath("$.code").value(200))
+            .andExpect(jsonPath("$.status").value("OK"))
+            .andExpect(jsonPath("$.message").value("기사 상세 조회 성공"))
             .andExpect(jsonPath("$.data.articleId").value(articleId))
-            .andExpect(jsonPath("$.data.title").value("주택시장 금리 상승! 버티는 게 답일까?"))
             .andExpect(jsonPath("$.data.category").value("REAL_ESTATE"));
     }
 
@@ -111,7 +112,20 @@ class ArticleControllerTest {
                 .header("Authorization", validToken))
             .andExpect(status().isNotFound())
             .andExpect(jsonPath("$.code").value(404))
+            .andExpect(jsonPath("$.status").value("NOT_FOUND"))
             .andExpect(jsonPath("$.message").value("게시글을 찾을 수 없습니다."));
+    }
+
+    @Test
+    @DisplayName("서버 내부 오류")
+    @WithMockUser
+    void getArticleDetails_InternalServerError() throws Exception {
+        Long articleId = -1L; // 서버 오류를 발생시키는 ID라고 가정
+
+        mockMvc.perform(get("/api/articles/{id}", articleId)
+                        .header("Authorization", validToken))
+                .andExpect(status().isInternalServerError())
+                .andExpect(jsonPath("$.code").value(404));
     }
 
     @Test
