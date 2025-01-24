@@ -8,6 +8,7 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
 import java.math.BigDecimal;
+import java.math.RoundingMode;
 
 import com.example.lifeonhana.entity.User;
 import jakarta.transaction.Transactional;
@@ -70,6 +71,7 @@ class AccountControllerTest {
     @Order(1)
     @DisplayName("계좌 목록 조회 - 성공")
     void getAccounts_Success() throws Exception {
+        Account account = accountRepository.findById(11L).orElseThrow();
         mockMvc.perform(get("/api/account")
                 .header("Authorization", validToken))
             .andExpect(status().isOk())
@@ -77,7 +79,7 @@ class AccountControllerTest {
             .andExpect(jsonPath("$.message").value("계좌 목록 조회 성공"))
             .andExpect(jsonPath("$.data.mainAccount.accountId").value(11))
             .andExpect(jsonPath("$.data.mainAccount.accountNumber").value("11111111111111"))
-            .andExpect(jsonPath("$.data.mainAccount.balance").value(4602012.00))
+            .andExpect(jsonPath("$.data.mainAccount.balance").value(account.getBalance().doubleValue()))
             .andDo(print());
     }
 
@@ -86,47 +88,57 @@ class AccountControllerTest {
     @DisplayName("계좌 이체 - 성공")
     void transfer_Success() throws Exception {
         BigDecimal transferAmount = new BigDecimal("1000");
+        Account fromAccountBefore = accountRepository.findById(11L).orElseThrow();
+        Account toAccountBefore = accountRepository.findById(12L).orElseThrow();
+
+        BigDecimal fromAccountBe = new BigDecimal(fromAccountBefore.getBalance().doubleValue());
+        BigDecimal toAccountBe = new BigDecimal(toAccountBefore.getBalance().doubleValue());
         AccountTransferRequest transferRequest = new AccountTransferRequest(
-            11L, 12L, transferAmount
+                11L, 12L, transferAmount
         );
 
         mockMvc.perform(post("/api/account/transfer")
-                .header("Authorization", validToken)
-                .contentType(MediaType.APPLICATION_JSON)
-                .content(objectMapper.writeValueAsString(transferRequest)))
-            .andExpect(status().isOk())
-            .andExpect(jsonPath("$.message").value("이체가 완료되었습니다."))
-            .andExpect(jsonPath("$.data.amount").value("1000"))
-            .andDo(print());
+                        .header("Authorization", validToken)
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(objectMapper.writeValueAsString(transferRequest)))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.message").value("이체가 완료되었습니다."))
+                .andExpect(jsonPath("$.data.amount").value("1000"))
+                .andDo(print());
 
-        // DB에 실제로 반영되었는지 확인
-        Account fromAccount = accountRepository.findById(11L).orElseThrow();
-        Account toAccount = accountRepository.findById(12L).orElseThrow();
-        assertEquals(new BigDecimal("4601012.00"), fromAccount.getBalance());
-        assertEquals(new BigDecimal("985988.00"), toAccount.getBalance());
+        Account fromAccountAfter = accountRepository.findById(11L).orElseThrow();
+        Account toAccountAfter = accountRepository.findById(12L).orElseThrow();
+
+        System.out.println("From account after: " + fromAccountAfter.getBalance());
+        System.out.println("To account after: " + toAccountAfter.getBalance());
+
+        assertEquals(fromAccountBe.subtract(transferAmount).setScale(2, RoundingMode.HALF_UP), fromAccountAfter.getBalance().setScale(2, RoundingMode.HALF_UP));
+        assertEquals(toAccountBe.add(transferAmount).setScale(2, RoundingMode.HALF_UP), toAccountAfter.getBalance().setScale(2, RoundingMode.HALF_UP));
     }
+
 
     @Test
     @DisplayName("급여 계좌 조회 - 성공")
     void getSalaryAccount_Success() throws Exception {
+        Account account = accountRepository.findById(11L).orElseThrow();
         mockMvc.perform(get("/api/account/salary")
                 .header("Authorization", validToken))
             .andExpect(status().isOk())
             .andExpect(jsonPath("$.code").value(200))
             .andExpect(jsonPath("$.message").value("월급 통장 조회 성공"))
             .andExpect(jsonPath("$.data.accountId").value(11))
-            .andExpect(jsonPath("$.data.balance").value(4602012.00));
+            .andExpect(jsonPath("$.data.balance").value(account.getBalance().doubleValue()));
     }
 
-//    @Test
-//    @DisplayName("계좌 목록 조회 - 사용자를 찾을 수 없음")
-//    void getAccounts_UserNotFound() throws Exception {
-//        mockMvc.perform(get("/api/account")
-//                .header("Authorization", "Bearer invalid-token"))
-//            .andExpect(status().isInternalServerError())  // 현재 구현상 500 에러 반환
-//            .andExpect(jsonPath("$.code").value(500))
-//            .andExpect(jsonPath("$.message").exists());
-//    }
+    @Test
+    void getAccounts_UserNotFound() throws Exception {
+        mockMvc.perform(get("/api/accounts")
+                        .header("Authorization", "invalid-token"))
+                .andExpect(status().isInternalServerError())
+                .andExpect(jsonPath("$.message").value("서버 내부 오류가 발생했습니다."))
+                .andExpect(jsonPath("$.status").value("INTERNAL_SERVER_ERROR"));
+    }
+
 
     @Test
     @DisplayName("계좌 이체 - 잔액 부족")
@@ -182,35 +194,33 @@ class AccountControllerTest {
             .andExpect(status().isNotFound());
     }
 
-//    @Test
-//    @DisplayName("음수 금액 이체 시도")
-//    void transfer_NegativeAmount() throws Exception {
-//        AccountTransferRequest transferRequest = new AccountTransferRequest(
-//            11L, 12L, new BigDecimal("-50000")
-//        );
-//
-//        mockMvc.perform(post("/api/account/transfer")
-//                .header("Authorization", validToken)
-//                .contentType(MediaType.APPLICATION_JSON)
-//                .content(objectMapper.writeValueAsString(transferRequest)))
-//            .andExpect(status().isInternalServerError())  // 현재 구현상 500 에러 반환
-//            .andExpect(jsonPath("$.code").value(500))
-//            .andExpect(jsonPath("$.message").exists());
-//    }
-//
-//    @Test
-//    @DisplayName("동일 계좌 이체 시도")
-//    void transfer_SameAccount() throws Exception {
-//        AccountTransferRequest transferRequest = new AccountTransferRequest(
-//            11L, 11L, new BigDecimal("50000")
-//        );
-//
-//        mockMvc.perform(post("/api/account/transfer")
-//                .header("Authorization", validToken)
-//                .contentType(MediaType.APPLICATION_JSON)
-//                .content(objectMapper.writeValueAsString(transferRequest)))
-//            .andExpect(status().isInternalServerError())  // 현재 구현상 500 에러 반환
-//            .andExpect(jsonPath("$.code").value(500))
-//            .andExpect(jsonPath("$.message").exists());
-//    }
+    @Test
+    @DisplayName("음수 금액 이체 시도")
+    void transfer_NegativeAmount() throws Exception {
+        AccountTransferRequest transferRequest = new AccountTransferRequest(
+            11L, 12L, new BigDecimal("-50000")
+        );
+
+        mockMvc.perform(post("/api/account/transfer")
+                .header("Authorization", validToken)
+                .contentType(MediaType.APPLICATION_JSON)
+                .content(objectMapper.writeValueAsString(transferRequest)))
+            .andExpect(jsonPath("$.code").value(400))
+            .andExpect(jsonPath("$.message").exists());
+    }
+
+    @Test
+    @DisplayName("동일 계좌 이체 시도")
+    void transfer_SameAccount() throws Exception {
+        AccountTransferRequest transferRequest = new AccountTransferRequest(
+            11L, 11L, new BigDecimal("50000")
+        );
+
+        mockMvc.perform(post("/api/account/transfer")
+                .header("Authorization", validToken)
+                .contentType(MediaType.APPLICATION_JSON)
+                .content(objectMapper.writeValueAsString(transferRequest)))
+            .andExpect(jsonPath("$.code").value(400))
+            .andExpect(jsonPath("$.message").exists());
+    }
 } 
