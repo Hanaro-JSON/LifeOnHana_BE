@@ -13,8 +13,8 @@ jobs:
     steps:
     - name: Trigger Main Repository Workflow
       uses: peter-evans/repository-dispatch@v2
-      with:
-        token: ${{ secrets.GH_ACCESS_TOKEN }}
-        repository: Hanaro-JSON/LifeOnHana
-        event-type: submodule-update
-        client-payload: '{"ref": "${{ github.ref }}", "sha": "${{ github.sha }}"}'
+        with:
+          token: ${{ secrets.GH_ACCESS_TOKEN }}
+          repository: Hanaro-JSON/LifeOnHana
+          event-type: submodule-update
+          client-payload: '{"ref": "${{ github.ref }}", "sha": "${{ github.sha }}"}'
