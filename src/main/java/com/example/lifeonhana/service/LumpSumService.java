@@ -1,7 +1,7 @@
 package com.example.lifeonhana.service;
 
-import java.math.BigDecimal;
 import java.time.LocalDateTime;
+import java.util.Map;
 
 import org.springframework.stereotype.Service;
 
@@ -29,7 +29,7 @@ public class LumpSumService {
 
 	public LumpSumResponseDTO createLumpSum(String authId, LumpSumRequestDTO lumpSumRequestDTO){
 		User user = userRepository.getUserByAuthId(authId);
-		validateRequest(authId, lumpSumRequestDTO);
+		Account account = validateRequest(authId, lumpSumRequestDTO);
 
 		LumpSum lumpSum = LumpSum.builder()
 			.user(user)
@@ -40,27 +40,22 @@ public class LumpSumService {
 			.requestDate(LocalDateTime.now())
 			.build();
 		LumpSum lumpSumRequest = lumpSumRepository.save(lumpSum);
-		return LumpSumResponseDTO.fromEntity(lumpSumRequest);
+		return LumpSumResponseDTO.fromEntity(lumpSumRequest, account.getBalance());
 	}
 
-	private void validateRequest(String authId, LumpSumRequestDTO lumpSumRequestDTO) {
-		if (lumpSumRequestDTO.source() == LumpSum.Source.SALARY)  {
-			Wallet wallet = walletRepository.findWalletIdByUserAuthIdAndWalletId(authId, lumpSumRequestDTO.accountId())
-				.orElseThrow(() -> new BadRequestException("하나지갑이 존재하지 않습니다."));
-			if (lumpSumRequestDTO.amount().compareTo(BigDecimal.valueOf(wallet.getWalletAmount())) > 0) {
-				throw new BadRequestException("잔액이 부족합니다.");
-			}
-			wallet.setWalletAmount(wallet.getWalletAmount() - lumpSumRequestDTO.amount().longValue());
-			walletRepository.save(wallet);
+	private Account validateRequest(String authId, LumpSumRequestDTO lumpSumRequestDTO) {
+		Wallet wallet =
+			walletRepository.findWalletIdByUserAuthId(authId).orElseThrow(() -> new BadRequestException("하나지갑이 존재하지 않습니다."));
+		Account account = accountRepository.findByAccountId(lumpSumRequestDTO.accountId())
+			.orElseThrow(() -> new BadRequestException("유효하지 않은 계좌 id 입니다."));
+		if (lumpSumRequestDTO.amount().compareTo(account.getBalance()) > 0) {
+			throw new BadRequestException("잔액이 부족합니다.", Map.of("balance", account.getBalance()));
 		}
-		if (lumpSumRequestDTO.source() == LumpSum.Source.OTHER) {
-			Account account = accountRepository.findByAccountId(lumpSumRequestDTO.accountId())
-				.orElseThrow(() -> new BadRequestException("유효하지 않은 계좌 id 입니다."));
-			if (lumpSumRequestDTO.amount().compareTo(account.getBalance()) > 0) {
-				throw new BadRequestException("잔액이 부족합니다.");
-			}
-			account.setBalance(account.getBalance().subtract(lumpSumRequestDTO.amount()));
-			accountRepository.save(account);
-		}
+		account.setBalance(account.getBalance().subtract(lumpSumRequestDTO.amount()));
+		accountRepository.save(account);
+		wallet.setWalletAmount(wallet.getWalletAmount() + lumpSumRequestDTO.amount().longValue());
+		walletRepository.save(wallet);
+
+		return account;
 	}
 }
