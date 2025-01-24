@@ -1,0 +1,14 @@
+-- -- 테스트 전 데이터 초기화
+-- DELETE FROM article_like WHERE 1=1;
+-- DELETE FROM account WHERE 1=1;
+-- DELETE FROM users WHERE 1=1;
+--
+-- -- 테스트용 사용자 데이터
+-- INSERT INTO users (user_id, auth_id, name, email)
+-- VALUES (1, 'test-auth-id', '테스트유저', 'test@example.com');
+--
+-- -- 테스트용 계좌 데이터
+-- INSERT INTO account (account_id, bank, account_number, account_name, balance, service_account, user_id)
+-- VALUES
+-- (1, 'HANA', '123-456-789', '급여계좌', 1000000.00, 'SALARY', 1),
+-- (2, 'HANA', '987-654-321', '생활비계좌', 500000.00, 'NORMAL', 1);

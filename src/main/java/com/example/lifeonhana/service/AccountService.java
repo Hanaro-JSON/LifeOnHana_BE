@@ -1,5 +1,6 @@
 package com.example.lifeonhana.service;
 
+import java.math.BigDecimal;
 import java.util.*;
 import java.util.stream.Collectors;
 
@@ -67,6 +68,14 @@ public class AccountService {
 
 	@Transactional
 	public AccountTransferResponse transfer(String authId, AccountTransferRequest request) {
+		if (request.amount().compareTo(BigDecimal.ZERO) <= 0) {
+			throw new IllegalArgumentException("이체 금액은 0보다 커야 합니다.");
+		}
+
+		if (request.fromAccountId().equals(request.toAccountId())) {
+			throw new IllegalArgumentException("출금 계좌와 입금 계좌가 동일할 수 없습니다.");
+		}
+
 		Account fromAccount = accountRepository.findByAccountIdAndMydata_User_AuthId(
 			request.fromAccountId(), authId
 		).orElseThrow(() -> new NotFoundException("출금 계좌를 찾을 수 없습니다."));
