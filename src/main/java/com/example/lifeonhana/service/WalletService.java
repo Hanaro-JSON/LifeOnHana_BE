@@ -33,9 +33,9 @@ public class WalletService {
 		return new WalletResponseDTO(
 			wallet.getWalletId(),
 			wallet.getWalletAmount(),
-			String.valueOf(wallet.getPaymentDay()),
-			String.valueOf(wallet.getStartDate()),
-			String.valueOf(wallet.getEndDate())
+			wallet.getPaymentDay().getValue(),
+			wallet.getStartDate().toLocalDate().format(DateTimeFormatter.ofPattern("yyyy-MM")),
+			wallet.getEndDate().toLocalDate().format(DateTimeFormatter.ofPattern("yyyy-MM"))
 		);
 	}
 
@@ -79,9 +79,9 @@ public class WalletService {
 		return new WalletResponseDTO(
 			wallet.getWalletId(),
 			wallet.getWalletAmount(),
-			wallet.getPaymentDay().toString(),
-			wallet.getStartDate().toString(),
-			wallet.getEndDate().toString()
+			wallet.getPaymentDay().getValue(),
+			wallet.getStartDate().toLocalDate().format(DateTimeFormatter.ofPattern("yyyy-MM")),
+			wallet.getEndDate().toLocalDate().format(DateTimeFormatter.ofPattern("yyyy-MM"))
 			);
 	}
 }
