@@ -34,7 +34,7 @@ public class HistoryController {
 	})
 	@GetMapping
 	public ResponseEntity<ApiResult> getHistories(
-		@Parameter(description = "조회할 년월 (YYYYMM 형식)", required = true)
+		@Parameter(description = "조회할 년월 (YYYY-MM 형식)", required = true)
 		@RequestParam String yearMonth,
 
 		@Parameter(description = "페이지 번호 (1부터 시작)", example = "1")
@@ -51,8 +51,8 @@ public class HistoryController {
 		}
 
 		// YYYYMM 형식 검증
-		if (!yearMonth.matches("\\d{6}")) {
-			throw new BadRequestException("올바른 년월 형식이 아닙니다. (YYYYMM)");
+		if (!yearMonth.matches("\\d{4}-\\d{2}")) {
+			throw new BadRequestException("올바른 년월 형식이 아닙니다. (YYYY-MM)");
 		}
 
 		HistoryResponseDTO response = historyService.getHistories(yearMonth, authId, page, size);
@@ -95,7 +95,7 @@ public class HistoryController {
 	})
 	@GetMapping("/statistics")
 	public ResponseEntity<ApiResult> getStatistics(
-		@Parameter(description = "조회할 년월 (YYYYMM 형식)", example = "202401", required = true)
+		@Parameter(description = "조회할 년월 (YYYY-MM 형식)", required = true)
 		@RequestParam String yearMonth,
 
 		@Parameter(hidden = true)
@@ -106,8 +106,8 @@ public class HistoryController {
 		}
 
 		// YYYYMM 형식 검증
-		if (!yearMonth.matches("\\d{6}")) {
-			throw new BadRequestException("올바른 년월 형식이 아닙니다. (YYYYMM)");
+		if (!yearMonth.matches("\\d{4}-\\d{2}")) {
+			throw new BadRequestException("올바른 년월 형식이 아닙니다. (YYYY-MM)");
 		}
 
 		StatisticsResponseDTO response = historyService.getStatistics(yearMonth, authId);

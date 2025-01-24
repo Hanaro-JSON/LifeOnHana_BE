@@ -30,14 +30,6 @@ public interface HistoryRepository extends JpaRepository<History, Long> {
 
 	List<History> findTop5ByUser_UserIdOrderByHistoryDatetimeDesc(Long userId);
 
-
-	// Page<History> findByUserAndHistoryDatetimeBetweenOrderByHistoryDatetimeDesc(
-	// 	User user,
-	// 	LocalDateTime startDate,
-	// 	LocalDateTime endDate,
-	// 	Pageable pageable
-	// );
-
 	@Query("SELECT COALESCE(SUM(h.amount), 0) FROM History h " +
 		"WHERE h.user = :user " +
 		"AND h.historyDatetime BETWEEN :startDate AND :endDate " +
@@ -47,12 +39,6 @@ public interface HistoryRepository extends JpaRepository<History, Long> {
 		@Param("startDate") LocalDateTime startDate,
 		@Param("endDate") LocalDateTime endDate
 	);
-
-	// BigDecimal findSumOfAmountByUserAndHistoryDatetimeBetweenAndIsExpenseFalse(
-	// 	User user,
-	// 	LocalDateTime startDate,
-	// 	LocalDateTime endDate
-	// );
 
 	@Query("SELECT COALESCE(SUM(h.amount), 0) FROM History h " +
 		"WHERE h.user = :user " +
@@ -65,15 +51,15 @@ public interface HistoryRepository extends JpaRepository<History, Long> {
 		@Param("endDate") LocalDateTime endDate
 	);
 
-	@Query("SELECT FUNCTION('DATE_FORMAT', h.historyDatetime, '%Y%m') as month, " +
+	@Query("SELECT FUNCTION('DATE_FORMAT', h.historyDatetime, '%Y-%m') as month, " +
 		"CAST(SUM(h.amount) AS integer) as amount " +
 		"FROM History h " +
 		"WHERE h.user = :user " +
 		"AND h.isExpense = true " +
 		"AND h.category != 'INTEREST' " +
 		"AND h.historyDatetime BETWEEN :startDate AND :endDate " +
-		"GROUP BY FUNCTION('DATE_FORMAT', h.historyDatetime, '%Y%m') " +
-		"ORDER BY FUNCTION('DATE_FORMAT', h.historyDatetime, '%Y%m') DESC")
+		"GROUP BY FUNCTION('DATE_FORMAT', h.historyDatetime, '%Y-%m') " +
+		"ORDER BY FUNCTION('DATE_FORMAT', h.historyDatetime, '%Y-%m') DESC")
 	List<Object[]> findMonthlyExpenses(
 		@Param("user") User user,
 		@Param("startDate") LocalDateTime startDate,
@@ -118,13 +104,6 @@ public interface HistoryRepository extends JpaRepository<History, Long> {
 		@Param("startDate") LocalDateTime startDate,
 		@Param("endDate") LocalDateTime endDate
 	);
-
-	// BigDecimal findSumOfAmountByUserAndHistoryDatetimeBetweenAndCategoryAndIsExpenseFalse(
-	// 	User user,
-	// 	LocalDateTime startDate,
-	// 	LocalDateTime endDate,
-	// 	History.Category category
-	// );
 
 	interface CategoryAmountProjection {
 		History.Category getCategory();
