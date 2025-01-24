@@ -1,3 +1,4 @@
+
 name: Trigger Main Repository CI/CD
 
 on:
@@ -11,8 +12,8 @@ jobs:
     runs-on: ubuntu-latest
 
     steps:
-    - name: Trigger Main Repository Workflow
-      uses: peter-evans/repository-dispatch@v2
+      - name: Trigger Main Repository Workflow
+        uses: peter-evans/repository-dispatch@v2
         with:
           token: ${{ secrets.GH_ACCESS_TOKEN }}
           repository: Hanaro-JSON/LifeOnHana
