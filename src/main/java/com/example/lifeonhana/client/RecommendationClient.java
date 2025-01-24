@@ -31,7 +31,7 @@ public class RecommendationClient {
 
 		String url = UriComponentsBuilder
 			.fromUriString(recommendationServiceUrl)
-			.path("recommendations")
+			.path("/recommendations")
 			.queryParam("userId", userId)
 			.queryParam("size", defaultSize)
 			.queryParam("seed", randomSeed)

@@ -29,14 +29,18 @@ public class WhilickController {
 		@ApiResponse(responseCode = "401", description = "인증 필요"),
 		@ApiResponse(responseCode = "404", description = "컨텐츠를 찾을 수 없음")
 	})
-	@GetMapping("/shorts")
+	@GetMapping({"/shorts", "/shorts/{articleId}"})
 	public ResponseEntity<ApiResult> getShorts(
+		@PathVariable(required = false) Long articleId,
 		@RequestParam(defaultValue = "0") int page,
 		@RequestParam(defaultValue = "10") int size,
 		@RequestHeader("Authorization") String token
 	) {
 		try {
-			WhilickResponseDTO response = whilickService.getShorts(page, size, token);
+			WhilickResponseDTO response = (articleId != null)
+				? whilickService.getShortsByArticleId(articleId, size, token)
+				: whilickService.getShorts(page, size, token);
+
 			return ResponseEntity.ok(ApiResult.builder()
 				.code(HttpStatus.OK.value())
 				.status(HttpStatus.OK)
