@@ -1,0 +1,29 @@
+spring:
+  datasource:
+    url: jdbc:mysql://seochodb.cnisi2wyicv7.ap-northeast-2.rds.amazonaws.com:3306/lifeonhanaDB?serverTimezone=Asia/Seoul&characterEncoding=UTF-8
+    driver-class-name: com.mysql.cj.jdbc.Driver
+    username: json
+    password: LifeOnHana1!
+  
+  jpa:
+    database-platform: org.hibernate.dialect.MySQLDialect
+    hibernate:
+      ddl-auto: none  # 실제 DB를 사용하므로 none으로 설정
+    show-sql: true
+    properties:
+      hibernate:
+        format_sql: true
+
+  data:
+    redis:
+      host: localhost
+      port: 6379 
+
+jwt:
+  secret: 526213295f8b15a1864ce077a86e7e88c610b2254cea97af8fd4d37aaff8535e4c60301a3bf5c4c9e27ba6826577f53b330f05361c0b59597b7ecb97a1c19b3f
+  access:
+    token:
+      expiration: 3600000000
+  refresh:
+    token:
+      expiration: 604800000 

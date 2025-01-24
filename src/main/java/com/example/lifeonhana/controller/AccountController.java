@@ -45,20 +45,23 @@ public class AccountController {
 	})
 	@GetMapping
 	public ResponseEntity<ApiResult> getAccounts(@RequestHeader("Authorization") String token) {
+		try {
+			token = token.substring(7);
+			Long userId = jwtService.extractUserId(token);
 
-		token = token.substring(7);
-		Long userId = jwtService.extractUserId(token);
+			AccountListResponseDTO response = accountService.getAccounts(userId);
 
-		AccountListResponseDTO response = accountService.getAccounts(userId);
-
-		return ResponseEntity.ok(
-			ApiResult.builder()
-				.code(HttpStatus.OK.value())
-				.status(HttpStatus.OK)
-				.message("계좌 목록 조회 성공")
-				.data(response)
-				.build()
-		);
+			return ResponseEntity.ok(
+				ApiResult.builder()
+					.code(HttpStatus.OK.value())
+					.status(HttpStatus.OK)
+					.message("계좌 목록 조회 성공")
+					.data(response)
+					.build()
+			);
+		} catch (Exception e) {
+			throw new UnauthorizedException("유효하지 않은 토큰입니다.");
+		}
 	}
 
 	@Operation(summary = "급여 계좌 잔액 조회", description = "사용자의 급여 계좌 정보와 잔액을 조회합니다.")

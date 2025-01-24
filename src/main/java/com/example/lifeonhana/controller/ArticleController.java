@@ -1,6 +1,7 @@
 package com.example.lifeonhana.controller;
 
 import com.example.lifeonhana.dto.response.ArticleListItemResponse;
+import com.example.lifeonhana.global.exception.NotFoundException;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.Parameter;
 import io.swagger.v3.oas.annotations.media.Content;
@@ -67,7 +68,15 @@ public class ArticleController {
 
 			return ResponseEntity.ok(result);
 
-		} catch (IllegalArgumentException e) {
+		}catch (NotFoundException e) {
+            return ResponseEntity.status(HttpStatus.NOT_FOUND)
+                .body(ApiResult.builder()
+                    .code(HttpStatus.NOT_FOUND.value())
+                    .status(HttpStatus.NOT_FOUND)
+                    .message("게시글을 찾을 수 없습니다.")
+                    .build()
+                ); }
+		catch (IllegalArgumentException e) {
 			// 잘못된 요청에 대한 응답
 			ApiResult result = ApiResult.builder()
 				.code(400)
