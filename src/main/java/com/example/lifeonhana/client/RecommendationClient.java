@@ -8,6 +8,7 @@ import org.springframework.stereotype.Component;
 import org.springframework.web.client.RestTemplate;
 import org.springframework.web.util.UriComponentsBuilder;
 
+import java.util.Collections;
 import java.util.List;
 import java.util.Map;
 import java.util.Random;
@@ -66,8 +67,13 @@ public class RecommendationClient {
 
 				List<?> recommendedArticles = (List<?>) data.get("recommendedArticles");
 				if (recommendedArticles == null) {
-					log.error("RecommendedArticles field is null in data");
-					throw new RuntimeException("추천 시스템 응답에 recommendedArticles 필드가 없습니다");
+					log.warn("RecommendedArticles field is null in data, returning empty list");
+					return Collections.emptyList();
+				}
+
+				if (recommendedArticles.isEmpty()) {
+					log.warn("Received empty recommendedArticles list from recommendation service");
+					return Collections.emptyList();
 				}
 
 				// Safer conversion with more detailed error handling
