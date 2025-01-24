@@ -1,6 +1,7 @@
 package com.example.lifeonhana.controller;
 
 import com.example.lifeonhana.dto.response.ArticleListItemResponse;
+import com.example.lifeonhana.entity.Article;
 import com.example.lifeonhana.global.exception.NotFoundException;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.Parameter;
@@ -107,6 +108,23 @@ public class ArticleController {
 		@AuthenticationPrincipal String authId
 	) {
 		try {
+			// 인증 검증
+			validateAuthentication(authId);
+			
+			// 카테고리 유효성 검사
+			if (category != null && !category.isEmpty()) {
+				try {
+					Article.Category.valueOf(category.toUpperCase());
+				} catch (IllegalArgumentException e) {
+					return ResponseEntity.badRequest()
+						.body(ApiResult.builder()
+							.code(400)
+							.status(HttpStatus.BAD_REQUEST)
+							.message("잘못된 카테고리입니다.")
+							.build());
+				}
+			}
+
 			Slice<ArticleListItemResponse> response = articleService.getArticles(category, page - 1, size, authId);
 			
 			Map<String, Object> data = new HashMap<>();
@@ -120,6 +138,13 @@ public class ArticleController {
 				.data(data)
 				.build());
 			
+		} catch (UnauthorizedException e) {
+			return ResponseEntity.status(HttpStatus.UNAUTHORIZED)
+				.body(ApiResult.builder()
+					.code(401)
+					.status(HttpStatus.UNAUTHORIZED)
+					.message("인증이 필요합니다.")
+					.build());
 		} catch (Exception e) {
 			return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
 				.body(ApiResult.builder()
@@ -147,14 +172,44 @@ public class ArticleController {
 			@RequestParam(defaultValue = "20") @Min(value = 1) @Max(value = MAX_LIMIT) int size,
 			@Parameter(hidden = true) @AuthenticationPrincipal String authId
 	) {
-		validateAuthentication(authId);
-		Slice<ArticleSearchResponseDTO> response = articleService.searchArticles(query, page, size, authId);
-		
-		Map<String, Object> data = new HashMap<>();
-		data.put("articles", response.getContent());
-		data.put("hasNext", response.hasNext());
+		try {
+			validateAuthentication(authId);
+			
+			// 검색어 길이 검증
+			if (query != null) {
+				if (query.length() < 2) {
+					return ResponseEntity.badRequest()
+						.body(ApiResult.builder()
+							.code(400)
+							.status(HttpStatus.BAD_REQUEST)
+							.message("검색어는 최소 2자 이상이어야 합니다.")
+							.build());
+				}
+				if (query.length() > 100) {
+					return ResponseEntity.badRequest()
+						.body(ApiResult.builder()
+							.code(400)
+							.status(HttpStatus.BAD_REQUEST)
+							.message("검색어는 100자를 초과할 수 없습니다.")
+							.build());
+				}
+			}
 
-		return createSuccessResponse("기사 검색 성공", data);
+			Slice<ArticleSearchResponseDTO> response = articleService.searchArticles(query, page, size, authId);
+			
+			Map<String, Object> data = new HashMap<>();
+			data.put("articles", response.getContent());
+			data.put("hasNext", response.hasNext());
+
+			return createSuccessResponse("기사 검색 성공", data);
+		} catch (UnauthorizedException e) {
+			return ResponseEntity.status(HttpStatus.UNAUTHORIZED)
+				.body(ApiResult.builder()
+					.code(401)
+					.status(HttpStatus.UNAUTHORIZED)
+					.message("인증이 필요합니다.")
+					.build());
+		}
 	}
 
 	private void validateAuthentication(String authId) {
