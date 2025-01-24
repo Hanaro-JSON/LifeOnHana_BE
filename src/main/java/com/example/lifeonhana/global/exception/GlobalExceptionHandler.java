@@ -15,7 +15,7 @@ public class GlobalExceptionHandler {
 			.code(exception.getStatusCode())
 			.status(exception.getHttpStatus())
 			.message(exception.getCustomMessage())
-			.data(null)
+			.data(exception.getData())
 			.build();
 		return ResponseEntity.status(exception.getHttpStatus()).body(response);
 	}
