@@ -3,13 +3,20 @@ spring:
     name: lifeonhana
 
   datasource:
-#    driver-class-name: com.mysql.cj.jdbc.Driver
-#    url: jdbc:mysql://localhost:3306/lifeonhana_localdb
-#    username: LifeOnHana
-#    password: LifeOnHana1!
+    # 로컬 db
+    #    driver-class-name: com.mysql.cj.jdbc.Driver
+    #    url: jdbc:mysql://localhost:3306/lifeonhana_localdb
+    #    username: LifeOnHana
+    #    password: LifeOnHana1!
+    # 서버 db
+    #    driver-class-name: com.mysql.cj.jdbc.Driver
+    #    url: jdbc:mysql://lifeonhana.cxq2u4wk2434.ap-northeast-2.rds.amazonaws.com:3306/lifeonhana_serverDB
+    #    username: admin
+    #    password: LifeOnHana1!
+    # 테스트 db
     driver-class-name: com.mysql.cj.jdbc.Driver
-    url: jdbc:mysql://lifeonhana.cxq2u4wk2434.ap-northeast-2.rds.amazonaws.com:3306/lifeonhana_serverDB
-    username: admin
+    url: jdbc:mysql://seochodb.cnisi2wyicv7.ap-northeast-2.rds.amazonaws.com:3306/lifeonhanaDB?serverTimezone=Asia/Seoul&characterEncoding=UTF-8
+    username: json
     password: LifeOnHana1!
 
   jpa:
@@ -40,7 +47,7 @@ jwt:
   access:
     token:
       expiration: 3600000000
-#1000시간 --> 개발 후 수정
+  #1000시간 --> 개발 후 수정
   refresh:
     token:
       expiration: 604800000
