@@ -131,7 +131,7 @@ class ArticleLikeControllerTest {
     void invalidToken_Access() throws Exception {
         mockMvc.perform(get("/api/articles/liked")
                 .header("Authorization", "Bearer invalid-token"))
-            .andExpect(status().isInternalServerError());
+            .andExpect(status().isUnauthorized());
     }
 
     @Test
