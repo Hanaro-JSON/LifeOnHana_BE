@@ -106,7 +106,7 @@ class ProductLikeControllerTest {
     void invalidToken_Access() throws Exception {
         mockMvc.perform(get("/api/users/liked/products")
                 .header("Authorization", "Bearer invalid-token"))
-            .andExpect(status().isInternalServerError());
+            .andExpect(status().isUnauthorized());
     }
 
     @Test
