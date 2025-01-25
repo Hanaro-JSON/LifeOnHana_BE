@@ -12,12 +12,19 @@ import org.springframework.security.web.authentication.UsernamePasswordAuthentic
 import org.springframework.web.cors.CorsConfiguration;
 import org.springframework.web.cors.CorsConfigurationSource;
 import org.springframework.web.cors.UrlBasedCorsConfigurationSource;
+import org.springframework.web.filter.OncePerRequestFilter;
+
+import java.io.IOException;
 import java.util.Arrays;
 
 import com.example.lifeonhana.filter.JwtAuthenticationFilter;
 import com.example.lifeonhana.service.JwtService;
 import com.example.lifeonhana.service.RedisService;
 
+import jakarta.servlet.FilterChain;
+import jakarta.servlet.ServletException;
+import jakarta.servlet.http.HttpServletRequest;
+import jakarta.servlet.http.HttpServletResponse;
 import lombok.RequiredArgsConstructor;
 
 @Configuration
@@ -40,7 +47,7 @@ public class SecurityConfig {
 	@Bean
 	public CorsConfigurationSource corsConfigurationSource() {
 		CorsConfiguration configuration = new CorsConfiguration();
-		configuration.setAllowedOrigins(Arrays.asList("http://localhost:3000", "https://life-on-hana-7gzbn8txw-bbzjuns-projects.vercel.app")); // 프론트엔드 서버 주소
+		configuration.setAllowedOrigins(Arrays.asList("http://localhost:3000", "https://life-on-hana-l280u7qzf-bbzjuns-projects.vercel.app")); // 프론트엔드 서버 주소
 		configuration.setAllowedMethods(Arrays.asList("GET", "POST", "PUT", "DELETE", "OPTIONS"));
 		configuration.setAllowedHeaders(Arrays.asList("*"));
 		configuration.setAllowCredentials(true);
@@ -70,8 +77,18 @@ public class SecurityConfig {
 					).permitAll()
 					.anyRequest().authenticated();
 			})
-			.addFilterBefore(jwtAuthenticationFilter(), UsernamePasswordAuthenticationFilter.class);
+			.addFilterBefore(jwtAuthenticationFilter(), UsernamePasswordAuthenticationFilter.class)
+			.addFilterBefore(new SameSiteCookieFilter(),
+				JwtAuthenticationFilter.class);
 
 		return http.build();
+	}
+	public static class SameSiteCookieFilter extends OncePerRequestFilter {
+		@Override
+		protected void doFilterInternal(HttpServletRequest request, HttpServletResponse response,
+			FilterChain filterChain) throws IOException, ServletException {
+			response.addHeader("Set-Cookie", "SameSite=None; Secure");
+			filterChain.doFilter(request, response);
+		}
 	}
 }
