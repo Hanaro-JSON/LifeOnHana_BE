@@ -1,25 +1,20 @@
 package com.example.lifeonhana.service;
 
 import com.example.lifeonhana.dto.request.ProductInsightRequest;
-import com.example.lifeonhana.dto.response.LoanProductResponse;
 import com.example.lifeonhana.dto.response.ProductInsightResponse;
 import com.example.lifeonhana.entity.Article;
 import com.example.lifeonhana.entity.Mydata;
 import com.example.lifeonhana.entity.Product;
 import com.example.lifeonhana.entity.User;
-import com.example.lifeonhana.global.exception.BadRequestException;
-import com.example.lifeonhana.global.exception.NotFoundException;
+import com.example.lifeonhana.global.exception.UnauthorizedException;
 import com.example.lifeonhana.repository.ArticleRepository;
 import com.example.lifeonhana.repository.HistoryRepository;
-import com.example.lifeonhana.repository.LoanProductRepository;
-import com.example.lifeonhana.repository.ProductLikeRepository;
 import com.example.lifeonhana.repository.ProductRepository;
 import com.example.lifeonhana.repository.UserRepository;
 import lombok.RequiredArgsConstructor;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
+
+import org.springframework.security.core.AuthenticationException;
 import org.springframework.stereotype.Service;
-import org.springframework.web.client.HttpClientErrorException;
 import org.springframework.web.client.RestTemplate;
 
 import java.math.BigDecimal;
@@ -64,7 +59,7 @@ public class ProductInsightService {
 
 	private User getUser(String authId) {
 		return userRepository.findByAuthId(authId)
-			.orElseThrow(() -> new IllegalArgumentException("사용자를 찾을 수 없습니다. authId: " + authId));
+			.orElseThrow(() -> new UnauthorizedException("사용자를 찾을 수 없습니다. authId: " + authId));
 	}
 
 	private Article getArticle(Long articleId) {

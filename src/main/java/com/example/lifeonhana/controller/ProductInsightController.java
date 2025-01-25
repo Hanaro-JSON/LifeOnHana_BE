@@ -7,12 +7,14 @@ import lombok.RequiredArgsConstructor;
 
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.core.AuthenticationException;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.web.bind.annotation.*;
 
 import com.example.lifeonhana.ApiResult;
 import com.example.lifeonhana.dto.request.ProductInsightRequest;
 import com.example.lifeonhana.dto.response.ProductInsightResponse;
+import com.example.lifeonhana.global.exception.UnauthorizedException;
 import com.example.lifeonhana.service.ProductInsightService;
 
 @RestController
@@ -29,6 +31,7 @@ public class ProductInsightController {
 		responses = {
 			@ApiResponse(responseCode = "200", description = "성공", content = @Content(mediaType = "application/json")),
 			@ApiResponse(responseCode = "400", description = "잘못된 요청", content = @Content(mediaType = "application/json")),
+			@ApiResponse(responseCode = "401", description = "인증 실패", content = @Content(mediaType = "application/json")),
 			@ApiResponse(responseCode = "500", description = "서버 오류", content = @Content(mediaType = "application/json"))
 		}
 	)
@@ -53,7 +56,14 @@ public class ProductInsightController {
 				e.getMessage(),
 				null
 			));
-		} catch (Exception e) {
+		} catch (UnauthorizedException e) {
+			return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(new ApiResult(
+				401,
+				HttpStatus.UNAUTHORIZED,
+				e.getMessage(),
+				null
+			));
+		}catch (Exception e) {
 			return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(new ApiResult(
 				500,
 				HttpStatus.INTERNAL_SERVER_ERROR,
