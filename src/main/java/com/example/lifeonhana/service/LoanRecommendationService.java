@@ -10,6 +10,7 @@ import com.example.lifeonhana.entity.Product;
 import com.example.lifeonhana.entity.User;
 import com.example.lifeonhana.global.exception.BadRequestException;
 import com.example.lifeonhana.global.exception.NotFoundException;
+import com.example.lifeonhana.global.exception.UnauthorizedException;
 import com.example.lifeonhana.repository.LoanProductRepository;
 import com.example.lifeonhana.repository.UserRepository;
 
@@ -36,18 +37,22 @@ public class LoanRecommendationService {
 	private User getUser(String authId) {
 		log.info("Fetching user with authId: {}", authId);
 		return userRepository.findByAuthId(authId)
-			.orElseThrow(() -> new BadRequestException("사용자를 찾을 수 없습니다."));
+			.orElseThrow(() -> new UnauthorizedException("인증되지 않은 사용자입니다."));
 	}
 
 	public List<LoanProductResponse> recommendLoanProducts(String reason, BigDecimal amount, String authId) {
-		log.info("Starting loan product recommendation process");
-		log.info("Reason: {}, Amount: {}, AuthId: {}", reason, amount, authId);
+		if (reason == null || reason.isEmpty()) {
+			log.error("Reason is missing or empty");
+			throw new IllegalArgumentException("대출 사유는 필수 항목입니다.");
+		}
 
-		// 사용자 조회
+		if (amount == null || amount.compareTo(BigDecimal.ZERO) <= 0) {
+			log.error("Amount is invalid: {}", amount);
+			throw new IllegalArgumentException("대출 금액은 0보다 커야 합니다.");
+		}
+
 		User user = getUser(authId);
-		log.info("Found user: {} (userId: {})", user.getName(), user.getUserId());
 
-		// 사용자 마이데이터 확인
 		Mydata mydata = user.getMydata();
 		if (mydata == null) {
 			log.error("Mydata not found for userId: {}", user.getUserId());
@@ -57,7 +62,6 @@ public class LoanRecommendationService {
 		log.info("User Mydata: deposit_amount={}, loan_amount={}, real_estate_amount={}, total_asset={}",
 			mydata.getDepositAmount(), mydata.getLoanAmount(), mydata.getRealEstateAmount(), mydata.getTotalAsset());
 
-		// 대출 상품 조회
 		log.info("Fetching loan products with category LOAN");
 		List<Product> loanProducts = loanProductRepository.findByCategory(Product.Category.LOAN);
 		log.info("Found {} loan products", loanProducts.size());
@@ -67,7 +71,6 @@ public class LoanRecommendationService {
 			throw new NotFoundException("대출 상품이 존재하지 않습니다.");
 		}
 
-		// Flask 요청 데이터 구성
 		Map<String, Object> request = Map.of(
 			"reason", reason,
 			"amount", amount,
@@ -91,19 +94,15 @@ public class LoanRecommendationService {
 		log.info("Constructed Flask request: {}", request);
 
 		try {
-			// Flask API 호출
 			log.info("Sending request to Flask");
 			var response = restTemplate.postForEntity(flaskUrl, request, Map.class);
 			log.info("Received response from Flask: {}", response);
 
-			// Flask 응답 처리
 			log.info("Received response from Flask: {}", response);
 			if (response.getBody() == null) {
-				log.error("Flask API response body is null");
 				throw new BadRequestException("Flask API 응답에 데이터가 없습니다.");
 			}
 			if (response.getBody().get("products") == null) {
-				log.error("Flask API response does not contain 'products'");
 				throw new BadRequestException("Flask API 응답에 'products'가 없습니다.");
 			}
 
@@ -116,7 +115,6 @@ public class LoanRecommendationService {
 
 			log.info("Recommended products received: {}", recommendedProducts);
 
-			// 추천 결과 생성
 			return recommendedProducts.stream()
 				.map(product -> {
 					log.info("Mapping product: {}", product);
