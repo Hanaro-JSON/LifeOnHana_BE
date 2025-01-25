@@ -15,6 +15,7 @@ import org.springframework.web.bind.annotation.RestController;
 import com.example.lifeonhana.ApiResult;
 import com.example.lifeonhana.dto.request.LoanRecommendationRequest;
 import com.example.lifeonhana.dto.response.LoanProductResponse;
+import com.example.lifeonhana.global.exception.UnauthorizedException;
 import com.example.lifeonhana.service.LoanRecommendationService;
 
 import io.swagger.v3.oas.annotations.Operation;
@@ -36,6 +37,8 @@ public class LoanRecommendationController {
 		description = "대출 사유와 금액, 마이데이터를 기반으로 대출 상품을 추천합니다.",
 		responses = {
 			@ApiResponse(responseCode = "200", description = "추천 성공", content = @Content(mediaType = "application/json")),
+			@ApiResponse(responseCode = "400", description = "잘못된 요청", content = @Content(mediaType = "application/json")),
+			@ApiResponse(responseCode = "401", description = "인증 실패", content = @Content(mediaType = "application/json")),
 			@ApiResponse(responseCode = "500", description = "서버 오류", content = @Content(mediaType = "application/json"))
 		}
 	)
@@ -56,7 +59,21 @@ public class LoanRecommendationController {
 				"대출 상품 추천 성공",
 				recommendedProducts
 			));
-		} catch (Exception e) {
+		} catch (IllegalArgumentException e) {
+			return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(new ApiResult(
+				400,
+				HttpStatus.BAD_REQUEST,
+				e.getMessage(),
+				null
+			));
+		} catch (UnauthorizedException e) {
+			return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(new ApiResult(
+				401,
+				HttpStatus.UNAUTHORIZED,
+				e.getMessage(),
+				null
+			));
+		}catch (Exception e) {
 			return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(new ApiResult(
 				500,
 				HttpStatus.INTERNAL_SERVER_ERROR,
