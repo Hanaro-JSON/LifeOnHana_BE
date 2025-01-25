@@ -1,4 +1,4 @@
-package com.example.lifeonhana.redis;
+package com.example.lifeonhana.service;
 
 
 import static org.junit.jupiter.api.Assertions.*;
@@ -14,8 +14,6 @@ import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 import org.springframework.data.redis.core.RedisTemplate;
 import org.springframework.data.redis.core.ValueOperations;
-
-import com.example.lifeonhana.service.RedisService;
 
 @ExtendWith(MockitoExtension.class)
 public class RedisServiceTest {

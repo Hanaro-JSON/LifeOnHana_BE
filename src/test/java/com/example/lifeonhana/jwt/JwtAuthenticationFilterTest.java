@@ -55,17 +55,17 @@ public class JwtAuthenticationFilterTest {
 		String token = "valid-token";
 		request.addHeader("Authorization", "Bearer " + token);
 
-		when(redisService.isBlacklisted(token)).thenReturn(false);
-		when(jwtService.extractAuthId(token)).thenReturn("test@example.com");
 		when(jwtService.isValidToken(token)).thenReturn(true);
+		when(jwtService.extractAuthId(token)).thenReturn("test@example.com");
+		when(redisService.isBlacklisted(token)).thenReturn(false);
 
 		// When
 		jwtAuthenticationFilter.doFilterInternal(request, response, filterChain);
 
 		// Then
-		verify(redisService).isBlacklisted(token);
-		verify(jwtService).extractAuthId(token);
 		verify(jwtService).isValidToken(token);
+		verify(jwtService).extractAuthId(token);
+		verify(redisService).isBlacklisted(token);
 		assert SecurityContextHolder.getContext().getAuthentication() != null;
 		assert SecurityContextHolder.getContext().getAuthentication().getAuthorities()
 			.stream()
@@ -78,14 +78,16 @@ public class JwtAuthenticationFilterTest {
 		String token = "blacklisted-token";
 		request.addHeader("Authorization", "Bearer " + token);
 
+		when(jwtService.isValidToken(token)).thenReturn(true);
+		when(jwtService.extractAuthId(token)).thenReturn("test@example.com");
 		when(redisService.isBlacklisted(token)).thenReturn(true);
 
 		// When
 		jwtAuthenticationFilter.doFilterInternal(request, response, filterChain);
 
 		// Then
+		verify(jwtService).isValidToken(token);
 		verify(redisService).isBlacklisted(token);
-		verify(jwtService, never()).isValidToken(anyString());
 		assert response.getStatus() == HttpServletResponse.SC_FORBIDDEN;
 
 		String responseBody = response.getContentAsString();
@@ -98,15 +100,15 @@ public class JwtAuthenticationFilterTest {
 		String token = "expired-token";
 		request.addHeader("Authorization", "Bearer " + token);
 
-		when(jwtService.extractAuthId(token)).thenThrow(new ExpiredJwtException(null, null, "Token is expired"));
+		when(jwtService.isValidToken(token)).thenThrow(new ExpiredJwtException(null, null, "Token is expired"));
 
 		// When
 		jwtAuthenticationFilter.doFilterInternal(request, response, filterChain);
 
 		// Then
-		verify(jwtService).extractAuthId(token);
+		verify(jwtService).isValidToken(token);
+		verify(jwtService, never()).extractAuthId(anyString());
 		verify(redisService, never()).isBlacklisted(anyString());
-		verify(jwtService, never()).isValidToken(anyString());
 		assert response.getStatus() == HttpServletResponse.SC_UNAUTHORIZED;
 
 		String responseBody = response.getContentAsString();
@@ -114,22 +116,21 @@ public class JwtAuthenticationFilterTest {
 	}
 
 	@Test
-	void doFilterInternal_WithInvalidToken_ShouldReturnBadRequest() throws ServletException, IOException {
+	void doFilterInternal_WithInvalidToken_ShouldReturnUnauthorized() throws ServletException, IOException {
 		// Given
 		String token = "invalid-token";
 		request.addHeader("Authorization", "Bearer " + token);
 
-		when(redisService.isBlacklisted(token)).thenReturn(false);
-		when(jwtService.extractAuthId(token)).thenReturn("test@example.com");
 		when(jwtService.isValidToken(token)).thenReturn(false);
 
 		// When
 		jwtAuthenticationFilter.doFilterInternal(request, response, filterChain);
 
 		// Then
-		verify(redisService).isBlacklisted(token);
 		verify(jwtService).isValidToken(token);
-		assert response.getStatus() == HttpServletResponse.SC_BAD_REQUEST;
+		verify(jwtService, never()).extractAuthId(anyString());
+		verify(redisService, never()).isBlacklisted(anyString());
+		assert response.getStatus() == HttpServletResponse.SC_UNAUTHORIZED;
 
 		String responseBody = response.getContentAsString();
 		assert responseBody.contains("Invalid token");

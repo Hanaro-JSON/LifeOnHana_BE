@@ -1,4 +1,4 @@
-package com.example.lifeonhana.jwt;
+package com.example.lifeonhana.service;
 
 import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.ArgumentMatchers.anyString;
@@ -11,9 +11,6 @@ import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 import org.springframework.test.util.ReflectionTestUtils;
-
-import com.example.lifeonhana.service.JwtService;
-import com.example.lifeonhana.service.RedisService;
 
 @ExtendWith(MockitoExtension.class)
 public class JwtServiceTest {

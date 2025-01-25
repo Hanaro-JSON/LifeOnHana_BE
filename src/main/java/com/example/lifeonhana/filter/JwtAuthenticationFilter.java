@@ -40,7 +40,6 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
 	) throws ServletException, IOException {
 		final String authHeader = request.getHeader("Authorization");
 
-		// Authorization 헤더가 없거나 Bearer 토큰이 아닌 경우 통과
 		if (authHeader == null || !authHeader.startsWith("Bearer ")) {
 			filterChain.doFilter(request, response);
 			return;
@@ -48,38 +47,44 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
 
 		try {
 			final String jwt = authHeader.substring(7);
+
+			// 토큰 유효성 먼저 검사
+			if (!jwtService.isValidToken(jwt)) {
+				setErrorResponse(response, HttpServletResponse.SC_UNAUTHORIZED, "Invalid token");
+				return;
+			}
+
+			// 토큰이 유효한 경우에만 authId 추출
 			final String authId = jwtService.extractAuthId(jwt);
 
-			// 토큰이 블랙리스트에 있는지 확인
+			// 블랙리스트 확인
 			if (redisService.isBlacklisted(jwt)) {
 				setErrorResponse(response, HttpServletResponse.SC_FORBIDDEN, "Token is blacklisted");
 				return;
 			}
 
 			if (authId != null && SecurityContextHolder.getContext().getAuthentication() == null) {
-				if (jwtService.isValidToken(jwt)) {
-					// 단순히 ROLE_USER 권한만 부여
-					List<SimpleGrantedAuthority> authorities =
-						Collections.singletonList(new SimpleGrantedAuthority("ROLE_USER"));
+				List<SimpleGrantedAuthority> authorities =
+					Collections.singletonList(new SimpleGrantedAuthority("ROLE_USER"));
 
-					UsernamePasswordAuthenticationToken authToken = new UsernamePasswordAuthenticationToken(
-						authId,
-						null,
-						authorities
-					);
+				UsernamePasswordAuthenticationToken authToken = new UsernamePasswordAuthenticationToken(
+					authId,
+					null,
+					authorities
+				);
 
-					authToken.setDetails(new WebAuthenticationDetailsSource().buildDetails(request));
-					SecurityContextHolder.getContext().setAuthentication(authToken);
-				} else {
-					setErrorResponse(response, HttpServletResponse.SC_BAD_REQUEST, "Invalid token");
-					return;
-				}
+				authToken.setDetails(new WebAuthenticationDetailsSource().buildDetails(request));
+				SecurityContextHolder.getContext().setAuthentication(authToken);
 			}
 		} catch (ExpiredJwtException e) {
 			setErrorResponse(response, HttpServletResponse.SC_UNAUTHORIZED, "Token is expired");
 			return;
+		} catch (IllegalArgumentException | SecurityException e) {
+			setErrorResponse(response, HttpServletResponse.SC_UNAUTHORIZED, "Token validation failed");
+			return;
 		} catch (Exception e) {
-			setErrorResponse(response, HttpServletResponse.SC_INTERNAL_SERVER_ERROR, "Token validation failed");
+			log.error("JWT 처리 중 예외 발생", e);
+			setErrorResponse(response, HttpServletResponse.SC_UNAUTHORIZED, "Token validation failed");
 			return;
 		}
 
@@ -92,6 +97,7 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
 		Map<String, Object> errorDetails = new HashMap<>();
 		errorDetails.put("status", status);
 		errorDetails.put("message", message);
+		errorDetails.put("data", null);
 		response.getWriter().write(new ObjectMapper().writeValueAsString(errorDetails));
 	}
 }
