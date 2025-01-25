@@ -67,11 +67,20 @@ public class AuthService {
 	public void signOut(String token) {
 		try {
 			String accessToken = token.startsWith("Bearer ") ? token.substring(7) : token;
-			String authId = jwtService.extractAuthId(accessToken);
 
+			if (!jwtService.isValidToken(accessToken)) {
+				throw new UnauthorizedException("Token validation failed");
+			}
+
+			String authId = jwtService.extractAuthId(accessToken);
 			Long expiration = jwtService.getExpirationFromToken(accessToken);
+
 			redisService.addToBlacklist(accessToken, expiration);
 			redisService.deleteRefreshToken(authId);
+		} catch (IllegalArgumentException | SecurityException e) {
+			throw new UnauthorizedException("Token validation failed");
+		} catch (UnauthorizedException e) {
+			throw e;
 		} catch (Exception e) {
 			throw new BadRequestException("로그아웃 처리 중 오류가 발생했습니다: " + e.getMessage());
 		}

@@ -1,4 +1,4 @@
-package com.example.lifeonhana.auth;
+package com.example.lifeonhana.controller;
 
 import com.example.lifeonhana.dto.request.AuthRequestDTO;
 import com.example.lifeonhana.dto.response.AuthResponseDTO;
@@ -23,7 +23,7 @@ import static org.junit.jupiter.api.Assertions.*;
 @SpringBootTest(webEnvironment = SpringBootTest.WebEnvironment.RANDOM_PORT)
 @AutoConfigureMockMvc
 @TestInstance(TestInstance.Lifecycle.PER_CLASS)
-class AuthIntegrationTest {
+class AuthControllerTest {
 
 	@Autowired
 	private MockMvc mockMvc;
@@ -71,7 +71,7 @@ class AuthIntegrationTest {
 	}
 
 	@Test
-	@DisplayName("First SignIn Success Test - Should return isFirst true")
+	@DisplayName("첫 로그인 성공 테스트 - isFirst true 반환")
 	void firstSignInSuccess() throws Exception {
 		// Prepare request
 		AuthRequestDTO request = new AuthRequestDTO(TEST_AUTH_ID, TEST_PASSWORD);
@@ -102,7 +102,7 @@ class AuthIntegrationTest {
 	}
 
 	@Test
-	@DisplayName("Second SignIn Success Test - Should return isFirst false")
+	@DisplayName("두 번째 로그인 성공 테스트 - isFirst false 반환")
 	void secondSignInSuccess() throws Exception {
 
 		AuthRequestDTO firstRequest = new AuthRequestDTO(TEST_AUTH_ID, TEST_PASSWORD);
@@ -133,7 +133,7 @@ class AuthIntegrationTest {
 	}
 
 	@Test
-	@DisplayName("SignIn Failure - Wrong Password Test")
+	@DisplayName("로그인 실패 - 잘못된 비밀번호")
 	void signInFailureWrongPassword() throws Exception {
 
 		AuthRequestDTO request = new AuthRequestDTO(TEST_AUTH_ID, "wrongpassword");
@@ -142,11 +142,11 @@ class AuthIntegrationTest {
 				.contentType(MediaType.APPLICATION_JSON)
 				.content(objectMapper.writeValueAsString(request)))
 			.andExpect(status().isUnauthorized())
-			.andExpect(jsonPath("$.message").value("Unauthorized.\n잘못된 비밀번호입니다."));
+			.andExpect(jsonPath("$.message").value("잘못된 비밀번호입니다."));
 	}
 
 	@Test
-	@DisplayName("SignIn Failure - User Not Found Test")
+	@DisplayName("로그인 실패 - 존재하지 않는 사용자")
 	void signInFailureUserNotFound() throws Exception {
 		AuthRequestDTO request = new AuthRequestDTO("nonexistent@example.com", TEST_PASSWORD);
 
@@ -158,7 +158,7 @@ class AuthIntegrationTest {
 	}
 
 	@Test
-	@DisplayName("Refresh Token Test")
+	@DisplayName("토큰 갱신 테스트")
 	void refreshTokenTest() throws Exception {
 
 		AuthRequestDTO signInRequest = new AuthRequestDTO(TEST_AUTH_ID, TEST_PASSWORD);
@@ -189,7 +189,7 @@ class AuthIntegrationTest {
 			.andExpect(jsonPath("$.data.refreshToken").exists());
 	}
 	@Test
-	@DisplayName("SignOut Success Test")
+	@DisplayName("로그아웃 성공 테스트")
 	void signOutSuccess() throws Exception {
 
 		AuthRequestDTO signInRequest = new AuthRequestDTO(TEST_AUTH_ID, TEST_PASSWORD);
@@ -218,25 +218,26 @@ class AuthIntegrationTest {
 		assertTrue(redisService.isBlacklisted(signInResponse.accessToken()));
 	}
 
-	// @Test
-	// @DisplayName("SignOut Failure - Invalid Token Test")
-	// void signOutFailureInvalidToken() throws Exception {
-	// 	mockMvc.perform(post("/api/auth/signout")
-	// 			.header("Authorization", "Bearer invalid_token"))
-	// 		.andExpect(status().isBadRequest());
-	// }
-	//
-	// @Test
-	// public void RefreshTokenWithInvalidToken() throws Exception {
-	// 	// Given - 잘못된 Refresh Token
-	// 	RefreshTokenRequestDTO refreshRequest = RefreshTokenRequestDTO.builder()
-	// 		.refreshToken("invalid.refresh.token")
-	// 		.build();
-	//
-	// 	// When & Then
-	// 	mockMvc.perform(post("/api/cert/refresh")
-	// 			.contentType(MediaType.APPLICATION_JSON)
-	// 			.content(objectMapper.writeValueAsString(refreshRequest)))
-	// 		.andExpect(status().isUnauthorized());
-	// }
+	@Test
+	@DisplayName("로그아웃 실패 - 유효하지 않은 토큰")
+	void signOutFailureInvalidToken() throws Exception {
+		mockMvc.perform(post("/api/auth/signout")
+				.header("Authorization", "Bearer invalid_token"))
+			.andExpect(status().isUnauthorized())
+			.andExpect(jsonPath("$.status").value(401))
+			.andExpect(jsonPath("$.message").value("Invalid token"));
+	}
+
+	@Test
+	@DisplayName("토큰 갱신 실패 - 유효하지 않은 리프레시 토큰")
+	void refreshTokenWithInvalidToken() throws Exception {
+		RefreshTokenRequestDTO refreshRequest = new RefreshTokenRequestDTO("invalid.refresh.token");
+
+		mockMvc.perform(post("/api/auth/refresh")
+				.contentType(MediaType.APPLICATION_JSON)
+				.content(objectMapper.writeValueAsString(refreshRequest)))
+			.andExpect(status().isUnauthorized())
+			.andExpect(jsonPath("$.code").value(401))
+			.andExpect(jsonPath("$.message").value("유효하지 않은 리프레시 토큰입니다."));
+	}
 }

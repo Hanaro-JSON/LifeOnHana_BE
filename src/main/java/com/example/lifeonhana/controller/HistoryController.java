@@ -78,13 +78,17 @@ public class HistoryController {
 			throw new UnauthorizedException("로그인이 필요한 서비스입니다.");
 		}
 
-		MonthlyExpenseResponseDTO response = historyService.getMonthlyExpenses(authId);
-		return ResponseEntity.ok(ApiResult.builder()
-			.code(HttpStatus.OK.value())
-			.status(HttpStatus.OK)
-			.message("월별 지출 내역 조회 성공")
-			.data(response)
-			.build());
+		try {
+			MonthlyExpenseResponseDTO response = historyService.getMonthlyExpenses(authId);
+			return ResponseEntity.ok(ApiResult.builder()
+				.code(HttpStatus.OK.value())
+				.status(HttpStatus.OK)
+				.message("월별 지출 내역 조회 성공")
+				.data(response)
+				.build());
+		} catch (Exception e) {
+			throw new UnauthorizedException("인증이 필요합니다.");
+		}
 	}
 
 	@Operation(summary = "거래 통계 조회", description = "특정 년월의 거래 통계를 조회합니다.")

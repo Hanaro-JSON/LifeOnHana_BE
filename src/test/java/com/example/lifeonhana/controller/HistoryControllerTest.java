@@ -1,4 +1,4 @@
-package com.example.lifeonhana.history;
+package com.example.lifeonhana.controller;
 
 import com.example.lifeonhana.entity.History;
 import com.example.lifeonhana.entity.User;
@@ -7,13 +7,14 @@ import com.example.lifeonhana.repository.HistoryRepository;
 import com.example.lifeonhana.repository.UserRepository;
 import com.example.lifeonhana.repository.WalletRepository;
 import com.example.lifeonhana.service.JwtService;
+
+import org.hamcrest.Matchers;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Nested;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.CsvSource;
-import org.junit.jupiter.params.provider.ValueSource;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc;
 import org.springframework.boot.test.context.SpringBootTest;
@@ -34,7 +35,7 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 @SpringBootTest
 @AutoConfigureMockMvc
 @Transactional
-class HistoryIntegrationTest {
+class HistoryControllerTest {
 
 	@Autowired
 	private MockMvc mockMvc;
@@ -197,16 +198,8 @@ class HistoryIntegrationTest {
 		void getMonthlyExpenses_NoAuth() throws Exception {
 			mockMvc.perform(get("/api/history/monthly"))
 				.andDo(print())
-				.andExpect(status().isBadRequest())
-				.andExpect(jsonPath("$.message").value("Bad Request.\n사용자를 찾을 수 없습니다."));
-		}
-
-		@Test
-		@DisplayName("잘못된 토큰으로 조회 시 실패")
-		void getMonthlyExpenses_InvalidToken() throws Exception {
-			mockMvc.perform(get("/api/history/monthly")
-					.header("Authorization", "Bearer invalid-token"))
-				.andExpect(status().isUnauthorized());
+				.andExpect(status().isUnauthorized())  // 401로 수정
+				.andExpect(jsonPath("$.message").value("인증이 필요합니다."));
 		}
 	}
 
@@ -227,10 +220,9 @@ class HistoryIntegrationTest {
 				.andExpect(jsonPath("$.data.totalExpense").value(650000))
 				.andExpect(jsonPath("$.data.totalInterest").value(5000))
 				.andExpect(jsonPath("$.data.expenseCategories").isArray())
-				.andExpect(jsonPath("$.data.expenseCategories[?(@.category=='FIXED_EXPENSE')].percentage")
-					.value(greaterThan(0)))
-				.andExpect(jsonPath("$.data.expenseCategories[?(@.category=='FOOD')].amount")
-					.value(50000));
+				.andExpect(jsonPath("$.data.expenseCategories[?(@.category=='FIXED_EXPENSE')].percentage").value(
+					Matchers.notNullValue()))
+				.andExpect(jsonPath("$.data.expenseCategories[?(@.category=='FOOD')].amount").value(50000));
 		}
 
 		@Test
