@@ -47,7 +47,7 @@ public class SecurityConfig {
 	@Bean
 	public CorsConfigurationSource corsConfigurationSource() {
 		CorsConfiguration configuration = new CorsConfiguration();
-		configuration.setAllowedOrigins(Arrays.asList("http://localhost:3000", "https://life-on-hana-7gzbn8txw-bbzjuns-projects.vercel.app")); // 프론트엔드 서버 주소
+		configuration.setAllowedOrigins(Arrays.asList("http://localhost:3000", "https://life-on-hana-l280u7qzf-bbzjuns-projects.vercel.app")); // 프론트엔드 서버 주소
 		configuration.setAllowedMethods(Arrays.asList("GET", "POST", "PUT", "DELETE", "OPTIONS"));
 		configuration.setAllowedHeaders(Arrays.asList("*"));
 		configuration.setAllowCredentials(true);
