@@ -1,8 +1,7 @@
 package com.example.lifeonhana.controller;
 
-import com.example.lifeonhana.entity.Article;
 import com.example.lifeonhana.entity.User;
-import com.example.lifeonhana.repository.ArticleRepository;
+import com.example.lifeonhana.repository.ProductRepository;
 import com.example.lifeonhana.repository.UserRepository;
 import com.example.lifeonhana.service.JwtService;
 import jakarta.transaction.Transactional;
@@ -20,8 +19,6 @@ import static org.springframework.test.web.servlet.result.MockMvcResultHandlers.
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
-
-
 @SpringBootTest(
     properties = "spring.profiles.active=test",
     webEnvironment = SpringBootTest.WebEnvironment.RANDOM_PORT
@@ -30,7 +27,7 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 @TestMethodOrder(MethodOrderer.OrderAnnotation.class)
 @ActiveProfiles("test")
 @Transactional
-class ArticleLikeControllerTest {
+class ProductLikeControllerTest {
 
     @Autowired
     private MockMvc mockMvc;
@@ -39,10 +36,10 @@ class ArticleLikeControllerTest {
     private JwtService jwtService;
 
     @Autowired
-    private ArticleRepository articleRepository;
+    private UserRepository userRepository;
 
     @Autowired
-    private UserRepository userRepository;
+    private ProductRepository productRepository;
 
     private String validToken;
 
@@ -58,98 +55,66 @@ class ArticleLikeControllerTest {
     @Order(1)
     @DisplayName("좋아요 토글 - 성공")
     void toggleLike_Success() throws Exception {
-        Article article = articleRepository.findById(13L)
-            .orElseThrow(() -> new RuntimeException("테스트 기사가 없습니다."));
+        Long productId = productRepository.findAll().get(2).getProductId();
 
-        mockMvc.perform(post("/api/articles/" + article.getArticleId() + "/like")
+        mockMvc.perform(post("/api/users/" + productId + "/like")
                 .header("Authorization", validToken))
             .andExpect(status().isOk())
             .andExpect(jsonPath("$.code").value(200))
             .andExpect(jsonPath("$.message").value("좋아요 성공"))
             .andExpect(jsonPath("$.data.isLiked").exists())
-            .andExpect(jsonPath("$.data.likeCount").exists())
-            .andDo(print());
-    }
-
-    @Test
-    @Order(4)
-    @DisplayName("좋아요 취소 - 성공")
-    void cancelLike_Success() throws Exception {
-        Article article = articleRepository.findById(13L)
-                .orElseThrow(() -> new RuntimeException("테스트 기사가 없습니다."));
-
-        mockMvc.perform(post("/api/articles/" + article.getArticleId() + "/like")
-                        .header("Authorization", validToken))
-                .andExpect(status().isOk())
-                .andExpect(jsonPath("$.code").value(200))
-                .andExpect(jsonPath("$.message").value("좋아요 취소 성공"))
-                .andExpect(jsonPath("$.data.isLiked").value(false))
-                .andExpect(jsonPath("$.data.likeCount").value(0))
-                .andDo(print());
-    }
-
-
-    @Test
-    @Order(2)
-    @DisplayName("좋아요 정보 조회 - 성공")
-    void getLikeInfo_Success() throws Exception {
-        Article article = articleRepository.findById(13L)
-            .orElseThrow(() -> new RuntimeException("테스트 기사가 없습니다."));
-
-        mockMvc.perform(get("/api/articles/" + article.getArticleId() + "/like")
-                .header("Authorization", validToken))
-            .andExpect(status().isOk())
-            .andExpect(jsonPath("$.code").value(200))
-            .andExpect(jsonPath("$.message").value("게시글 좋아요 정보 조회 성공"))
-            .andExpect(jsonPath("$.data.isLiked").exists())
-            .andExpect(jsonPath("$.data.likeCount").exists())
             .andDo(print());
     }
 
     @Test
     @Order(3)
-    @DisplayName("좋아요한 기사 목록 조회 - 성공")
-    void getLikedArticles_Success() throws Exception {
-        mockMvc.perform(get("/api/articles/liked")
+    @DisplayName("좋아요 토글 - 취소")
+    void cancelLike_Success() throws Exception {
+        Long productId = productRepository.findAll().get(2).getProductId();
+
+        mockMvc.perform(post("/api/users/" + productId + "/like")
+                        .header("Authorization", validToken))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.code").value(200))
+                .andExpect(jsonPath("$.message").value("좋아요 취소 성공"))
+                .andExpect(jsonPath("$.data.isLiked").exists())
+                .andDo(print());
+    }
+
+    @Test
+    @Order(2)
+    @DisplayName("좋아요한 상품 목록 조회 - 성공")
+    void getLikedProducts_Success() throws Exception {
+        mockMvc.perform(get("/api/users/liked/products")
                 .header("Authorization", validToken)
-                .param("category", "REAL_ESTATE"))
+                .param("category", "FINANCE"))
             .andExpect(status().isOk())
             .andExpect(jsonPath("$.code").value(200))
-            .andExpect(jsonPath("$.message").value("좋아요한 기사 목록 조회 성공"))
+            .andExpect(jsonPath("$.message").value("좋아요한 상품 목록 조회 성공"))
             .andDo(print());
     }
 
     @Test
     @DisplayName("인증되지 않은 사용자 접근")
     void unauthorized_Access() throws Exception {
-        mockMvc.perform(get("/api/articles/liked"))
-            .andExpect(status().isInternalServerError());
+        mockMvc.perform(get("/api/users/liked/products"))
+            .andExpect(status().isBadRequest());
     }
 
     @Test
     @DisplayName("잘못된 토큰으로 접근")
     void invalidToken_Access() throws Exception {
-        mockMvc.perform(get("/api/articles/liked")
+        mockMvc.perform(get("/api/users/liked/products")
                 .header("Authorization", "Bearer invalid-token"))
             .andExpect(status().isInternalServerError());
     }
 
     @Test
-    @DisplayName("카테고리 파라미터 검증")
-    void validateCategoryParameter() throws Exception {
-        mockMvc.perform(get("/api/articles/liked")
-                .header("Authorization", validToken)
-                .param("category", "INVALID_CATEGORY"))
+    @DisplayName("존재하지 않는 상품 좋아요")
+    void toggleLike_ProductNotFound() throws Exception {
+        mockMvc.perform(post("/api/users/999/like")
+                .header("Authorization", validToken))
             .andExpect(status().isBadRequest());
     }
 
-    @Test
-    @DisplayName("페이지네이션 파라미터 검증")
-    void validatePaginationParameters() throws Exception {
-        mockMvc.perform(get("/api/articles/liked")
-                .header("Authorization", validToken)
-                .param("page", "-1")
-                .param("size", "0"))
-            .andExpect(status().isBadRequest());
-    }
 }
