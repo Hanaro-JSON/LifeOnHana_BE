@@ -35,7 +35,11 @@ public class ProductLikeService {
 	public ProductListResponseDTO<ProductResponseDTO> getProductLikes(String authId, int page, int size) {
 		User user = userRepository.findByAuthId(authId)
 			.orElseThrow(() -> new IllegalArgumentException("사용자를 찾을 수 없습니다."));
-			
+
+		if (page < 0 || size <= 0 || size > 1000) {
+			throw new IllegalArgumentException("유효하지 않은 페이지네이션 파라미터입니다.");
+		}
+
 		String userLikesKey = "user:" + user.getUserId() + ":productLikes";
 		Map<Object, Object> likedProductsMap = redisTemplate.opsForHash().entries(userLikesKey);
 
@@ -70,9 +74,19 @@ public class ProductLikeService {
 
 	@Transactional
 	public boolean toggleLike(Long productId, String authId) {
+		if (productId == null || productId <= 0) {
+			throw new IllegalArgumentException("유효하지 않은 상품 ID입니다.");
+		}
+
+		// 사용자 존재 확인
 		User user = userRepository.findByAuthId(authId)
-			.orElseThrow(() -> new IllegalArgumentException("사용자를 찾을 수 없습니다."));
-		
+				.orElseThrow(() -> new IllegalArgumentException("사용자를 찾을 수 없습니다."));
+
+		// 상품 존재 확인
+		Product product = productRepository.findById(productId)
+				.orElseThrow(() -> new IllegalArgumentException("상품을 찾을 수 없습니다."));
+
+
 		String userLikesKey = "user:" + user.getUserId() + ":productLikes";
 
 		Boolean isLiked = (Boolean) redisTemplate.opsForHash().get(userLikesKey, productId.toString());
