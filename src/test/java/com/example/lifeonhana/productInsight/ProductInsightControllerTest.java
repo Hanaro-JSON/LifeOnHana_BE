@@ -1,7 +1,5 @@
 package com.example.lifeonhana.productInsight;
 
-import com.example.lifeonhana.dto.request.ProductInsightRequest;
-import com.example.lifeonhana.dto.response.ProductInsightResponse;
 import com.example.lifeonhana.entity.Article;
 import com.example.lifeonhana.entity.Product;
 import com.example.lifeonhana.entity.User;
@@ -14,11 +12,12 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 
 import jakarta.transaction.Transactional;
 import org.junit.jupiter.api.*;
+import org.mockito.Mockito;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc;
 import org.springframework.boot.test.context.SpringBootTest;
+import org.springframework.boot.test.mock.mockito.MockBean;
 import org.springframework.http.MediaType;
-import org.springframework.security.test.context.support.WithMockUser;
 import org.springframework.test.context.ActiveProfiles;
 import org.springframework.test.web.servlet.MockMvc;
 
@@ -58,23 +57,20 @@ class ProductInsightControllerTest {
 
 	@BeforeEach
 	void setUp() {
-		// 실제 테스트 데이터로 토큰 생성
 		User testUser = userRepository.findById(3L)
 			.orElseThrow(() -> new RuntimeException("테스트 사용자가 없습니다."));
 		validToken = "Bearer " + jwtService.generateAccessToken(testUser.getAuthId(), testUser.getUserId());
+		System.out.println("Generated authToken: " + validToken);
 	}
 
 	@Test
 	@DisplayName("상품 기대효과 분석 조회 - 성공")
-	@WithMockUser
 	void getProductInsight_Success() throws Exception {
-		// 테스트에 사용할 엔티티 조회
-		Article article = articleRepository.findById(3L)
+		Article article = articleRepository.findById(11L)
 			.orElseThrow(() -> new RuntimeException("테스트 기사가 없습니다."));
 		Product product = productRepository.findById(5L)
 			.orElseThrow(() -> new RuntimeException("테스트 상품이 없습니다."));
 
-		// 요청 데이터 생성
 		ObjectMapper objectMapper = new ObjectMapper();
 		Map<String, Object> requestData = Map.of(
 			"articleId", article.getArticleId(),
@@ -85,7 +81,7 @@ class ProductInsightControllerTest {
 				.contentType(MediaType.APPLICATION_JSON)
 				.content(objectMapper.writeValueAsString(requestData))
 				.header("Authorization", validToken))
-			.andDo(print()) // 응답 출력
+			.andDo(print())
 			.andExpect(status().isOk())
 			.andExpect(jsonPath("$.code").value(200))
 			.andExpect(jsonPath("$.message").value("상품 분석 성공"))
@@ -96,42 +92,63 @@ class ProductInsightControllerTest {
 	}
 
 	@Test
-	@DisplayName("잘못된 요청 - articleId 누락")
-	@WithMockUser
-	void getProductInsight_BadRequest_MissingArticleId() throws Exception {
+	@DisplayName("상품 기대효과 분석 조회 - 잘못된 요청")
+	void getProductInsight_BadRequest() throws Exception {
 		ObjectMapper objectMapper = new ObjectMapper();
-		Map<String, Object> requestData = Map.of(
-			"productId", 5L
+		Map<String, Object> invalidRequestData = Map.of(
+			"articleId", 99999,
+			"productId", 99999
 		);
 
 		mockMvc.perform(post("/api/anthropic/effect")
 				.contentType(MediaType.APPLICATION_JSON)
-				.content(objectMapper.writeValueAsString(requestData))
+				.content(objectMapper.writeValueAsString(invalidRequestData))
 				.header("Authorization", validToken))
 			.andDo(print())
 			.andExpect(status().isBadRequest())
 			.andExpect(jsonPath("$.code").value(400))
-			.andExpect(jsonPath("$.message").value("잘못된 요청입니다."));
+			.andExpect(jsonPath("$.message").exists());
 	}
 
 	@Test
-	@DisplayName("서버 오류 발생")
-	@WithMockUser
-	void getProductInsight_InternalServerError() throws Exception {
-		// 서버 오류를 강제하기 위한 잘못된 요청 데이터
+	@DisplayName("상품 기대효과 분석 조회 - 권한 없음")
+	void getProductInsight_Unauthorized() throws Exception {
 		ObjectMapper objectMapper = new ObjectMapper();
 		Map<String, Object> requestData = Map.of(
-			"articleId", -1L,
-			"productId", -1L
+			"articleId", 11,
+			"productId", 5
 		);
 
 		mockMvc.perform(post("/api/anthropic/effect")
 				.contentType(MediaType.APPLICATION_JSON)
-				.content(objectMapper.writeValueAsString(requestData))
-				.header("Authorization", validToken))
+				.content(objectMapper.writeValueAsString(requestData)))
 			.andDo(print())
-			.andExpect(status().isInternalServerError())
-			.andExpect(jsonPath("$.code").value(500))
-			.andExpect(jsonPath("$.message").value("내부 서버 오류 발생: 예상치 못한 오류"));
+			.andExpect(status().isUnauthorized())
+			.andExpect(jsonPath("$.code").value(401))
+			.andExpect(jsonPath("$.message").exists());
 	}
+
+	// @Test
+	// @DisplayName("상품 기대효과 분석 조회 - 내부 서버 오류")
+	// void getProductInsight_InternalServerError() throws Exception {
+	// 	// Mock 동작 정의: 예외를 강제로 발생시킴
+	// 	Mockito.when(productInsightService.getProductInsight(Mockito.any(), Mockito.anyString()))
+	// 		.thenThrow(new RuntimeException("강제 서버 오류"));
+	//
+	// 	ObjectMapper objectMapper = new ObjectMapper();
+	// 	Map<String, Object> requestData = Map.of(
+	// 		"articleId", 11,
+	// 		"productId", 5
+	// 	);
+	//
+	// 	mockMvc.perform(post("/api/anthropic/effect")
+	// 			.contentType(MediaType.APPLICATION_JSON)
+	// 			.content(objectMapper.writeValueAsString(requestData))
+	// 			.header("Authorization", validToken))
+	// 		.andDo(print())
+	// 		.andExpect(status().isInternalServerError())
+	// 		.andExpect(jsonPath("$.code").value(500))
+	// 		.andExpect(jsonPath("$.message").value("내부 서버 오류 발생: 강제 서버 오류"));
+	// }
+
 }

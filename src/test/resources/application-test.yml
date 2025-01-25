@@ -1,29 +1,68 @@
 spring:
+  application:
+    name: lifeonhana
+
   datasource:
-    url: jdbc:mysql://seochodb.cnisi2wyicv7.ap-northeast-2.rds.amazonaws.com:3306/lifeonhanaDB?serverTimezone=Asia/Seoul&characterEncoding=UTF-8
+    # 로컬 db
+    #    driver-class-name: com.mysql.cj.jdbc.Driver
+    #    url: jdbc:mysql://localhost:3306/lifeonhana_localdb
+    #    username: LifeOnHana
+    #    password: LifeOnHana1!
+    # 서버 db
+    #    driver-class-name: com.mysql.cj.jdbc.Driver
+    #    url: jdbc:mysql://lifeonhana.cxq2u4wk2434.ap-northeast-2.rds.amazonaws.com:3306/lifeonhana_serverDB
+    #    username: admin
+    #    password: LifeOnHana1!
+    # 테스트 db
     driver-class-name: com.mysql.cj.jdbc.Driver
+    url: jdbc:mysql://seochodb.cnisi2wyicv7.ap-northeast-2.rds.amazonaws.com:3306/lifeonhanaDB?serverTimezone=Asia/Seoul&characterEncoding=UTF-8
     username: json
     password: LifeOnHana1!
-  
+
   jpa:
-    database-platform: org.hibernate.dialect.MySQLDialect
-    hibernate:
-      ddl-auto: none  # 실제 DB를 사용하므로 none으로 설정
     show-sql: true
+    hibernate:
+      ddl-auto: update
     properties:
       hibernate:
         format_sql: true
+    generate-ddl: true
 
   data:
     redis:
       host: localhost
-      port: 6379 
+      port: 6379
+      password:
+      timeout: 2000
+      database: 0
+      lettuce:
+        pool:
+          max-active: 10
+          max-idle: 5
+          min-idle: 1
+          max-wait: 2000ms
 
 jwt:
   secret: 526213295f8b15a1864ce077a86e7e88c610b2254cea97af8fd4d37aaff8535e4c60301a3bf5c4c9e27ba6826577f53b330f05361c0b59597b7ecb97a1c19b3f
   access:
     token:
       expiration: 3600000000
+  #1000시간 --> 개발 후 수정
   refresh:
     token:
-      expiration: 604800000 
+      expiration: 604800000
+
+springdoc:
+  api-docs:
+    path: /api-docs
+  swagger-ui:
+    path: /swagger-ui.html
+
+logging:
+  level:
+    org.hibernate.SQL: debug
+    org.hibernate.type: trace
+    com.example.lifeonhana: debug
+
+server:
+  port: 8080
