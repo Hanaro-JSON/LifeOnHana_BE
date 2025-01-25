@@ -1,4 +1,4 @@
-package com.example.lifeonhana.productInsight;
+package com.example.lifeonhana.controller;
 
 import com.example.lifeonhana.entity.Article;
 import com.example.lifeonhana.entity.Product;
@@ -7,16 +7,13 @@ import com.example.lifeonhana.repository.ArticleRepository;
 import com.example.lifeonhana.repository.ProductRepository;
 import com.example.lifeonhana.repository.UserRepository;
 import com.example.lifeonhana.service.JwtService;
-import com.example.lifeonhana.service.ProductInsightService;
 import com.fasterxml.jackson.databind.ObjectMapper;
 
 import jakarta.transaction.Transactional;
 import org.junit.jupiter.api.*;
-import org.mockito.Mockito;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc;
 import org.springframework.boot.test.context.SpringBootTest;
-import org.springframework.boot.test.mock.mockito.MockBean;
 import org.springframework.http.MediaType;
 import org.springframework.test.context.ActiveProfiles;
 import org.springframework.test.web.servlet.MockMvc;
@@ -127,28 +124,4 @@ class ProductInsightControllerTest {
 			.andExpect(jsonPath("$.code").value(401))
 			.andExpect(jsonPath("$.message").exists());
 	}
-
-	// @Test
-	// @DisplayName("상품 기대효과 분석 조회 - 내부 서버 오류")
-	// void getProductInsight_InternalServerError() throws Exception {
-	// 	// Mock 동작 정의: 예외를 강제로 발생시킴
-	// 	Mockito.when(productInsightService.getProductInsight(Mockito.any(), Mockito.anyString()))
-	// 		.thenThrow(new RuntimeException("강제 서버 오류"));
-	//
-	// 	ObjectMapper objectMapper = new ObjectMapper();
-	// 	Map<String, Object> requestData = Map.of(
-	// 		"articleId", 11,
-	// 		"productId", 5
-	// 	);
-	//
-	// 	mockMvc.perform(post("/api/anthropic/effect")
-	// 			.contentType(MediaType.APPLICATION_JSON)
-	// 			.content(objectMapper.writeValueAsString(requestData))
-	// 			.header("Authorization", validToken))
-	// 		.andDo(print())
-	// 		.andExpect(status().isInternalServerError())
-	// 		.andExpect(jsonPath("$.code").value(500))
-	// 		.andExpect(jsonPath("$.message").value("내부 서버 오류 발생: 강제 서버 오류"));
-	// }
-
 }
