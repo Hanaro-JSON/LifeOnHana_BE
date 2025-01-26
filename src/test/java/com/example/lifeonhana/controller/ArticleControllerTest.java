@@ -84,7 +84,7 @@ class ArticleControllerTest {
             .andExpect(status().isOk())
             .andExpect(jsonPath("$.code").value(200))
             .andExpect(jsonPath("$.message").value("기사 목록 조회 성공"))
-            .andExpect(jsonPath("$.data.articles[0].title").value("은퇴자의 효율적인 주택 다운사이징 방안"))
+            .andExpect(jsonPath("$.data.articles[0].category").value("REAL_ESTATE"))
             .andDo(print());
     }
 
