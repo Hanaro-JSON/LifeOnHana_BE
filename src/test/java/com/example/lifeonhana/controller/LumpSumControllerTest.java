@@ -20,8 +20,6 @@ import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.test.web.servlet.request.MockMvcRequestBuilders;
 
 import com.example.lifeonhana.dto.request.LumpSumRequestDTO;
-import com.example.lifeonhana.dto.response.LumpSumResponseDTO;
-import com.example.lifeonhana.entity.Account;
 import com.example.lifeonhana.entity.LumpSum;
 import com.example.lifeonhana.entity.User;
 import com.example.lifeonhana.repository.AccountRepository;
@@ -58,10 +56,10 @@ public class LumpSumControllerTest {
 	@BeforeEach
 	void setUp() {
 		User user = userRepository.findById(3L).orElseThrow(() -> new RuntimeException("테스트 사용자가 없습니다."));
-		validToken = "Bearer " + jwtService.generateAccessToken("user1@example.com", 3L);
+		validToken = "Bearer " + jwtService.generateAccessToken(user.getAuthId(), 3L);
 		System.out.println("validToken = " + validToken);
 
-		Account account = accountRepository.findByAccountId(11L).orElseThrow(() -> new RuntimeException("존재하지 않는 계좌 "
+		accountRepository.findByAccountId(11L).orElseThrow(() -> new RuntimeException("존재하지 않는 계좌 "
 			+ "id 입니다."));
 	}
 
@@ -77,6 +75,7 @@ public class LumpSumControllerTest {
 			.contentType(MediaType.APPLICATION_JSON)
 			.content(objectMapper.writeValueAsString(requestDTO)))
 			.andExpect(status().isOk())
+			.andExpect(jsonPath("$.message").value("목돈 인출 신청 성공"))
 			.andDo(print());
 	}
 
