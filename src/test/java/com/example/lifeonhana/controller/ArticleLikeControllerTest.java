@@ -112,7 +112,7 @@ class ArticleLikeControllerTest {
     void getLikedArticles_Success() throws Exception {
         mockMvc.perform(get("/api/articles/liked")
                 .header("Authorization", validToken)
-                .param("category", "REAL_ESTATE"))
+                .param("category", "INVESTMENT"))
             .andExpect(status().isOk())
             .andExpect(jsonPath("$.code").value(200))
             .andExpect(jsonPath("$.message").value("좋아요한 기사 목록 조회 성공"))
