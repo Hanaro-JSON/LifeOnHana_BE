@@ -30,7 +30,6 @@ import com.example.lifeonhana.entity.User;
 import com.example.lifeonhana.repository.UserRepository;
 import com.example.lifeonhana.service.JwtService;
 import com.example.lifeonhana.service.ProductService;
-import com.fasterxml.jackson.databind.ObjectMapper;
 
 @SpringBootTest(
 	properties = "spring.profiles.active=test",
@@ -42,9 +41,6 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 public class ProductControllerTest {
 	@Autowired
 	private MockMvc mockMvc;
-
-	@Autowired
-	private ObjectMapper objectMapper;
 
 	@Autowired
 	private UserRepository userRepository;
@@ -60,7 +56,7 @@ public class ProductControllerTest {
 	@BeforeEach
 	void setUp() {
 		User user = userRepository.findById(3L).orElseThrow(() -> new RuntimeException("테스트 사용자가 없습니다."));
-		validToken = "Bearer " + jwtService.generateAccessToken("user1@example.com", 3L);
+		validToken = "Bearer " + jwtService.generateAccessToken(user.getAuthId(), 3L);
 		System.out.println("validToken = " + validToken);
 	}
 
