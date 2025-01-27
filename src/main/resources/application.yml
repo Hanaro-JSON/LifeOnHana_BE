@@ -54,9 +54,9 @@ jwt:
 
 springdoc:
   api-docs:
-    path: /api/api-docs
+    path: /utils/api-docs
   swagger-ui:
-    path: /api/swagger-ui.html
+    path: /utils/swagger-ui.html
 
 logging:
   level:

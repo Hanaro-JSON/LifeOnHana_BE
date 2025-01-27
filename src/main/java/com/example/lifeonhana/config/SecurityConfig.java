@@ -68,12 +68,12 @@ public class SecurityConfig {
 			.authorizeHttpRequests(auth -> {
 				auth.requestMatchers(
 						"/api/**",
-						"/api/swagger-ui/**",
-						"/api/swagger-ui.html",
-						"/api/swagger-resources/**",
-						"/api/api-docs/**",
-						"/api/v3/api-docs/**",
-						"/api/actuator/**"
+						"/utils/swagger-ui/**",
+						"/utils/swagger-ui.html",
+						"/utils/swagger-resources/**",
+						"/utils/api-docs/**",
+						"/utils/v3/api-docs/**",
+						"/utils/actuator/**"
 					).permitAll()
 					.anyRequest().authenticated();
 			})
