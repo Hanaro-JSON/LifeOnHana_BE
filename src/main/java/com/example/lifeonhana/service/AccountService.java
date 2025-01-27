@@ -6,6 +6,7 @@ import java.util.stream.Collectors;
 
 import javax.security.auth.login.AccountNotFoundException;
 
+import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -99,6 +100,21 @@ public class AccountService {
 			toAccountResponseDTO(toAccount)
 		);
 	}
+
+	@Scheduled(cron = "0 0 0 1 * *") // 매월 1일 자정에 실행
+	@Transactional
+	public void applyMonthlyInterest() {
+		Account salaryAccounts = accountRepository.findByServiceAccount(Account.ServiceAccount.SALARY);
+
+		BigDecimal interestRate = new BigDecimal("0.02");
+
+		BigDecimal interest = salaryAccounts.getBalance().multiply(interestRate);
+		salaryAccounts.deposit(interest);
+
+		accountRepository.save(salaryAccounts);
+		System.out.println("SALARY 계좌에 이자가 지급되었습니다.");
+	}
+
 
 	private AccountResponseDTO toAccountResponseDTO(Account account) {
 		return new AccountResponseDTO(
