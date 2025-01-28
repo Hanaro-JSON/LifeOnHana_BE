@@ -99,6 +99,18 @@ public class ArticleController {
 		}
 	}
 
+
+	@Operation(
+		summary = "기사 목록 조회",
+		description = "카테고리별 기사 목록을 페이징하여 조회합니다."
+	)
+	@ApiResponses({
+		@ApiResponse(responseCode = "200", description = "기사 목록 조회 성공"),
+		@ApiResponse(responseCode = "400", description = "잘못된 카테고리"),
+		@ApiResponse(responseCode = "401", description = "인증이 필요합니다."),
+		@ApiResponse(responseCode = "500", description = "서버 오류")
+	})
+	@SecurityRequirement(name = "bearerAuth")
 	@GetMapping
 	public ResponseEntity<ApiResult> getArticles(
 		@RequestParam(value = "category", required = false) String category,
