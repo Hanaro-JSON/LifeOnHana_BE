@@ -47,7 +47,7 @@ public class GlobalExceptionHandler {
 		ApiResult response = ApiResult.builder()
 			.code(HttpStatus.INTERNAL_SERVER_ERROR.value())
 			.status(HttpStatus.INTERNAL_SERVER_ERROR)
-			.message("서버 내부 오류가 발생했습니다." + exception.getMessage())
+			.message("서버 내부 오류가 발생했습니다.")
 			.data(null)
 			.build();
 		return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(response);
