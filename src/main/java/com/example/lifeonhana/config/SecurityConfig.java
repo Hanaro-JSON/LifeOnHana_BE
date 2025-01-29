@@ -73,7 +73,7 @@ public class SecurityConfig {
 						"/utils/swagger-resources/**",
 						"/utils/api-docs/**",
 						"/utils/v3/api-docs/**",
-						"/utils/actuator/**"
+						"/actuator/**"
 					).permitAll()
 					.anyRequest().authenticated();
 			})
