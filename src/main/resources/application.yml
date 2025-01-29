@@ -74,3 +74,4 @@ management:
     web:
       exposure:
         include: "*" #모든 항목 활성화
+        exclude: env, beans #evn와 beans는 비활성화
