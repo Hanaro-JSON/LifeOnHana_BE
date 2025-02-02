@@ -28,7 +28,7 @@ import io.swagger.v3.oas.annotations.tags.Tag;
 @RequestMapping("/api/users")
 @Tag(name = "User Liked API", description = "좋아요한 상품 목록 api")
 public class ProductLikeController {
-	ProductLikeService productLikeService;
+	private final ProductLikeService productLikeService;
 
 	public ProductLikeController(ProductLikeService productLikeService) {
 		this.productLikeService = productLikeService;
@@ -37,44 +37,35 @@ public class ProductLikeController {
 	@GetMapping("/liked/products")
 	@Operation(summary = "좋아요한 상품 목록 조회", description = "좋아요한 상품 목록을 조회합니다.")
 	@ApiResponses(value = {
-		@ApiResponse(responseCode = "200", description = "종아요한 상품 목록 조회 성공"),
-		@ApiResponse(responseCode = "404", description = "좋아요한 상품이 없습니다.")
+		@ApiResponse(responseCode = "200", ref = "#/components/responses/Success"),
+		@ApiResponse(responseCode = "404", ref = "#/components/responses/NotFound")
 	})
 	@SecurityRequirement(name = "bearerAuth")
-	public ResponseEntity<ApiResult> getProductLikes(@AuthenticationPrincipal String authId,
+	public ResponseEntity<ApiResult<ProductListResponseDTO<ProductResponseDTO>>> getProductLikes(
+		@AuthenticationPrincipal String authId,
 		@RequestParam(defaultValue = "0") int offset,
-		@RequestParam(defaultValue = "10") int limit) {
-
-		ProductListResponseDTO<ProductResponseDTO> productLikePage = productLikeService.getProductLikes(authId, offset, limit);
-
-		if (productLikePage.products().isEmpty()) {
-			return ResponseEntity.status(404).body(new ApiResult(200, HttpStatus.OK, "좋아요한 상품이 없습니다.", productLikePage));
-		}
-		return ResponseEntity.ok(new ApiResult(200, HttpStatus.OK, "좋아요한 상품 목록 조회 성공", productLikePage));
+		@RequestParam(defaultValue = "10") int limit) 
+	{
+		ProductListResponseDTO<ProductResponseDTO> response = productLikeService.getProductLikes(authId, offset, limit);
+		return ResponseEntity.ok(ApiResult.success(ErrorCode.LIKED_PRODUCT_LIST_SUCCESS, response));
 	}
 
-	@Operation(
-		summary = "상품 좋아요 생성 및 취소",
-		description = "상품에 좋아요를 생성하거나 취소합니다.",
-		responses = {
-			@ApiResponse(responseCode = "200", description = "성공", content = @Content(mediaType = "application/json")),
-			@ApiResponse(responseCode = "404", description = "상품을 찾을 수 없음", content = @Content(mediaType = "application/json"))
-		}
-	)
 	@PostMapping("/{productId}/like")
-	public ResponseEntity<ApiResult> toggleLike(
+	@Operation(summary = "상품 좋아요 토글", description = "상품 좋아요 상태를 변경합니다.")
+	@ApiResponses(value = {
+		@ApiResponse(responseCode = "200", ref = "#/components/responses/Success"),
+		@ApiResponse(responseCode = "404", ref = "#/components/responses/NotFound")
+	})
+	public ResponseEntity<ApiResult<Map<String, Boolean>>> toggleLike(
 		@PathVariable Long productId,
-		@AuthenticationPrincipal String authId
-	) {
+		@AuthenticationPrincipal String authId) 
+	{
 		boolean isLiked = productLikeService.toggleLike(productId, authId);
-
-		String message = isLiked ? "좋아요 성공" : "좋아요 취소 성공";
-
-		return ResponseEntity.ok(new ApiResult(
-			200,
-			HttpStatus.OK,
-			message,
-			Map.of("isLiked", isLiked)
-		));
+		return ResponseEntity.ok(
+			ApiResult.success(
+				isLiked ? ErrorCode.PRODUCT_LIKE_ADDED : ErrorCode.PRODUCT_LIKE_REMOVED,
+				Map.of("isLiked", isLiked)
+			)
+		);
 	}
 }

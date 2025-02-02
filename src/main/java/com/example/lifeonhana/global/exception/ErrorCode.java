@@ -106,7 +106,19 @@ public enum ErrorCode {
 
     // 분석 관련
     INSIGHT_ANALYSIS_SUCCESS(HttpStatus.OK, "I200", "상품 분석이 완료되었습니다"),
-    ANALYSIS_SERVICE_UNAVAILABLE(HttpStatus.SERVICE_UNAVAILABLE, "I503", "분석 서비스가 일시적으로 중단되었습니다");
+    ANALYSIS_SERVICE_UNAVAILABLE(HttpStatus.SERVICE_UNAVAILABLE, "I503", "분석 서비스가 일시적으로 중단되었습니다"),
+
+    // 좋아요 관련
+    LIKED_PRODUCT_LIST_SUCCESS(HttpStatus.OK, "L200", "좋아요한 상품 목록 조회 성공"),
+    PRODUCT_LIKE_ADDED(HttpStatus.OK, "L201", "상품 좋아요 처리 완료"),
+    PRODUCT_LIKE_REMOVED(HttpStatus.OK, "L202", "상품 좋아요 취소 완료"),
+
+    // 페이지네이션
+    INVALID_PAGINATION_PARAMS(HttpStatus.BAD_REQUEST, "P400", "잘못된 페이지네이션 파라미터"),
+
+    // 좋아요
+    NO_LIKED_PRODUCTS(HttpStatus.NOT_FOUND, "L404", "좋아요한 상품이 없습니다"),
+    INVALID_PRODUCT_ID(HttpStatus.BAD_REQUEST, "P400", "유효하지 않은 상품 ID");
 
     
 
