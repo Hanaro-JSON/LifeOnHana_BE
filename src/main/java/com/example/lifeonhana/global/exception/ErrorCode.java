@@ -123,7 +123,15 @@ public enum ErrorCode {
     // 사용자 정보
     USER_INFO_SUCCESS(HttpStatus.OK, "U200", "사용자 정보 조회 성공"),
     MYDATA_INFO_SUCCESS(HttpStatus.OK, "M200", "마이데이터 조회 성공"),
-    NICKNAME_INFO_SUCCESS(HttpStatus.OK, "N200", "사용자 칭호 조회 성공");
+    NICKNAME_INFO_SUCCESS(HttpStatus.OK, "N200", "사용자 칭호 조회 성공"),
+
+    // 하나지갑 관련
+    WALLET_CREATE_SUCCESS(HttpStatus.OK, "W200", "하나지갑 정보 등록 성공"),
+    WALLET_READ_SUCCESS(HttpStatus.OK, "W201", "하나지갑 정보 조회 성공"),
+    WALLET_UPDATE_SUCCESS(HttpStatus.OK, "W202", "하나지갑 정보 수정 성공"),
+    WALLET_CREATE_FAILED(HttpStatus.BAD_REQUEST, "W400", "하나지갑 정보 등록 실패"),
+    WALLET_ALREADY_EXISTS(HttpStatus.BAD_REQUEST, "W400", "이미 존재하는 하나지갑 정보");
+
 
     
 
