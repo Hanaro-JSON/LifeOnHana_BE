@@ -54,9 +54,6 @@ public enum ErrorCode {
     // 서버
     INTERNAL_SERVER_ERROR(HttpStatus.INTERNAL_SERVER_ERROR, "S500", "서버 내부 오류"),
 
-    // 상품
-    PRODUCT_NOT_FOUND(HttpStatus.NOT_FOUND, "P001", "상품을 찾을 수 없습니다"),
-
     // 파일 업로드 관련
     FILE_UPLOAD_FAILED(HttpStatus.INTERNAL_SERVER_ERROR, "F001", "파일 업로드 실패"),
     INVALID_FILE_TYPE(HttpStatus.BAD_REQUEST, "F002", "허용되지 않은 파일 형식입니다"),
@@ -94,7 +91,18 @@ public enum ErrorCode {
     LUMP_SUM_CREATED(HttpStatus.CREATED, "L201", "목돈 인출 신청이 완료되었습니다"),
 
     // 지갑 관련
-    WALLET_NOT_FOUND(HttpStatus.NOT_FOUND, "W404", "하나지갑이 존재하지 않습니다");
+    WALLET_NOT_FOUND(HttpStatus.NOT_FOUND, "W404", "하나지갑이 존재하지 않습니다"),
+
+    // 상품 목록
+    PRODUCT_LIST_SUCCESS(HttpStatus.OK, "P200", "상품 목록 조회 성공"),
+
+    // 상품 상세
+    SAVING_PRODUCT_DETAIL_SUCCESS(HttpStatus.OK, "P201", "예적금 상품 상세 조회 성공"),
+    LOAN_PRODUCT_DETAIL_SUCCESS(HttpStatus.OK, "P202", "대출 상품 상세 조회 성공"),
+    LIFE_PRODUCT_DETAIL_SUCCESS(HttpStatus.OK, "P203", "라이프 상품 상세 조회 성공"),
+
+    // 공통
+    PRODUCT_NOT_FOUND(HttpStatus.NOT_FOUND, "P404", "상품을 찾을 수 없습니다");
 
     
 

@@ -13,7 +13,7 @@ import com.example.lifeonhana.dto.response.ProductListResponseDTO;
 import com.example.lifeonhana.dto.response.SavingProductResponseDTO;
 import com.example.lifeonhana.dto.response.SimpleProductResponseDTO;
 import com.example.lifeonhana.entity.Product;
-import com.example.lifeonhana.global.exception.BadRequestException;
+import com.example.lifeonhana.global.exception.BaseException;
 import com.example.lifeonhana.repository.ProductLikeRepository;
 import com.example.lifeonhana.repository.ProductRepository;
 
@@ -47,10 +47,10 @@ public class ProductService {
 
 	public SavingProductResponseDTO getSavingsProduct(Long productId) {
 		Product product = productRepository.findByProductId(productId)
-				.orElseThrow(() -> new BadRequestException("존재하지 않는 id 입니다."));
+				.orElseThrow(() -> new BaseException(ErrorCode.PRODUCT_NOT_FOUND));
 
 		if (product.getCategory() != Product.Category.SAVINGS) {
-			throw new BadRequestException("존재하지 않는 id 입니다.");
+			throw new BaseException(ErrorCode.PRODUCT_NOT_FOUND);
 		}
 
 		boolean isLike = productLikeRepository.existsById_ProductIdAndIsLikeTrue(productId);
@@ -58,11 +58,11 @@ public class ProductService {
 	}
 
 	public LoanProductDetailResponseDTO getLoanProduct(Long productId) {
-		Product product = productRepository.findByProductId(productId).orElseThrow(() -> new BadRequestException(
-			"존재하지 않는 id 입니다."));
+		Product product = productRepository.findByProductId(productId).orElseThrow(() -> new BaseException(
+			ErrorCode.PRODUCT_NOT_FOUND));
 
 		if (product.getCategory() != Product.Category.LOAN) {
-			throw new BadRequestException("존재하지 않는 id 입니다.");
+			throw new BaseException(ErrorCode.PRODUCT_NOT_FOUND);
 		}
 
 		boolean isLike = productLikeRepository.existsById_ProductIdAndIsLikeTrue(productId);
@@ -70,11 +70,11 @@ public class ProductService {
 	}
 
 	public LifeProductResponseDTO getLifeProduct(Long productId) {
-		Product product = productRepository.findByProductId(productId).orElseThrow(() -> new BadRequestException(
-			"존재하지 않는 id 입니다."));
+		Product product = productRepository.findByProductId(productId).orElseThrow(() -> new BaseException(
+			ErrorCode.PRODUCT_NOT_FOUND));
 
 		if(product.getCategory() != Product.Category.LIFE) {
-			throw new BadRequestException("존재하지 않는 id 입니다.");
+			throw new BaseException(ErrorCode.PRODUCT_NOT_FOUND);
 		}
 
 		boolean isLike = productLikeRepository.existsById_ProductIdAndIsLikeTrue(productId);
