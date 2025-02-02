@@ -14,6 +14,7 @@ import com.example.lifeonhana.dto.response.SavingProductResponseDTO;
 import com.example.lifeonhana.dto.response.SimpleProductResponseDTO;
 import com.example.lifeonhana.entity.Product;
 import com.example.lifeonhana.global.exception.BaseException;
+import com.example.lifeonhana.global.exception.ErrorCode;
 import com.example.lifeonhana.repository.ProductLikeRepository;
 import com.example.lifeonhana.repository.ProductRepository;
 

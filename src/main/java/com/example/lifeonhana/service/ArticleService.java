@@ -6,7 +6,6 @@ import com.example.lifeonhana.entity.ArticleLike;
 import com.example.lifeonhana.entity.User;
 import com.example.lifeonhana.global.exception.BaseException;
 import com.example.lifeonhana.global.exception.ErrorCode;
-import com.example.lifeonhana.global.exception.NotFoundException;
 import jakarta.persistence.criteria.CriteriaBuilder;
 import jakarta.persistence.criteria.Root;
 import org.springframework.transaction.annotation.Transactional;
