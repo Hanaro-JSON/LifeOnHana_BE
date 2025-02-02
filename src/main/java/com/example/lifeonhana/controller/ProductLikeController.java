@@ -15,6 +15,7 @@ import org.springframework.web.bind.annotation.RestController;
 import com.example.lifeonhana.ApiResult;
 import com.example.lifeonhana.dto.response.ProductListResponseDTO;
 import com.example.lifeonhana.dto.response.ProductResponseDTO;
+import com.example.lifeonhana.global.exception.ErrorCode;
 import com.example.lifeonhana.service.ProductLikeService;
 
 import io.swagger.v3.oas.annotations.Operation;

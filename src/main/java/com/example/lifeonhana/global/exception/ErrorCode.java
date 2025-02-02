@@ -61,9 +61,9 @@ public enum ErrorCode {
     // 기사 관련
     ARTICLE_NOT_FOUND_ID(HttpStatus.NOT_FOUND, "A001", "존재하지 않는 ID입니다"),
 
-    AUTH_REQUIRED(HttpStatus.UNAUTHORIZED, "H001", "로그인이 필요한 서비스입니다"),
+    AUTH_REQUIRED(HttpStatus.UNAUTHORIZED, "A401", "로그인이 필요한 서비스입니다"),
     INVALID_DATE_FORMAT(HttpStatus.BAD_REQUEST, "H002", "올바른 년월 형식이 아닙니다 (YYYY-MM)"),
-
+    NO_LIKED_ARTICLES(HttpStatus.NOT_FOUND, "A404", "좋아요한 칼럼이 없습니다"),
     // 대출 관련
     LOAN_AMOUNT_INVALID(HttpStatus.BAD_REQUEST, "L001", "유효하지 않은 대출 금액입니다"),
     LOAN_REASON_REQUIRED(HttpStatus.BAD_REQUEST, "L002", "대출 사유는 필수 항목입니다"),
@@ -118,7 +118,12 @@ public enum ErrorCode {
 
     // 좋아요
     NO_LIKED_PRODUCTS(HttpStatus.NOT_FOUND, "L404", "좋아요한 상품이 없습니다"),
-    INVALID_PRODUCT_ID(HttpStatus.BAD_REQUEST, "P400", "유효하지 않은 상품 ID");
+    INVALID_PRODUCT_ID(HttpStatus.BAD_REQUEST, "P400", "유효하지 않은 상품 ID"),
+
+    // 사용자 정보
+    USER_INFO_SUCCESS(HttpStatus.OK, "U200", "사용자 정보 조회 성공"),
+    MYDATA_INFO_SUCCESS(HttpStatus.OK, "M200", "마이데이터 조회 성공"),
+    NICKNAME_INFO_SUCCESS(HttpStatus.OK, "N200", "사용자 칭호 조회 성공");
 
     
 
