@@ -8,7 +8,8 @@ import com.example.lifeonhana.filter.JwtAuthenticationFilter;
 import com.example.lifeonhana.service.RedisService;
 import com.example.lifeonhana.service.UserService;
 import com.example.lifeonhana.service.JwtService;
-import com.example.lifeonhana.global.exception.NotFoundException;
+import com.example.lifeonhana.global.exception.BaseException;
+import com.example.lifeonhana.global.exception.ErrorCode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
@@ -130,14 +131,15 @@ class UserControllerTest {
 	void getUserInfo_UserNotFound() throws Exception {
 		// given
 		given(userService.getUserInfo(AUTH_ID))
-			.willThrow(new NotFoundException("사용자를 찾을 수 없습니다."));
+			.willThrow(new BaseException(ErrorCode.USER_NOT_FOUND, AUTH_ID));
 
 		// when & then
 		mockMvc.perform(get("/api/users/info")
 				.header("Authorization", "Bearer test-token")
 				.principal(() -> AUTH_ID))
 			.andExpect(status().isNotFound())
-			.andExpect(jsonPath("$.message").value("Not Found.\n사용자를 찾을 수 없습니다."));
+			.andExpect(jsonPath("$.code").value(ErrorCode.USER_NOT_FOUND.getCode()))
+			.andExpect(jsonPath("$.message").value(ErrorCode.USER_NOT_FOUND.getMessage()));
 	}
 
 	@Test
@@ -171,14 +173,15 @@ class UserControllerTest {
 	void getMyData_NotFound() throws Exception {
 		// given
 		given(userService.getMyData(AUTH_ID))
-			.willThrow(new NotFoundException("마이데이터 정보를 찾을 수 없습니다."));
+			.willThrow(new BaseException(ErrorCode.MYDATA_NOT_FOUND, AUTH_ID));
 
 		// when & then
 		mockMvc.perform(get("/api/users/mydata")
 				.header("Authorization", "Bearer test-token")
 				.principal(() -> AUTH_ID))
 			.andExpect(status().isNotFound())
-			.andExpect(jsonPath("$.message").value("Not Found.\n마이데이터 정보를 찾을 수 없습니다."));
+			.andExpect(jsonPath("$.code").value(ErrorCode.MYDATA_NOT_FOUND.getCode()))
+			.andExpect(jsonPath("$.message").value(ErrorCode.MYDATA_NOT_FOUND.getMessage()));
 	}
 
 	@Test
@@ -210,16 +213,15 @@ class UserControllerTest {
 	@DisplayName("사용자 칭호 조회 실패 - 좋아요 기록 없음")
 	void getUserNickname_NoLikes() throws Exception {
 		// given
-		UserNicknameResponseDTO emptyResponse = UserNicknameResponseDTO.builder()
-			.nickname("좋아요한 칼럼이 없습니다.")
-			.build();
-		given(userService.getUserNickname(AUTH_ID)).willReturn(emptyResponse);
+		given(userService.getUserNickname(AUTH_ID))
+			.willThrow(new BaseException(ErrorCode.NO_LIKED_ARTICLES));
 
 		// when & then
 		mockMvc.perform(get("/api/users/nickname")
 				.header("Authorization", "Bearer test-token")
 				.principal(() -> AUTH_ID))
-			.andExpect(status().isOk())
-			.andExpect(jsonPath("$.data.nickname").value("좋아요한 칼럼이 없습니다."));
+			.andExpect(status().isNotFound())
+			.andExpect(jsonPath("$.code").value(ErrorCode.NO_LIKED_ARTICLES.getCode()))
+			.andExpect(jsonPath("$.message").value(ErrorCode.NO_LIKED_ARTICLES.getMessage()));
 	}
 }
