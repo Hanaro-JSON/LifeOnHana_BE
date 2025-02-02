@@ -102,7 +102,11 @@ public enum ErrorCode {
     LIFE_PRODUCT_DETAIL_SUCCESS(HttpStatus.OK, "P203", "라이프 상품 상세 조회 성공"),
 
     // 공통
-    PRODUCT_NOT_FOUND(HttpStatus.NOT_FOUND, "P404", "상품을 찾을 수 없습니다");
+    PRODUCT_NOT_FOUND(HttpStatus.NOT_FOUND, "P404", "상품을 찾을 수 없습니다"),
+
+    // 분석 관련
+    INSIGHT_ANALYSIS_SUCCESS(HttpStatus.OK, "I200", "상품 분석이 완료되었습니다"),
+    ANALYSIS_SERVICE_UNAVAILABLE(HttpStatus.SERVICE_UNAVAILABLE, "I503", "분석 서비스가 일시적으로 중단되었습니다");
 
     
 
