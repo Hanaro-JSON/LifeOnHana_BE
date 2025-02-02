@@ -130,10 +130,15 @@ public enum ErrorCode {
     WALLET_READ_SUCCESS(HttpStatus.OK, "W201", "하나지갑 정보 조회 성공"),
     WALLET_UPDATE_SUCCESS(HttpStatus.OK, "W202", "하나지갑 정보 수정 성공"),
     WALLET_CREATE_FAILED(HttpStatus.BAD_REQUEST, "W400", "하나지갑 정보 등록 실패"),
-    WALLET_ALREADY_EXISTS(HttpStatus.BAD_REQUEST, "W400", "이미 존재하는 하나지갑 정보");
+    WALLET_ALREADY_EXISTS(HttpStatus.BAD_REQUEST, "W400", "이미 존재하는 하나지갑 정보"),
 
+    // 쇼츠 관련
+    SHORTS_READ_SUCCESS(HttpStatus.OK, "S200", "컨텐츠 조회 성공"),
+    CONTENT_NOT_FOUND(HttpStatus.NOT_FOUND, "S404", "컨텐츠를 찾을 수 없습니다"),
 
-    
+    // 추천 시스템
+    RECOMMENDATION_SERVICE_ERROR(HttpStatus.INTERNAL_SERVER_ERROR, "R500", "추천 서비스 장애");
+
 
     private final HttpStatus httpStatus;
     private final String code;
