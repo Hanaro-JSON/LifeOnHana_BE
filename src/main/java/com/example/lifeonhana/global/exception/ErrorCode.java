@@ -45,12 +45,20 @@ public enum ErrorCode {
     // 기사 관련
     ARTICLE_NOT_FOUND(HttpStatus.NOT_FOUND, "AR001", "게시글을 찾을 수 없습니다"),
 
+    // 상품 관련
+    PRODUCT_NOT_FOUND(HttpStatus.NOT_FOUND, "P001", "상품을 찾을 수 없습니다"),
+
     // 리소스 관련 오류
     RESOURCE_NOT_FOUND(HttpStatus.NOT_FOUND, "R001", "요청한 리소스를 찾을 수 없습니다"),
 
     // 인증 관련
     INVALID_TOKEN_FORMAT(HttpStatus.BAD_REQUEST, "A003", "토큰 형식이 올바르지 않습니다"),
-    INVALID_ACCESS_TOKEN(HttpStatus.UNAUTHORIZED, "A004", "유효하지 않은 액세스 토큰");
+    INVALID_ACCESS_TOKEN(HttpStatus.UNAUTHORIZED, "A004", "유효하지 않은 액세스 토큰"),
+
+    // Redis 관련
+    REDIS_DATA_INVALID(HttpStatus.BAD_REQUEST, "R001", "잘못된 Redis 데이터 형식"),
+    SYNC_ARTICLE_LIKE_FAILED(HttpStatus.INTERNAL_SERVER_ERROR, "R002", "좋아요 동기화 실패"),
+    SYNC_PRODUCT_LIKE_FAILED(HttpStatus.INTERNAL_SERVER_ERROR, "R003", "상품 좋아요 동기화 실패");
         
 
     private final HttpStatus httpStatus;
