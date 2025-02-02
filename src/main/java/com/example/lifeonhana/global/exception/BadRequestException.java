@@ -4,11 +4,12 @@ import org.springframework.http.HttpStatus;
 
 public class BadRequestException extends BaseException {
 
-	public BadRequestException(String message) {
-		super(message);
+	public BadRequestException(ErrorCode errorCode) {
+		super(errorCode);
 	}
-	public  BadRequestException(String message, Object data) {
-		super(message, data);
+
+	public BadRequestException(ErrorCode errorCode, Object data) {
+		super(errorCode, data);
 	}
 
 	@Override

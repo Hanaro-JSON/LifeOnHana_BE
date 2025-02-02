@@ -3,8 +3,12 @@ package com.example.lifeonhana.global.exception;
 import org.springframework.http.HttpStatus;
 
 public class ForbiddenException extends BaseException {
-	public ForbiddenException(String message) {
-		super(message);
+	public ForbiddenException(ErrorCode errorCode) {
+		super(errorCode);
+	}
+
+	public ForbiddenException(ErrorCode errorCode, Object data) {
+		super(errorCode, data);
 	}
 
 	@Override

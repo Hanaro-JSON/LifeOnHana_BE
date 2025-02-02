@@ -2,9 +2,13 @@ package com.example.lifeonhana.global.exception;
 
 import org.springframework.http.HttpStatus;
 
-public class NotFoundException extends BaseException{
-	public NotFoundException(String message) {
-		super(message);
+public class NotFoundException extends BaseException {
+	public NotFoundException(ErrorCode errorCode) {
+		super(errorCode);
+	}
+
+	public NotFoundException(ErrorCode errorCode, Object data) {
+		super(errorCode, data);
 	}
 
 	@Override

@@ -6,21 +6,34 @@ import lombok.Getter;
 
 @Getter
 public abstract class BaseException extends RuntimeException {
+	private final ErrorCode errorCode;
 	private final Object data;
 
-	protected BaseException(String message) {
-		super(message, null);
+	protected BaseException(ErrorCode errorCode) {
+		super(errorCode.getMessage());
+		this.errorCode = errorCode;
 		this.data = null;
 	}
 
-	protected BaseException(String message, Object data) {
-		super(message);
+	protected BaseException(ErrorCode errorCode, Object data) {
+		super(errorCode.getMessage());
+		this.errorCode = errorCode;
 		this.data = data;
 	}
 
-	public abstract int getStatusCode();
-	public abstract HttpStatus getHttpStatus();
+	public int getStatusCode() {
+		return errorCode.getHttpStatus().value();
+	}
+
+	public HttpStatus getHttpStatus() {
+		return errorCode.getHttpStatus();
+	}
+
 	public String getCustomMessage() {
-		return getMessage();
+		return errorCode.getMessage();
+	}
+
+	public String getErrorCode() {
+		return errorCode.getCode();
 	}
 }

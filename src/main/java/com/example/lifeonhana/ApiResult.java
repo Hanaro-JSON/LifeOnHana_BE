@@ -11,9 +11,27 @@ import lombok.Data;
 @Data
 @AllArgsConstructor
 @Builder
-public class ApiResult {
-	private int code;
-	private HttpStatus status;
+@JsonInclude(JsonInclude.Include.NON_NULL)
+public class ApiResult<T> {
+	private int status;
+	private String code;
 	private String message;
-	private Object data;
+	private T data;
+
+	public static <T> ApiResult<T> success(T data) {
+		return ApiResult.<T>builder()
+			.status(HttpStatus.OK.value())
+			.code("SUCCESS")
+			.message("요청 처리 성공")
+			.data(data)
+			.build();
+	}
+
+	public static ApiResult<?> error(ErrorCode errorCode) {
+		return ApiResult.builder()
+			.status(errorCode.getHttpStatus().value())
+			.code(errorCode.getCode())
+			.message(errorCode.getMessage())
+			.build();
+	}
 }

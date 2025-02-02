@@ -3,8 +3,12 @@ package com.example.lifeonhana.global.exception;
 import org.springframework.http.HttpStatus;
 
 public class UnauthorizedException extends BaseException {
-	public UnauthorizedException(String message) {
-		super(message);
+	public UnauthorizedException(ErrorCode errorCode) {
+		super(errorCode);
+	}
+
+	public UnauthorizedException(ErrorCode errorCode, Object data) {
+		super(errorCode, data);
 	}
 
 	@Override

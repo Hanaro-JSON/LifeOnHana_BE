@@ -223,4 +223,23 @@ class AccountControllerTest {
             .andExpect(jsonPath("$.code").value(400))
             .andExpect(jsonPath("$.message").exists());
     }
+
+    @Test
+    @DisplayName("잘못된 토큰 형식")
+    void getAccounts_InvalidTokenFormat() throws Exception {
+        mockMvc.perform(get("/api/account")
+                .header("Authorization", "InvalidToken"))
+            .andExpect(status().isBadRequest())
+            .andExpect(jsonPath("$.code").value("A003"));
+    }
+
+    @Test
+    @DisplayName("만료된 토큰")
+    void getAccounts_ExpiredToken() throws Exception {
+        String expiredToken = "Bearer expired.token.here";
+        mockMvc.perform(get("/api/account")
+                .header("Authorization", expiredToken))
+            .andExpect(status().isUnauthorized())
+            .andExpect(jsonPath("$.code").value("A004"));
+    }
 } 
