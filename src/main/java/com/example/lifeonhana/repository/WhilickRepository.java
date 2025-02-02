@@ -22,10 +22,9 @@ public interface WhilickRepository extends JpaRepository<Whilick, Long> {
 	Set<Article> findArticlesWithWhilicksByIdIn(@Param("articleIds") List<Long> articleIds);
 
 	@Query("SELECT DISTINCT a FROM Article a " +
-		"LEFT JOIN FETCH a.articleLikes al " +
-		"WHERE a.articleId IN :articleIds " +
-		"AND (al IS NULL OR (al.id.userId = :userId AND al.isLike = true))")
-	Set<Article> findArticlesWithLikesByIdIn(@Param("articleIds") List<Long> articleIds, @Param("userId") Long userId);
+		"LEFT JOIN FETCH a.articleLikes " +
+		"WHERE a.articleId IN :articleIds")
+	Set<Article> findArticlesWithLikesByIdIn(@Param("articleIds") List<Long> articleIds);
 
 	@Query("SELECT DISTINCT a FROM Article a " +
 		"ORDER BY a.publishedAt DESC")

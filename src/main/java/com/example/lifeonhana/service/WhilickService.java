@@ -88,8 +88,13 @@ public class WhilickService {
 
 		List<Long> pageArticleIds = articleIds.subList(start, end);
 
+		log.info("Page article IDs: {}, Size: {}", pageArticleIds, pageArticleIds.size());
+
 		Set<Article> articlesWithWhilicks = whilickRepository.findArticlesWithWhilicksByIdIn(pageArticleIds);
-		Set<Article> articlesWithLikes = whilickRepository.findArticlesWithLikesByIdIn(pageArticleIds, userId);
+		Set<Article> articlesWithLikes = whilickRepository.findArticlesWithLikesByIdIn(pageArticleIds);
+		log.info("Articles with whilicks size: {}", articlesWithWhilicks.size());
+		log.info("Articles with likes size: {}", articlesWithLikes.size());
+
 
 		Map<Long, Article> whilicksMap = articlesWithWhilicks.stream()
 			.collect(Collectors.toMap(Article::getArticleId, a -> a));
@@ -113,6 +118,8 @@ public class WhilickService {
 		List<WhilickContentDTO> contents = sortedArticles.stream()
 			.map(article -> createWhilickContent(article, userId))
 			.collect(Collectors.toList());
+
+		log.info("Sorted articles size: {}, Final contents size: {}", sortedArticles.size(), contents.size());
 
 		return new WhilickResponseDTO(
 			contents,
