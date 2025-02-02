@@ -57,7 +57,7 @@ public class AccountController {
 
 	private void validateTokenFormat(String token) {
 		if (token == null || !token.startsWith("Bearer ")) {
-			throw new BadRequestException(ErrorCode.INVALID_TOKEN_FORMAT);
+			throw new BadRequestException(ErrorCode.INVALID_TOKEN);
 		}
 	}
 
@@ -65,7 +65,7 @@ public class AccountController {
 		try {
 			return jwtService.extractUserId(token.substring(7));
 		} catch (JwtException e) {
-			throw new UnauthorizedException(ErrorCode.INVALID_ACCESS_TOKEN);
+			throw new UnauthorizedException(ErrorCode.EXPIRED_TOKEN);
 		}
 	}
 
@@ -81,7 +81,7 @@ public class AccountController {
 		@AuthenticationPrincipal String authId
 	) {
 		if (authId == null || authId.isEmpty()) {
-			throw new UnauthorizedException(ErrorCode.UNAUTHORIZED_ACCESS);
+			throw new UnauthorizedException(ErrorCode.UNAUTHORIZED);
 		}
 
 		SalaryAccountResponseDTO response = accountService.getSalaryAccount(authId);
@@ -105,7 +105,7 @@ public class AccountController {
 		@RequestBody AccountTransferRequest transferRequest) {
 		
 		if (authId == null || authId.isEmpty()) {
-			throw new UnauthorizedException(ErrorCode.UNAUTHORIZED_ACCESS);
+			throw new UnauthorizedException(ErrorCode.UNAUTHORIZED);
 		}
 		
 		AccountTransferResponse response = accountService.transfer(authId, transferRequest);

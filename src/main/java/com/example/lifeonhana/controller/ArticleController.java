@@ -32,6 +32,8 @@ import org.springframework.data.domain.Slice;
 import java.util.Map;
 import java.util.HashMap;
 
+import com.example.lifeonhana.global.exception.ErrorCode;
+
 @RestController
 @RequestMapping("/api/articles")
 @RequiredArgsConstructor
@@ -54,51 +56,25 @@ public class ArticleController {
 		}
 	)
 	@GetMapping("/{articleId}")
-	public ResponseEntity<ApiResult> getArticleDetails(@PathVariable Long articleId ,@AuthenticationPrincipal String authId) {
+	public ResponseEntity<ApiResult<ArticleDetailResponse>> getArticleDetails(
+			@PathVariable Long articleId, 
+			@AuthenticationPrincipal String authId) {
 		try {
-			// Service에서 기사 상세 데이터 가져오기
-			ArticleDetailResponse articleResponse = articleService.getArticleDetails(articleId,authId);
-
-			// 성공 응답 생성
-			ApiResult result = ApiResult.builder()
-				.code(200)
-				.status(HttpStatus.OK)
-				.message("기사 상세 조회 성공")
-				.data(articleResponse)
-				.build();
-
-			return ResponseEntity.ok(result);
-
-		}catch (NotFoundException e) {
-            return ResponseEntity.status(HttpStatus.NOT_FOUND)
-                .body(ApiResult.builder()
-                    .code(HttpStatus.NOT_FOUND.value())
-                    .status(HttpStatus.NOT_FOUND)
-                    .message("게시글을 찾을 수 없습니다.")
-                    .build()
-                ); }
-		catch (IllegalArgumentException e) {
-			// 잘못된 요청에 대한 응답
-			ApiResult result = ApiResult.builder()
-				.code(400)
-				.status(HttpStatus.BAD_REQUEST)
-				.message(e.getMessage())
-				.build();
-
-			return ResponseEntity.badRequest().body(result);
-
+			ArticleDetailResponse articleResponse = articleService.getArticleDetails(articleId, authId);
+			return ResponseEntity.ok(ApiResult.<ArticleDetailResponse>builder()
+					.code(String.valueOf(HttpStatus.OK.value()))
+					.status(HttpStatus.OK)
+					.message("기사 상세 조회 성공")
+					.data(articleResponse)
+					.build());
+		} catch (NotFoundException e) {
+			return createErrorResponse(ErrorCode.ARTICLE_NOT_FOUND);
+		} catch (IllegalArgumentException e) {
+			return createErrorResponse(ErrorCode.INVALID_REQUEST);
 		} catch (Exception e) {
-			// 내부 서버 오류에 대한 응답
-			ApiResult result = ApiResult.builder()
-				.code(500)
-				.status(HttpStatus.INTERNAL_SERVER_ERROR)
-				.message("Unexpected error occurred")
-				.build();
-
-			return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(result);
+			return createErrorResponse(ErrorCode.INTERNAL_SERVER_ERROR);
 		}
 	}
-
 
 	@Operation(
 		summary = "기사 목록 조회",
@@ -112,28 +88,19 @@ public class ArticleController {
 	})
 	@SecurityRequirement(name = "bearerAuth")
 	@GetMapping
-	public ResponseEntity<ApiResult> getArticles(
-		@RequestParam(value = "category", required = false) String category,
-		@RequestParam(value = "page", defaultValue = "1") int page,
-		@RequestParam(value = "size", defaultValue = "20") int size,
-		@Parameter(hidden = true)
-		@AuthenticationPrincipal String authId
-	) {
+	public ResponseEntity<ApiResult<Map<String, Object>>> getArticles(
+			@RequestParam(value = "category", required = false) String category,
+			@RequestParam(value = "page", defaultValue = "1") int page,
+			@RequestParam(value = "size", defaultValue = "20") int size,
+			@Parameter(hidden = true) @AuthenticationPrincipal String authId) {
 		try {
-			// 인증 검증
 			validateAuthentication(authId);
 			
-			// 카테고리 유효성 검사
 			if (category != null && !category.isEmpty()) {
 				try {
 					Article.Category.valueOf(category.toUpperCase());
 				} catch (IllegalArgumentException e) {
-					return ResponseEntity.badRequest()
-						.body(ApiResult.builder()
-							.code(400)
-							.status(HttpStatus.BAD_REQUEST)
-							.message("잘못된 카테고리입니다.")
-							.build());
+					return createErrorResponse(ErrorCode.INVALID_CATEGORY);
 				}
 			}
 
@@ -143,27 +110,11 @@ public class ArticleController {
 			data.put("articles", response.getContent());
 			data.put("hasNext", response.hasNext());
 
-			return ResponseEntity.ok(ApiResult.builder()
-				.code(200)
-				.status(HttpStatus.OK)
-				.message("기사 목록 조회 성공")
-				.data(data)
-				.build());
-			
+			return createSuccessResponse("기사 목록 조회 성공", data);
 		} catch (UnauthorizedException e) {
-			return ResponseEntity.status(HttpStatus.UNAUTHORIZED)
-				.body(ApiResult.builder()
-					.code(401)
-					.status(HttpStatus.UNAUTHORIZED)
-					.message("인증이 필요합니다.")
-					.build());
+			return createErrorResponse(ErrorCode.UNAUTHORIZED);
 		} catch (Exception e) {
-			return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
-				.body(ApiResult.builder()
-					.code(500)
-					.status(HttpStatus.INTERNAL_SERVER_ERROR)
-					.message("기사 목록 조회 중 오류가 발생했습니다.")
-					.build());
+			return createErrorResponse(ErrorCode.INTERNAL_SERVER_ERROR);
 		}
 	}
 
@@ -175,7 +126,7 @@ public class ArticleController {
 	})
 	@GetMapping("/search")
 	@SecurityRequirement(name = "bearerAuth")
-	public ResponseEntity<ApiResult> searchArticles(
+	public ResponseEntity<ApiResult<Map<String, Object>>> searchArticles(
 			@Parameter(description = "검색 키워드")
 			@RequestParam(name = "query", required = false) String query,
 			@Parameter(description = "페이지 번호", example = "0")
@@ -187,24 +138,8 @@ public class ArticleController {
 		try {
 			validateAuthentication(authId);
 			
-			// 검색어 길이 검증
-			if (query != null) {
-				if (query.length() < 2) {
-					return ResponseEntity.badRequest()
-						.body(ApiResult.builder()
-							.code(400)
-							.status(HttpStatus.BAD_REQUEST)
-							.message("검색어는 최소 2자 이상이어야 합니다.")
-							.build());
-				}
-				if (query.length() > 100) {
-					return ResponseEntity.badRequest()
-						.body(ApiResult.builder()
-							.code(400)
-							.status(HttpStatus.BAD_REQUEST)
-							.message("검색어는 100자를 초과할 수 없습니다.")
-							.build());
-				}
+			if (query != null && (query.length() < 2 || query.length() > 100)) {
+				return createErrorResponse(ErrorCode.VALIDATION_FAILED);
 			}
 
 			Slice<ArticleSearchResponseDTO> response = articleService.searchArticles(query, page, size, authId);
@@ -215,27 +150,33 @@ public class ArticleController {
 
 			return createSuccessResponse("기사 검색 성공", data);
 		} catch (UnauthorizedException e) {
-			return ResponseEntity.status(HttpStatus.UNAUTHORIZED)
-				.body(ApiResult.builder()
-					.code(401)
-					.status(HttpStatus.UNAUTHORIZED)
-					.message("인증이 필요합니다.")
-					.build());
+			return createErrorResponse(ErrorCode.UNAUTHORIZED);
+		} catch (Exception e) {
+			return createErrorResponse(ErrorCode.INTERNAL_SERVER_ERROR);
 		}
 	}
 
-	private void validateAuthentication(String authId) {
-		if (authId == null || authId.isEmpty()) {
-			throw new UnauthorizedException("로그인이 필요한 서비스입니다.");
-		}
-	}
-
-	private ResponseEntity<ApiResult> createSuccessResponse(String message, Object data) {
-		return ResponseEntity.ok(ApiResult.builder()
-				.code(HttpStatus.OK.value())
+	private ResponseEntity<ApiResult<Map<String, Object>>> createSuccessResponse(String message, Map<String, Object> data) {
+		return ResponseEntity.ok(ApiResult.<Map<String, Object>>builder()
+				.code(String.valueOf(HttpStatus.OK.value()))
 				.status(HttpStatus.OK)
 				.message(message)
 				.data(data)
 				.build());
+	}
+
+	private <T> ResponseEntity<ApiResult<T>> createErrorResponse(ErrorCode errorCode) {
+		return ResponseEntity.status(errorCode.getHttpStatus())
+				.body(ApiResult.<T>builder()
+						.status(errorCode.getHttpStatus())
+						.code(errorCode.getCode())
+						.message(errorCode.getMessage())
+						.build());
+	}
+
+	private void validateAuthentication(String authId) {
+		if (authId == null || authId.isEmpty()) {
+			throw new UnauthorizedException(ErrorCode.UNAUTHORIZED);
+		}
 	}
 }

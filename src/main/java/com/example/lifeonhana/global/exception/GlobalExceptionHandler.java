@@ -10,22 +10,16 @@ import com.example.lifeonhana.ApiResult;
 @RestControllerAdvice
 public class GlobalExceptionHandler {
 	@ExceptionHandler(BaseException.class)
-	public ResponseEntity<ApiResult> handleBaseException(BaseException exception) {
-		return ResponseEntity
-			.status(exception.getHttpStatus())
-			.body(ApiResult.builder()
-				.status(exception.getHttpStatus().value())
-				.code(exception.getErrorCode())
-				.message(exception.getCustomMessage())
-				.data(exception.getData())
-				.build());
+	public ResponseEntity<ApiResult<?>> handleBaseException(BaseException e) {
+		return ResponseEntity.status(e.getHttpStatus())
+			.body(ApiResult.error(e.getErrorCode()));
 	}
 
 	@ExceptionHandler(UnauthorizedException.class)
-	public ResponseEntity<?> handleUnauthorizedException(UnauthorizedException exception) {
-		ApiResult response = ApiResult.builder()
-			.status(HttpStatus.UNAUTHORIZED.value())
-			.code(exception.getErrorCode())
+	public ResponseEntity<ApiResult<?>> handleUnauthorizedException(UnauthorizedException exception) {
+		ApiResult<?> response = ApiResult.builder()
+			.status(HttpStatus.UNAUTHORIZED)
+			.code(exception.getErrorCode().getCode())
 			.message(exception.getCustomMessage())
 			.data(exception.getData())
 			.build();
@@ -33,13 +27,23 @@ public class GlobalExceptionHandler {
 	}
 
 	@ExceptionHandler(Exception.class)
-	public ResponseEntity<ApiResult> handleException(Exception exception) {
-		return ResponseEntity
-			.status(HttpStatus.INTERNAL_SERVER_ERROR)
+	public ResponseEntity<ApiResult<?>> handleAll(Exception e) {
+		ErrorCode errorCode = ErrorCode.INTERNAL_SERVER_ERROR;
+		return ResponseEntity.status(errorCode.getHttpStatus())
+			.body(ApiResult.error(errorCode));
+	}
+
+	@ExceptionHandler(IllegalArgumentException.class)
+	public ResponseEntity<ApiResult<?>> handleIllegalArgument(IllegalArgumentException e) {
+		return createErrorResponse(ErrorCode.INVALID_REQUEST, e.getMessage());
+	}
+
+	private ResponseEntity<ApiResult<?>> createErrorResponse(ErrorCode errorCode, String message) {
+		return ResponseEntity.status(errorCode.getHttpStatus())
 			.body(ApiResult.builder()
-				.status(HttpStatus.INTERNAL_SERVER_ERROR.value())
-				.code("INTERNAL_ERROR")
-				.message("서버 내부 오류가 발생했습니다")
+				.status(errorCode.getHttpStatus())
+				.code(errorCode.getCode())
+				.message(message)
 				.build());
 	}
 }
