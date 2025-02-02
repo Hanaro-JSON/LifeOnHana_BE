@@ -15,6 +15,7 @@ import com.example.lifeonhana.entity.ProductLikeId;
 import com.example.lifeonhana.entity.User;
 import com.example.lifeonhana.global.exception.BaseException;
 import com.example.lifeonhana.global.exception.ErrorCode;
+import com.example.lifeonhana.global.exception.InternalServerException;
 import com.example.lifeonhana.global.exception.NotFoundException;
 import com.example.lifeonhana.repository.ArticleLikeRepository;
 import com.example.lifeonhana.repository.ArticleRepository;
@@ -83,7 +84,7 @@ public class RedisToDatabaseSynchronizer {
 				log.error("[Sync Error] Code: {} | Message: {}", 
 					ErrorCode.SYNC_ARTICLE_LIKE_FAILED.getCode(), 
 					e.getMessage());
-				throw new BaseException(ErrorCode.SYNC_ARTICLE_LIKE_FAILED, e);
+				throw new InternalServerException(ErrorCode.SYNC_ARTICLE_LIKE_FAILED, e);
 			}
 		}
 		
