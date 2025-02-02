@@ -16,9 +16,8 @@ import com.example.lifeonhana.dto.response.AccountTransferResponse;
 import com.example.lifeonhana.dto.response.SalaryAccountResponseDTO;
 import com.example.lifeonhana.service.AccountService;
 import com.example.lifeonhana.service.JwtService;
-import com.example.lifeonhana.global.exception.UnauthorizedException;
 import com.example.lifeonhana.global.exception.ErrorCode;
-import com.example.lifeonhana.global.exception.BadRequestException;
+import com.example.lifeonhana.global.exception.BaseException;
 
 import io.jsonwebtoken.JwtException;
 import io.swagger.v3.oas.annotations.Operation;
@@ -52,12 +51,12 @@ public class AccountController {
 		Long userId = extractUserIdFromToken(token);
 		
 		AccountListResponseDTO response = accountService.getAccounts(userId);
-		return ResponseEntity.ok(ApiResult.success(response));
+		return ResponseEntity.ok(ApiResult.<AccountListResponseDTO>success(response));
 	}
 
 	private void validateTokenFormat(String token) {
 		if (token == null || !token.startsWith("Bearer ")) {
-			throw new BadRequestException(ErrorCode.INVALID_TOKEN);
+			throw new BaseException(ErrorCode.INVALID_TOKEN);
 		}
 	}
 
@@ -65,7 +64,7 @@ public class AccountController {
 		try {
 			return jwtService.extractUserId(token.substring(7));
 		} catch (JwtException e) {
-			throw new UnauthorizedException(ErrorCode.EXPIRED_TOKEN);
+			throw new BaseException(ErrorCode.EXPIRED_TOKEN);
 		}
 	}
 
@@ -81,12 +80,12 @@ public class AccountController {
 		@AuthenticationPrincipal String authId
 	) {
 		if (authId == null || authId.isEmpty()) {
-			throw new UnauthorizedException(ErrorCode.UNAUTHORIZED);
+			throw new BaseException(ErrorCode.UNAUTHORIZED);
 		}
 
 		SalaryAccountResponseDTO response = accountService.getSalaryAccount(authId);
 		
-		return ResponseEntity.ok(ApiResult.success(response));
+		return ResponseEntity.ok(ApiResult.<SalaryAccountResponseDTO>success(response));
 	}
 
 	@Operation(
@@ -105,10 +104,10 @@ public class AccountController {
 		@RequestBody AccountTransferRequest transferRequest) {
 		
 		if (authId == null || authId.isEmpty()) {
-			throw new UnauthorizedException(ErrorCode.UNAUTHORIZED);
+			throw new BaseException(ErrorCode.UNAUTHORIZED);
 		}
 		
 		AccountTransferResponse response = accountService.transfer(authId, transferRequest);
-		return ResponseEntity.ok(ApiResult.success(response));
+		return ResponseEntity.ok(ApiResult.<AccountTransferResponse>success(response));
 	}
 }

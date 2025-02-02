@@ -4,6 +4,7 @@ import com.example.lifeonhana.dto.response.LikeResponseDto;
 import com.example.lifeonhana.entity.Article;
 import com.example.lifeonhana.entity.ArticleLike;
 import com.example.lifeonhana.entity.User;
+import com.example.lifeonhana.global.exception.BaseException;
 import com.example.lifeonhana.global.exception.ErrorCode;
 import com.example.lifeonhana.global.exception.NotFoundException;
 import jakarta.persistence.criteria.CriteriaBuilder;
@@ -150,7 +151,7 @@ public class ArticleService {
 		}
 
 		Long userId = userRepository.findByAuthId(authId)
-			.orElseThrow(() -> new NotFoundException(ErrorCode.USER_NOT_FOUND))
+			.orElseThrow(() -> new BaseException(ErrorCode.USER_NOT_FOUND))
 			.getUserId();
 
 		String userLikesKey = "user:" + userId + ":likes";
@@ -252,7 +253,7 @@ public class ArticleService {
 
 	private User findUser(String authId) {
 		return userRepository.findByAuthId(authId)
-				.orElseThrow(() -> new NotFoundException(ErrorCode.USER_NOT_FOUND));
+				.orElseThrow(() -> new BaseException(ErrorCode.USER_NOT_FOUND));
 	}
 
 	private Map<Long, Boolean> getLikeStatusMap(List<Article> articles, User user) {

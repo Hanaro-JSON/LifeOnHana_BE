@@ -7,7 +7,9 @@ import lombok.Getter;
 @Getter
 public enum ErrorCode {
     // 성공
-    SUCCESS(HttpStatus.OK, "0000", "요청이 성공적으로 처리되었습니다"),
+    SUCCESS(HttpStatus.OK, "S200", "요청이 성공적으로 처리되었습니다"),
+    LOGOUT_SUCCESS(HttpStatus.OK, "A200", "로그아웃 성공"),
+    CREATED(HttpStatus.CREATED, "S201", "리소스가 성공적으로 생성됨"),
 
     // 인증/인가
     UNAUTHORIZED(HttpStatus.UNAUTHORIZED, "A001", "인증이 필요합니다"),
@@ -27,7 +29,7 @@ public enum ErrorCode {
     ACCOUNT_NOT_FOUND(HttpStatus.NOT_FOUND, "AC001", "계좌를 찾을 수 없습니다"),
     MAIN_ACCOUNT_NOT_FOUND(HttpStatus.NOT_FOUND, "AC008", "메인 계좌를 찾을 수 없습니다"),
     INSUFFICIENT_BALANCE(HttpStatus.BAD_REQUEST, "AC002", "잔액이 부족합니다"),
-    SALARY_ACCOUNT_NOT_FOUND(HttpStatus.NOT_FOUND, "AC003", "급여 계좌를 찾을 수 없습니다"),
+    SALARY_ACCOUNT_NOT_FOUND(HttpStatus.NOT_FOUND, "AC003", "하나 월급 계좌를 찾을 수 없습니다"),
     NEGATIVE_TRANSFER_AMOUNT(HttpStatus.BAD_REQUEST, "AC004", "이체 금액은 0보다 커야 합니다"),
     TRANSFER_SAME_ACCOUNT(HttpStatus.BAD_REQUEST, "AC005", "동일 계좌로의 이체는 불가능합니다"),
     INTEREST_CALCULATION_FAILED(HttpStatus.INTERNAL_SERVER_ERROR, "AC006", "이자 계산 중 오류가 발생했습니다"),
@@ -48,7 +50,6 @@ public enum ErrorCode {
 
     // Redis
     REDIS_DATA_INVALID(HttpStatus.BAD_REQUEST, "R001", "잘못된 Redis 데이터 형식"),
-    SYNC_ARTICLE_LIKE_FAILED(HttpStatus.INTERNAL_SERVER_ERROR, "R002", "좋아요 동기화 실패"),
 
     // 서버
     INTERNAL_SERVER_ERROR(HttpStatus.INTERNAL_SERVER_ERROR, "S500", "서버 내부 오류"),
@@ -80,7 +81,20 @@ public enum ErrorCode {
     // Flask API 관련
     FLASK_RESPONSE_EMPTY(HttpStatus.BAD_REQUEST, "F001", "Flask API 응답 데이터 없음"),
     FLASK_RESPONSE_INVALID(HttpStatus.BAD_REQUEST, "F002", "Flask API 응답 형식 오류"),
-    FLASK_API_ERROR(HttpStatus.BAD_GATEWAY, "F003", "외부 API 호출 실패");
+    FLASK_API_ERROR(HttpStatus.BAD_GATEWAY, "F003", "외부 API 호출 실패"),
+
+    // 유효성 검사 오류
+    INVALID_INPUT(HttpStatus.BAD_REQUEST, "V400", "입력값이 유효하지 않습니다"),
+
+    // 동기화 관련
+    SYNC_ARTICLE_LIKE_FAILED(HttpStatus.INTERNAL_SERVER_ERROR, "S500", "게시글 좋아요 동기화 실패"),
+    SYNC_PRODUCT_LIKE_FAILED(HttpStatus.INTERNAL_SERVER_ERROR, "S501", "상품 좋아요 동기화 실패"),
+
+    // 목돈 관련
+    LUMP_SUM_CREATED(HttpStatus.CREATED, "L201", "목돈 인출 신청이 완료되었습니다"),
+
+    // 지갑 관련
+    WALLET_NOT_FOUND(HttpStatus.NOT_FOUND, "W404", "하나지갑이 존재하지 않습니다");
 
     
 

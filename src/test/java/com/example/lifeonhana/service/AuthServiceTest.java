@@ -12,14 +12,14 @@ import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
+import org.springframework.data.crossstore.ChangeSetPersister.NotFoundException;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.test.util.ReflectionTestUtils;
 
 import com.example.lifeonhana.dto.request.AuthRequestDTO;
 import com.example.lifeonhana.dto.response.AuthResponseDTO;
 import com.example.lifeonhana.entity.User;
-import com.example.lifeonhana.global.exception.NotFoundException;
-import com.example.lifeonhana.global.exception.UnauthorizedException;
+import com.example.lifeonhana.global.exception.BaseException;
 import com.example.lifeonhana.repository.UserRepository;
 
 @ExtendWith(MockitoExtension.class)
@@ -132,7 +132,7 @@ public class AuthServiceTest {
 		when(jwtService.isValidToken(refreshToken)).thenReturn(false);
 
 		// When & Then
-		assertThrows(UnauthorizedException.class, () -> authService.refreshToken(refreshToken));
+		assertThrows(BaseException.class, () -> authService.refreshToken(refreshToken));
 		verify(jwtService).isValidToken(refreshToken);
 		verify(jwtService, never()).extractAuthId(anyString());
 	}
@@ -163,7 +163,7 @@ public class AuthServiceTest {
 		when(jwtService.isValidToken(accessToken)).thenReturn(false);
 
 		// When & Then
-		assertThrows(UnauthorizedException.class, () -> authService.signOut(token));
+		assertThrows(BaseException.class, () -> authService.signOut(token));
 		verify(jwtService).isValidToken(accessToken);
 		verify(jwtService, never()).extractAuthId(anyString());
 		verify(redisService, never()).addToBlacklist(anyString(), anyLong());
@@ -185,6 +185,6 @@ public class AuthServiceTest {
 		when(passwordEncoder.matches(anyString(), anyString())).thenReturn(false);
 
 		// When & Then
-		assertThrows(UnauthorizedException.class, () -> authService.signIn(testRequest));
+		assertThrows(BaseException.class, () -> authService.signIn(testRequest));
 	}
 }

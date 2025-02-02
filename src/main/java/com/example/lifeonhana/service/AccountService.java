@@ -18,6 +18,8 @@ import com.example.lifeonhana.entity.Account;
 import com.example.lifeonhana.entity.User;
 import com.example.lifeonhana.repository.AccountRepository;
 import com.example.lifeonhana.repository.UserRepository;
+import com.fasterxml.jackson.databind.JsonSerializable.Base;
+
 import lombok.RequiredArgsConstructor;
 
 @Service
@@ -30,7 +32,7 @@ public class AccountService {
 	@Transactional(readOnly = true)
 	public AccountListResponseDTO getAccounts(Long userId) {
 		Account mainAccount = accountRepository.findByMydata_User_UserIdAndServiceAccount(userId, Account.ServiceAccount.SALARY)
-			.orElseThrow(() -> new NotFoundException(ErrorCode.MAIN_ACCOUNT_NOT_FOUND));
+			.orElseThrow(() -> new BaseException(ErrorCode.MAIN_ACCOUNT_NOT_FOUND));
 
 		List<Account> allAccounts = accountRepository.findByMydata_User_UserId(userId);
 
@@ -45,11 +47,11 @@ public class AccountService {
 	@Transactional(readOnly = true)
 	public SalaryAccountResponseDTO getSalaryAccount(String authId) {
 		User user = userRepository.findByAuthId(authId)
-			.orElseThrow(() -> new NotFoundException(ErrorCode.USER_NOT_FOUND));
+			.orElseThrow(() -> new BaseException(ErrorCode.USER_NOT_FOUND));
 			
 		Account salaryAccount = accountRepository.findByMydata_User_UserIdAndServiceAccount(
 			user.getUserId(), Account.ServiceAccount.SALARY)
-			.orElseThrow(() -> new NotFoundException(ErrorCode.SALARY_ACCOUNT_NOT_FOUND));
+			.orElseThrow(() -> new BaseException(ErrorCode.SALARY_ACCOUNT_NOT_FOUND));
 			
 		return new SalaryAccountResponseDTO(
 			salaryAccount.getAccountId(),
@@ -60,22 +62,22 @@ public class AccountService {
 	@Transactional
 	public AccountTransferResponse transfer(String authId, AccountTransferRequest request) {
 		if (request.amount().compareTo(BigDecimal.ZERO) <= 0) {
-			throw new BadRequestException(ErrorCode.NEGATIVE_TRANSFER_AMOUNT);
+			throw new BaseException(ErrorCode.NEGATIVE_TRANSFER_AMOUNT);
 		}
 
 		if (request.fromAccountId().equals(request.toAccountId())) {
-			throw new BadRequestException(ErrorCode.TRANSFER_SAME_ACCOUNT);
+			throw new BaseException(ErrorCode.TRANSFER_SAME_ACCOUNT);
 		}
 
 		Account fromAccount = accountRepository.findByAccountIdAndMydata_User_AuthId(
 			request.fromAccountId(), authId)
-			.orElseThrow(() -> new NotFoundException(ErrorCode.ACCOUNT_NOT_FOUND));
+			.orElseThrow(() -> new BaseException(ErrorCode.ACCOUNT_NOT_FOUND));
 
 		Account toAccount = accountRepository.findById(request.toAccountId())
-			.orElseThrow(() -> new NotFoundException(ErrorCode.ACCOUNT_NOT_FOUND));
+			.orElseThrow(() -> new BaseException(ErrorCode.ACCOUNT_NOT_FOUND));
 
 		if (fromAccount.getBalance().compareTo(request.amount()) < 0) {
-			throw new InsufficientBalanceException(ErrorCode.INSUFFICIENT_BALANCE);
+			throw new BaseException(ErrorCode.INSUFFICIENT_BALANCE);
 		}
 
 		fromAccount.withdraw(request.amount());
@@ -101,7 +103,7 @@ public class AccountService {
 			accountRepository.save(salaryAccounts);
 			
 		} catch (Exception e) {
-			throw new InternalServerException(ErrorCode.INTEREST_CALCULATION_FAILED, e.getMessage());
+			throw new BaseException(ErrorCode.INTEREST_CALCULATION_FAILED, e.getMessage());
 		}
 	}
 

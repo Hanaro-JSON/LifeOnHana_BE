@@ -7,43 +7,48 @@ import org.springframework.web.bind.annotation.RestControllerAdvice;
 
 import com.example.lifeonhana.ApiResult;
 
+import lombok.extern.slf4j.Slf4j;
+
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+import org.springframework.web.bind.MethodArgumentNotValidException;
+import java.util.Map;
+import java.util.Optional;
+import java.util.stream.Collectors;
+import org.springframework.validation.FieldError;
+
 @RestControllerAdvice
+@Slf4j
 public class GlobalExceptionHandler {
+
+	// 1. 모든 커스텀 예외 처리 (핵심)
 	@ExceptionHandler(BaseException.class)
 	public ResponseEntity<ApiResult<?>> handleBaseException(BaseException e) {
-		return ResponseEntity.status(e.getHttpStatus())
-			.body(ApiResult.error(e.getErrorCode()));
+		log.error("Business Exception: {}", e.getErrorCode().name(), e);
+		return buildResponse(e.getErrorCode(), e.getDetails());
 	}
 
-	@ExceptionHandler(UnauthorizedException.class)
-	public ResponseEntity<ApiResult<?>> handleUnauthorizedException(UnauthorizedException exception) {
-		ApiResult<?> response = ApiResult.builder()
-			.status(HttpStatus.UNAUTHORIZED)
-			.code(exception.getErrorCode().getCode())
-			.message(exception.getCustomMessage())
-			.data(exception.getData())
-			.build();
-		return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(response);
+	// 2. 스프링 프레임워크 예외 처리
+	@ExceptionHandler(MethodArgumentNotValidException.class)
+	public ResponseEntity<ApiResult<?>> handleValidation(MethodArgumentNotValidException e) {
+		Map<String, String> errors = e.getFieldErrors().stream()
+			.collect(Collectors.toMap(
+				FieldError::getField,
+				fieldError -> Optional.ofNullable(fieldError.getDefaultMessage()).orElse("")
+			));
+		return buildResponse(ErrorCode.INVALID_INPUT, errors);
 	}
 
+	// 3. 처리되지 않은 모든 예외
 	@ExceptionHandler(Exception.class)
 	public ResponseEntity<ApiResult<?>> handleAll(Exception e) {
-		ErrorCode errorCode = ErrorCode.INTERNAL_SERVER_ERROR;
-		return ResponseEntity.status(errorCode.getHttpStatus())
-			.body(ApiResult.error(errorCode));
+		log.error("Unhandled Exception: ", e);
+		return buildResponse(ErrorCode.INTERNAL_SERVER_ERROR, null);
 	}
 
-	@ExceptionHandler(IllegalArgumentException.class)
-	public ResponseEntity<ApiResult<?>> handleIllegalArgument(IllegalArgumentException e) {
-		return createErrorResponse(ErrorCode.INVALID_REQUEST, e.getMessage());
-	}
-
-	private ResponseEntity<ApiResult<?>> createErrorResponse(ErrorCode errorCode, String message) {
+	// 공통 응답 생성 메서드
+	private ResponseEntity<ApiResult<?>> buildResponse(ErrorCode errorCode, Object data) {
 		return ResponseEntity.status(errorCode.getHttpStatus())
-			.body(ApiResult.builder()
-				.status(errorCode.getHttpStatus())
-				.code(errorCode.getCode())
-				.message(message)
-				.build());
+			.body(ApiResult.error(errorCode, data));
 	}
 }

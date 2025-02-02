@@ -3,18 +3,15 @@ package com.example.lifeonhana;
 import org.springframework.http.HttpStatus;
 
 import com.example.lifeonhana.global.exception.ErrorCode;
-import com.fasterxml.jackson.annotation.JsonInclude;
 
-import lombok.AllArgsConstructor;
 import lombok.Builder;
-import lombok.Data;
 import lombok.Getter;
 
 @Getter
 @Builder
 public class ApiResult<T> {
-	private HttpStatus status;
 	private String code;
+	private HttpStatus status;
 	private String message;
 	private T data;
 	private String customMessage;
@@ -24,8 +21,8 @@ public class ApiResult<T> {
 	}
 
 	public static class ApiResultBuilder<T> {
-		private HttpStatus status;
 		private String code;
+		private HttpStatus status;
 		private String message;
 		private T data;
 		private String customMessage;
@@ -48,24 +45,42 @@ public class ApiResult<T> {
 		}
 
 		public ApiResult<T> build() {
-			return new ApiResult<>(status, code, message, data, customMessage);
+			return new ApiResult<>(code, status, message, data, customMessage);
+		}
+
+		public <U> ApiResultBuilder<U> data(U data) {
+			this.data = (T) data;
+			return (ApiResultBuilder<U>) this;
 		}
 	}
 
+	public static <T> ApiResult<T> success() {
+		return success(ErrorCode.SUCCESS, null);
+	}
+
 	public static <T> ApiResult<T> success(T data) {
+		return success(ErrorCode.SUCCESS, data);
+	}
+
+	public static <T> ApiResult<T> success(ErrorCode successCode, T data) {
 		return ApiResult.<T>builder()
-			.status(HttpStatus.OK)
-			.code("SUCCESS")
-			.message("요청 처리 성공")
+			.code(successCode.getCode())
+			.status(successCode.getHttpStatus())
+			.message(successCode.getMessage())
 			.data(data)
 			.build();
 	}
 
 	public static ApiResult<?> error(ErrorCode errorCode) {
+		return error(errorCode, null);
+	}
+
+	public static ApiResult<?> error(ErrorCode errorCode, Object errorData) {
 		return ApiResult.builder()
-			.status(errorCode.getHttpStatus())
 			.code(errorCode.getCode())
+			.status(errorCode.getHttpStatus())
 			.message(errorCode.getMessage())
+			.data(errorData)
 			.build();
 	}
 

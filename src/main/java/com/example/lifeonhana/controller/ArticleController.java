@@ -2,7 +2,6 @@ package com.example.lifeonhana.controller;
 
 import com.example.lifeonhana.dto.response.ArticleListItemResponse;
 import com.example.lifeonhana.entity.Article;
-import com.example.lifeonhana.global.exception.NotFoundException;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.Parameter;
 import io.swagger.v3.oas.annotations.media.Content;
@@ -20,7 +19,6 @@ import com.example.lifeonhana.service.ArticleService;
 import com.example.lifeonhana.service.JwtService;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import com.example.lifeonhana.dto.response.ArticleSearchResponseDTO;
-import com.example.lifeonhana.global.exception.UnauthorizedException;
 import io.swagger.v3.oas.annotations.responses.ApiResponses;
 import io.swagger.v3.oas.annotations.security.SecurityRequirement;
 import jakarta.validation.constraints.Max;
@@ -32,6 +30,7 @@ import org.springframework.data.domain.Slice;
 import java.util.Map;
 import java.util.HashMap;
 
+import com.example.lifeonhana.global.exception.BaseException;
 import com.example.lifeonhana.global.exception.ErrorCode;
 
 @RestController
@@ -67,7 +66,7 @@ public class ArticleController {
 					.message("기사 상세 조회 성공")
 					.data(articleResponse)
 					.build());
-		} catch (NotFoundException e) {
+		} catch (BaseException e) {
 			return createErrorResponse(ErrorCode.ARTICLE_NOT_FOUND);
 		} catch (IllegalArgumentException e) {
 			return createErrorResponse(ErrorCode.INVALID_REQUEST);
@@ -111,7 +110,7 @@ public class ArticleController {
 			data.put("hasNext", response.hasNext());
 
 			return createSuccessResponse("기사 목록 조회 성공", data);
-		} catch (UnauthorizedException e) {
+		} catch (BaseException e) {
 			return createErrorResponse(ErrorCode.UNAUTHORIZED);
 		} catch (Exception e) {
 			return createErrorResponse(ErrorCode.INTERNAL_SERVER_ERROR);
@@ -149,7 +148,7 @@ public class ArticleController {
 			data.put("hasNext", response.hasNext());
 
 			return createSuccessResponse("기사 검색 성공", data);
-		} catch (UnauthorizedException e) {
+		} catch (BaseException e) {
 			return createErrorResponse(ErrorCode.UNAUTHORIZED);
 		} catch (Exception e) {
 			return createErrorResponse(ErrorCode.INTERNAL_SERVER_ERROR);
@@ -176,7 +175,7 @@ public class ArticleController {
 
 	private void validateAuthentication(String authId) {
 		if (authId == null || authId.isEmpty()) {
-			throw new UnauthorizedException(ErrorCode.UNAUTHORIZED);
+			throw new BaseException(ErrorCode.UNAUTHORIZED);
 		}
 	}
 }

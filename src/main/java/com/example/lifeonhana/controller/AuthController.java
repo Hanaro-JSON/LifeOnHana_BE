@@ -1,5 +1,6 @@
 package com.example.lifeonhana.controller;
 
+import com.example.lifeonhana.global.exception.BaseException;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
@@ -10,8 +11,7 @@ import com.example.lifeonhana.dto.response.AuthResponseDTO;
 import com.example.lifeonhana.dto.request.RefreshTokenRequestDTO;
 import com.example.lifeonhana.service.AuthService;
 import com.example.lifeonhana.service.JwtService;
-import com.example.lifeonhana.global.exception.BadRequestException;
-import com.example.lifeonhana.global.exception.UnauthorizedException;
+import com.example.lifeonhana.global.exception.ErrorCode;
 
 import io.swagger.v3.oas.annotations.responses.ApiResponse;
 import lombok.RequiredArgsConstructor;
@@ -48,7 +48,7 @@ public class AuthController {
 				.message("로그인 성공")
 				.data(authResponse)
 				.build());
-		} catch (UnauthorizedException e) {
+		} catch (BaseException e) {
 			throw e;
 		}
 	}
@@ -69,7 +69,7 @@ public class AuthController {
 				.message("토큰 갱신 성공")
 				.data(newTokens)
 				.build());
-		} catch (UnauthorizedException e) {
+		} catch (BaseException e) {
 			throw e;
 		}
 	}
@@ -82,16 +82,9 @@ public class AuthController {
 	})
 	@PostMapping("/signout")
 	public ResponseEntity<ApiResult<Void>> signOut(@RequestHeader("Authorization") String token) {
-		try {
-			authService.signOut(token);
-			return ResponseEntity.ok(ApiResult.<Void>builder()
-				.code(String.valueOf(HttpStatus.OK.value()))
-				.status(HttpStatus.OK)
-				.message("로그아웃 성공")
-				.data(null)
-				.build());
-		} catch (BadRequestException | UnauthorizedException e) {
-			throw e;
-		}
+		authService.signOut(token);
+		return ResponseEntity.ok(
+			ApiResult.success(ErrorCode.LOGOUT_SUCCESS, null)
+		);
 	}
 }

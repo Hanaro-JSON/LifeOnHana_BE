@@ -1,5 +1,6 @@
 package com.example.lifeonhana.service;
 
+import org.springframework.data.crossstore.ChangeSetPersister.NotFoundException;
 import org.springframework.stereotype.Service;
 import org.springframework.web.client.HttpClientErrorException;
 import org.springframework.web.client.RestTemplate;
@@ -8,15 +9,14 @@ import com.example.lifeonhana.dto.response.LoanProductResponse;
 import com.example.lifeonhana.entity.Mydata;
 import com.example.lifeonhana.entity.Product;
 import com.example.lifeonhana.entity.User;
-import com.example.lifeonhana.global.exception.BadRequestException;
+import com.example.lifeonhana.global.exception.BaseException;
 import com.example.lifeonhana.global.exception.ErrorCode;
-import com.example.lifeonhana.global.exception.InternalServerException;
-import com.example.lifeonhana.global.exception.NotFoundException;
-import com.example.lifeonhana.global.exception.UnauthorizedException;
 import com.example.lifeonhana.repository.LoanProductRepository;
 import com.example.lifeonhana.repository.UserRepository;
 
 import lombok.RequiredArgsConstructor;
+
+import org.apache.coyote.BadRequestException;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -39,22 +39,22 @@ public class LoanRecommendationService {
 	private User getUser(String authId) {
 		log.info("Fetching user with authId: {}", authId);
 		return userRepository.findByAuthId(authId)
-			.orElseThrow(() -> new UnauthorizedException(ErrorCode.AUTH_REQUIRED));
+			.orElseThrow(() -> new BaseException(ErrorCode.AUTH_REQUIRED));
 	}
 
 	public List<LoanProductResponse> recommendLoanProducts(String reason, BigDecimal amount, String authId) {
 		if (reason == null || reason.isBlank()) {
-			throw new BadRequestException(ErrorCode.LOAN_REASON_REQUIRED);
+			throw new BaseException(ErrorCode.LOAN_REASON_REQUIRED);
 		}
 		if (amount.compareTo(BigDecimal.ZERO) <= 0) {
-			throw new BadRequestException(ErrorCode.LOAN_AMOUNT_INVALID);
+			throw new BaseException(ErrorCode.LOAN_AMOUNT_INVALID);
 		}
 
 		User user = getUser(authId);
 
 		Mydata mydata = user.getMydata();
 		if (mydata == null) {
-			throw new BadRequestException(ErrorCode.MYDATA_NOT_FOUND);
+			throw new BaseException(ErrorCode.MYDATA_NOT_FOUND);
 		}
 
 		log.info("User Mydata: deposit_amount={}, loan_amount={}, real_estate_amount={}, total_asset={}",
@@ -63,7 +63,7 @@ public class LoanRecommendationService {
 		log.info("Fetching loan products with category LOAN");
 		List<Product> loanProducts = loanProductRepository.findByCategory(Product.Category.LOAN);
 		if (loanProducts.isEmpty()) {
-			throw new NotFoundException(ErrorCode.LOAN_PRODUCTS_NOT_FOUND);
+			throw new BaseException(ErrorCode.LOAN_PRODUCTS_NOT_FOUND);
 		}
 		log.info("Found {} loan products", loanProducts.size());
 
@@ -96,16 +96,16 @@ public class LoanRecommendationService {
 
 			log.info("Received response from Flask: {}", response);
 			if (response.getBody() == null) {
-				throw new BadRequestException(ErrorCode.FLASK_RESPONSE_EMPTY);
+				throw new BaseException(ErrorCode.FLASK_RESPONSE_EMPTY);
 			}
 			if (response.getBody().get("products") == null) {
-				throw new BadRequestException(ErrorCode.FLASK_RESPONSE_INVALID);
+				throw new BaseException(ErrorCode.FLASK_RESPONSE_INVALID);
 			}
 
 			List<Map<String, Object>> recommendedProducts = (List<Map<String, Object>>) response.getBody().get("products");
 
 			if (recommendedProducts.isEmpty()) {
-				throw new NotFoundException(ErrorCode.NO_RECOMMENDED_PRODUCTS);
+				throw new BaseException(ErrorCode.NO_RECOMMENDED_PRODUCTS);
 			}
 
 			log.info("Recommended products received: {}", recommendedProducts);
@@ -150,9 +150,9 @@ public class LoanRecommendationService {
 				}).toList();
 
 		} catch (HttpClientErrorException e) {
-			throw new BadRequestException(ErrorCode.FLASK_API_ERROR, e);
+			throw new BaseException(ErrorCode.FLASK_API_ERROR, e);
 		} catch (Exception e) {
-			throw new InternalServerException(ErrorCode.INTERNAL_SERVER_ERROR, e);
+			throw new BaseException(ErrorCode.INTERNAL_SERVER_ERROR, e);
 		}
 	}
 }

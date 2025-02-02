@@ -5,8 +5,7 @@ import com.example.lifeonhana.dto.response.HistoryResponseDTO;
 import com.example.lifeonhana.dto.response.MonthlyExpenseResponseDTO;
 import com.example.lifeonhana.dto.response.StatisticsResponseDTO;
 import com.example.lifeonhana.service.HistoryService;
-import com.example.lifeonhana.global.exception.BadRequestException;
-import com.example.lifeonhana.global.exception.UnauthorizedException;
+import com.example.lifeonhana.global.exception.BaseException;
 import com.example.lifeonhana.global.exception.ErrorCode;
 
 import io.swagger.v3.oas.annotations.Operation;
@@ -48,11 +47,11 @@ public class HistoryController {
 		@AuthenticationPrincipal String authId
 	) {
 		if (authId == null || authId.isEmpty()) {
-			throw new UnauthorizedException(ErrorCode.AUTH_REQUIRED);
+			throw new BaseException(ErrorCode.AUTH_REQUIRED);
 		}
 
 		if (!yearMonth.matches("\\d{4}-\\d{2}")) {
-			throw new BadRequestException(ErrorCode.INVALID_DATE_FORMAT);
+			throw new BaseException(ErrorCode.INVALID_DATE_FORMAT);
 		}
 
 		HistoryResponseDTO response = historyService.getHistories(yearMonth, authId, page, size);
@@ -75,7 +74,7 @@ public class HistoryController {
 		@AuthenticationPrincipal String authId
 	) {
 		if (authId == null || authId.isEmpty()) {
-			throw new UnauthorizedException(ErrorCode.AUTH_REQUIRED);
+			throw new BaseException(ErrorCode.AUTH_REQUIRED);
 		}
 
 		try {
@@ -87,7 +86,7 @@ public class HistoryController {
 				.data(response)
 				.build());
 		} catch (Exception e) {
-			throw new UnauthorizedException(ErrorCode.AUTH_REQUIRED);
+			throw new BaseException(ErrorCode.AUTH_REQUIRED);
 		}
 	}
 
@@ -106,11 +105,11 @@ public class HistoryController {
 		@AuthenticationPrincipal String authId
 	) {
 		if (authId == null || authId.isEmpty()) {
-			throw new UnauthorizedException(ErrorCode.AUTH_REQUIRED);
+			throw new BaseException(ErrorCode.AUTH_REQUIRED);
 		}
 
 		if (!yearMonth.matches("\\d{4}-\\d{2}")) {
-			throw new BadRequestException(ErrorCode.INVALID_DATE_FORMAT);
+			throw new BaseException(ErrorCode.INVALID_DATE_FORMAT);
 		}
 
 		StatisticsResponseDTO response = historyService.getStatistics(yearMonth, authId);

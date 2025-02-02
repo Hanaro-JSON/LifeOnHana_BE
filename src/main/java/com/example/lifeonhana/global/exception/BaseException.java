@@ -5,32 +5,26 @@ import org.springframework.http.HttpStatus;
 import lombok.Getter;
 
 @Getter
-public abstract class BaseException extends RuntimeException {
+public class BaseException extends RuntimeException {
 	private final ErrorCode errorCode;
-	private final Object data;
+	private final transient Object details;
 
 	public BaseException(ErrorCode errorCode) {
-		super(errorCode.getMessage());
-		this.errorCode = errorCode;
-		this.data = null;
+		this(errorCode, null, null);
+	}
+
+	public BaseException(ErrorCode errorCode, Object details) {
+		this(errorCode, details, null);
 	}
 
 	public BaseException(ErrorCode errorCode, Throwable cause) {
-		super(errorCode.getMessage(), cause);
-		this.errorCode = errorCode;
-		this.data = null;
+		this(errorCode, null, cause);
 	}
 
-	public BaseException(ErrorCode errorCode, Object data) {
-		super(errorCode.getMessage());
-		this.errorCode = errorCode;
-		this.data = data;
-	}
-
-	public BaseException(ErrorCode errorCode, Object data, Throwable cause) {
+	public BaseException(ErrorCode errorCode, Object details, Throwable cause) {
 		super(errorCode.getMessage(), cause);
 		this.errorCode = errorCode;
-		this.data = data;
+		this.details = details;
 	}
 
 	public int getStatusCode() {
