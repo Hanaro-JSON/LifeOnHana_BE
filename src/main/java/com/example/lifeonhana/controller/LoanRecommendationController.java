@@ -15,7 +15,8 @@ import org.springframework.web.bind.annotation.RestController;
 import com.example.lifeonhana.ApiResult;
 import com.example.lifeonhana.dto.request.LoanRecommendationRequest;
 import com.example.lifeonhana.dto.response.LoanProductResponse;
-import com.example.lifeonhana.global.exception.UnauthorizedException;
+import com.example.lifeonhana.global.exception.BadRequestException;
+import com.example.lifeonhana.global.exception.ErrorCode;
 import com.example.lifeonhana.service.LoanRecommendationService;
 
 import io.swagger.v3.oas.annotations.Operation;
@@ -43,43 +44,21 @@ public class LoanRecommendationController {
 		}
 	)
 	@PostMapping
-	public ResponseEntity<ApiResult> recommendLoanProducts(
+	public ResponseEntity<ApiResult<List<LoanProductResponse>>> recommendLoanProducts(
 		@RequestBody LoanRecommendationRequest request,
 		@AuthenticationPrincipal String authId
 	) {
-		try {
-			String reason = request.reason();
-			BigDecimal amount = request.amount();
+		String reason = request.reason();
+		BigDecimal amount = request.amount();
 
-			List<LoanProductResponse> recommendedProducts = loanRecommendationService.recommendLoanProducts(reason, amount, authId);
+		List<LoanProductResponse> recommendedProducts = loanRecommendationService
+			.recommendLoanProducts(reason, amount, authId);
 
-			return ResponseEntity.ok(new ApiResult(
-				200,
-				HttpStatus.OK,
-				"대출 상품 추천 성공",
-				recommendedProducts
-			));
-		} catch (IllegalArgumentException e) {
-			return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(new ApiResult(
-				400,
-				HttpStatus.BAD_REQUEST,
-				e.getMessage(),
-				null
-			));
-		} catch (UnauthorizedException e) {
-			return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(new ApiResult(
-				401,
-				HttpStatus.UNAUTHORIZED,
-				e.getMessage(),
-				null
-			));
-		}catch (Exception e) {
-			return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(new ApiResult(
-				500,
-				HttpStatus.INTERNAL_SERVER_ERROR,
-				e.getMessage(),
-				null
-			));
-		}
+		return ResponseEntity.ok(ApiResult.<List<LoanProductResponse>>builder()
+			.code(String.valueOf(HttpStatus.OK.value()))
+			.status(HttpStatus.OK)
+			.message("대출 상품 추천 성공")
+			.data(recommendedProducts)
+			.build());
 	}
 }

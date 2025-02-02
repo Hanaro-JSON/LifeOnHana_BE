@@ -7,6 +7,7 @@ import com.example.lifeonhana.dto.response.StatisticsResponseDTO;
 import com.example.lifeonhana.service.HistoryService;
 import com.example.lifeonhana.global.exception.BadRequestException;
 import com.example.lifeonhana.global.exception.UnauthorizedException;
+import com.example.lifeonhana.global.exception.ErrorCode;
 
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.Parameter;
@@ -33,7 +34,7 @@ public class HistoryController {
 		@ApiResponse(responseCode = "401", description = "인증이 필요합니다.")
 	})
 	@GetMapping
-	public ResponseEntity<ApiResult> getHistories(
+	public ResponseEntity<ApiResult<HistoryResponseDTO>> getHistories(
 		@Parameter(description = "조회할 년월 (YYYY-MM 형식)", required = true)
 		@RequestParam String yearMonth,
 
@@ -47,17 +48,16 @@ public class HistoryController {
 		@AuthenticationPrincipal String authId
 	) {
 		if (authId == null || authId.isEmpty()) {
-			throw new UnauthorizedException("로그인이 필요한 서비스입니다.");
+			throw new UnauthorizedException(ErrorCode.AUTH_REQUIRED);
 		}
 
-		// YYYYMM 형식 검증
 		if (!yearMonth.matches("\\d{4}-\\d{2}")) {
-			throw new BadRequestException("올바른 년월 형식이 아닙니다. (YYYY-MM)");
+			throw new BadRequestException(ErrorCode.INVALID_DATE_FORMAT);
 		}
 
 		HistoryResponseDTO response = historyService.getHistories(yearMonth, authId, page, size);
-		return ResponseEntity.ok(ApiResult.builder()
-			.code(HttpStatus.OK.value())
+		return ResponseEntity.ok(ApiResult.<HistoryResponseDTO>builder()
+			.code(String.valueOf(HttpStatus.OK.value()))
 			.status(HttpStatus.OK)
 			.message("거래 내역 조회 성공")
 			.data(response)
@@ -70,24 +70,24 @@ public class HistoryController {
 		@ApiResponse(responseCode = "401", description = "인증이 필요합니다.")
 	})
 	@GetMapping("/monthly")
-	public ResponseEntity<ApiResult> getMonthlyExpenses(
+	public ResponseEntity<ApiResult<MonthlyExpenseResponseDTO>> getMonthlyExpenses(
 		@Parameter(hidden = true)
 		@AuthenticationPrincipal String authId
 	) {
 		if (authId == null || authId.isEmpty()) {
-			throw new UnauthorizedException("로그인이 필요한 서비스입니다.");
+			throw new UnauthorizedException(ErrorCode.AUTH_REQUIRED);
 		}
 
 		try {
 			MonthlyExpenseResponseDTO response = historyService.getMonthlyExpenses(authId);
-			return ResponseEntity.ok(ApiResult.builder()
-				.code(HttpStatus.OK.value())
+			return ResponseEntity.ok(ApiResult.<MonthlyExpenseResponseDTO>builder()
+				.code(String.valueOf(HttpStatus.OK.value()))
 				.status(HttpStatus.OK)
 				.message("월별 지출 내역 조회 성공")
 				.data(response)
 				.build());
 		} catch (Exception e) {
-			throw new UnauthorizedException("인증이 필요합니다.");
+			throw new UnauthorizedException(ErrorCode.AUTH_REQUIRED);
 		}
 	}
 
@@ -98,7 +98,7 @@ public class HistoryController {
 		@ApiResponse(responseCode = "401", description = "인증이 필요합니다.")
 	})
 	@GetMapping("/statistics")
-	public ResponseEntity<ApiResult> getStatistics(
+	public ResponseEntity<ApiResult<StatisticsResponseDTO>> getStatistics(
 		@Parameter(description = "조회할 년월 (YYYY-MM 형식)", required = true)
 		@RequestParam String yearMonth,
 
@@ -106,17 +106,16 @@ public class HistoryController {
 		@AuthenticationPrincipal String authId
 	) {
 		if (authId == null || authId.isEmpty()) {
-			throw new UnauthorizedException("로그인이 필요한 서비스입니다.");
+			throw new UnauthorizedException(ErrorCode.AUTH_REQUIRED);
 		}
 
-		// YYYYMM 형식 검증
 		if (!yearMonth.matches("\\d{4}-\\d{2}")) {
-			throw new BadRequestException("올바른 년월 형식이 아닙니다. (YYYY-MM)");
+			throw new BadRequestException(ErrorCode.INVALID_DATE_FORMAT);
 		}
 
 		StatisticsResponseDTO response = historyService.getStatistics(yearMonth, authId);
-		return ResponseEntity.ok(ApiResult.builder()
-			.code(HttpStatus.OK.value())
+		return ResponseEntity.ok(ApiResult.<StatisticsResponseDTO>builder()
+			.code(String.valueOf(HttpStatus.OK.value()))
 			.status(HttpStatus.OK)
 			.message("거래 통계 조회 성공")
 			.data(response)

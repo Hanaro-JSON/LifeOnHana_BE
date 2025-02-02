@@ -61,7 +61,28 @@ public enum ErrorCode {
     INVALID_FILE_TYPE(HttpStatus.BAD_REQUEST, "F002", "허용되지 않은 파일 형식입니다"),
 
     // 기사 관련
-    ARTICLE_NOT_FOUND_ID(HttpStatus.NOT_FOUND, "A001", "존재하지 않는 ID입니다");
+    ARTICLE_NOT_FOUND_ID(HttpStatus.NOT_FOUND, "A001", "존재하지 않는 ID입니다"),
+
+    AUTH_REQUIRED(HttpStatus.UNAUTHORIZED, "H001", "로그인이 필요한 서비스입니다"),
+    INVALID_DATE_FORMAT(HttpStatus.BAD_REQUEST, "H002", "올바른 년월 형식이 아닙니다 (YYYY-MM)"),
+
+    // 대출 관련
+    LOAN_AMOUNT_INVALID(HttpStatus.BAD_REQUEST, "L001", "유효하지 않은 대출 금액입니다"),
+    LOAN_REASON_REQUIRED(HttpStatus.BAD_REQUEST, "L002", "대출 사유는 필수 항목입니다"),
+
+    // 마이데이터 관련
+    MYDATA_NOT_FOUND(HttpStatus.BAD_REQUEST, "M001", "마이데이터 정보가 존재하지 않습니다"),
+
+    // 대출 상품 관련
+    LOAN_PRODUCTS_NOT_FOUND(HttpStatus.NOT_FOUND, "L003", "대출 상품이 존재하지 않습니다"),
+    NO_RECOMMENDED_PRODUCTS(HttpStatus.NOT_FOUND, "L004", "추천된 대출 상품이 없습니다"),
+
+    // Flask API 관련
+    FLASK_RESPONSE_EMPTY(HttpStatus.BAD_REQUEST, "F001", "Flask API 응답 데이터 없음"),
+    FLASK_RESPONSE_INVALID(HttpStatus.BAD_REQUEST, "F002", "Flask API 응답 형식 오류"),
+    FLASK_API_ERROR(HttpStatus.BAD_GATEWAY, "F003", "외부 API 호출 실패");
+
+    
 
     private final HttpStatus httpStatus;
     private final String code;
