@@ -2,7 +2,7 @@
 
 ### 디지털 하나로 4기 - 비대면 금융 서비스 개발 프로젝트
 
-<h1> 🧗🏻 소득 크레바스에 맞닥뜨린 당신을 구해줄 든든한 동반자, <br/> 라이프 온 하나 (LIFE on HANA) </h1>
+<h2> 🧗🏻 소득 크레바스에 맞닥뜨린 당신을 구해줄 든든한 동반자, <br/> 라이프 온 하나 (LIFE on HANA) </h1>
 
 ![리드미배너](https://github.com/user-attachments/assets/ecba6c49-18e4-4f21-9cd2-fa7c2ee7846b)
 
