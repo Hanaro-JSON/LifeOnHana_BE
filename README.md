@@ -1,17 +1,17 @@
-## 🌌 team JSON
+## 🌌 team JSON - 백엔드
+
 ### 디지털 하나로 4기 - 비대면 금융 서비스 개발 프로젝트
 
-### 🧗🏻 소득 크레바스에 맞닥뜨린 당신을 구해줄 든든한 동반자, 라이프 온 하나 (LIFE on HANA)
+<h1> 🧗🏻 소득 크레바스에 맞닥뜨린 당신을 구해줄 든든한 동반자, <br/> 라이프 온 하나 (LIFE on HANA) </h1>
 
-![image](https://github.com/user-attachments/assets/a8420167-66be-4a8f-9ce2-36527fe05b0b)
+![리드미배너](https://github.com/user-attachments/assets/ecba6c49-18e4-4f21-9cd2-fa7c2ee7846b)
 
 
-## 목차
+## 📜 목차
 - [ ⏰ BE 시간 관리](#-be-시간-관리)
 - [ 📚 기술 스택](#-기술-스택)
 - [ 📄 APIs](#-apis)
 - [ 🤗 BE 팀원](#-be-팀원)
-  
 <br />
 
 ## ⏰ BE 시간 관리
