@@ -38,8 +38,8 @@ public class ProductLikeController {
 	@GetMapping("/liked/products")
 	@Operation(summary = "좋아요한 상품 목록 조회", description = "좋아요한 상품 목록을 조회합니다.")
 	@ApiResponses(value = {
-		@ApiResponse(responseCode = "200", ref = "#/components/responses/Success"),
-		@ApiResponse(responseCode = "404", ref = "#/components/responses/NotFound")
+		@ApiResponse(responseCode = "200", description = "좋아요한 상품 목록 조회 성공"),
+		@ApiResponse(responseCode = "404", description = "좋아요한 상품이 없습니다.")
 	})
 	@SecurityRequirement(name = "bearerAuth")
 	public ResponseEntity<ApiResult<ProductListResponseDTO<ProductResponseDTO>>> getProductLikes(
@@ -54,8 +54,8 @@ public class ProductLikeController {
 	@PostMapping("/{productId}/like")
 	@Operation(summary = "상품 좋아요 토글", description = "상품 좋아요 상태를 변경합니다.")
 	@ApiResponses(value = {
-		@ApiResponse(responseCode = "200", ref = "#/components/responses/Success"),
-		@ApiResponse(responseCode = "404", ref = "#/components/responses/NotFound")
+		@ApiResponse(responseCode = "200", description = "좋아요 상태 변경 성공"),
+		@ApiResponse(responseCode = "404", description = "존재하지 않는 상품입니다.")
 	})
 	public ResponseEntity<ApiResult<Map<String, Boolean>>> toggleLike(
 		@PathVariable Long productId,

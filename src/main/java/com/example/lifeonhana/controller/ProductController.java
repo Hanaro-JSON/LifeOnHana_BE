@@ -37,9 +37,8 @@ public class ProductController {
 	@GetMapping("")
 	@Operation(summary = "상품 목록 조회", description = "상품 목록을 조회합니다.")
 	@ApiResponses(value = {
-		@ApiResponse(responseCode = "200", description = "상품 목록 조회 성공",
-			content = @Content(schema = @Schema(implementation = ProductListResponseDTO.class))),
-		@ApiResponse(responseCode = "404", ref = "#/components/responses/NotFound")
+		@ApiResponse(responseCode = "200", description = "상품 목록 조회 성공"),
+		@ApiResponse(responseCode = "400", description = "잘못된 요청입니다.")
 	})
 	@SecurityRequirement(name = "bearerAuth")
 	public ResponseEntity<ApiResult<ProductListResponseDTO<SimpleProductResponseDTO>>> getProducts(
@@ -54,7 +53,7 @@ public class ProductController {
 	@Operation(summary = "예적금 상품 상세 조회", description = "예적금 상품을 상세 조회합니다.")
 	@ApiResponses(value = {
 		@ApiResponse(responseCode = "200", description = "예적금 상품 상세 조회 성공"),
-		@ApiResponse(responseCode = "404", description = "상품을 찾을 수 없습니다")
+		@ApiResponse(responseCode = "400", description = "존재하지 않는 id 입니다.")
 	})
 	@SecurityRequirement(name = "bearerAuth")
 	public ResponseEntity<ApiResult<SavingProductResponseDTO>> getSavings(
@@ -67,7 +66,7 @@ public class ProductController {
 	@Operation(summary = "대출 상품 상세 조회", description = "대출 상품을 상세 조회합니다.")
 	@ApiResponses(value = {
 		@ApiResponse(responseCode = "200", description = "대출 상품 상세 조회 성공"),
-		@ApiResponse(responseCode = "404", description = "상품을 찾을 수 없습니다")
+		@ApiResponse(responseCode = "400", description = "존재하지 않는 id 입니다.")
 	})
 	@SecurityRequirement(name = "bearerAuth")
 	public ResponseEntity<ApiResult<LoanProductDetailResponseDTO>> getLoans(
@@ -80,7 +79,7 @@ public class ProductController {
 	@Operation(summary = "라이프 상품 상세 조회", description = "라이프 상품을 상세 조회합니다.")
 	@ApiResponses(value = {
 		@ApiResponse(responseCode = "200", description = "라이프 상품 상세 조회 성공"),
-		@ApiResponse(responseCode = "404", description = "상품을 찾을 수 없습니다")
+		@ApiResponse(responseCode = "400", description = "존재하지 않는 id 입니다.")
 	})
 	@SecurityRequirement(name = "bearerAuth")
 	public ResponseEntity<ApiResult<LifeProductResponseDTO>> getLife(

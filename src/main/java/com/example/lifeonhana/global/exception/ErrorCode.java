@@ -8,7 +8,7 @@ import lombok.Getter;
 public enum ErrorCode {
     // 성공
     SUCCESS(HttpStatus.OK, "S200", "요청이 성공적으로 처리되었습니다"),
-    LOGOUT_SUCCESS(HttpStatus.OK, "A200", "로그아웃 성공"),
+    LOGOUT_SUCCESS(HttpStatus.OK, "S200", "로그아웃 성공"),
     CREATED(HttpStatus.CREATED, "S201", "리소스가 성공적으로 생성됨"),
 
     // 인증/인가
@@ -27,7 +27,7 @@ public enum ErrorCode {
 
     // 계좌
     ACCOUNT_NOT_FOUND(HttpStatus.NOT_FOUND, "AC001", "계좌를 찾을 수 없습니다"),
-    MAIN_ACCOUNT_NOT_FOUND(HttpStatus.NOT_FOUND, "AC008", "메인 계좌를 찾을 수 없습니다"),
+    MAIN_ACCOUNT_NOT_FOUND(HttpStatus.NOT_FOUND, "AC007", "메인 계좌를 찾을 수 없습니다"),
     INSUFFICIENT_BALANCE(HttpStatus.BAD_REQUEST, "AC002", "잔액이 부족합니다"),
     SALARY_ACCOUNT_NOT_FOUND(HttpStatus.NOT_FOUND, "AC003", "하나 월급 계좌를 찾을 수 없습니다"),
     NEGATIVE_TRANSFER_AMOUNT(HttpStatus.BAD_REQUEST, "AC004", "이체 금액은 0보다 커야 합니다"),

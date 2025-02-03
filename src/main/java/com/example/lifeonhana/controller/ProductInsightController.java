@@ -18,6 +18,7 @@ import com.example.lifeonhana.service.ProductInsightService;
 import com.example.lifeonhana.global.exception.ErrorCode;
 import io.swagger.v3.oas.annotations.media.Schema;
 import io.swagger.v3.oas.annotations.responses.ApiResponses;
+import io.swagger.v3.oas.annotations.security.SecurityRequirement;
 
 @RestController
 @RequiredArgsConstructor
@@ -29,12 +30,11 @@ public class ProductInsightController {
 
 	@PostMapping("/effect")
 	@Operation(summary = "상품 기대효과 분석 조회", description = "상품 기대효과 결과를 반환합니다.")
-	@ApiResponses({
-		@ApiResponse(responseCode = "200", description = "분석 성공", 
-			content = @Content(schema = @Schema(implementation = ProductInsightResponse.class))),
-		@ApiResponse(responseCode = "400", ref = "#/components/responses/BadRequest"),
-		@ApiResponse(responseCode = "401", ref = "#/components/responses/Unauthorized"),
-		@ApiResponse(responseCode = "500", ref = "#/components/responses/InternalServerError")
+	@ApiResponses(value = {
+		@ApiResponse(responseCode = "200", description = "분석 성공"),
+		@ApiResponse(responseCode = "400", description = "잘못된 요청입니다."),
+		@ApiResponse(responseCode = "401", description = "인증 실패"),
+		@ApiResponse(responseCode = "500", description = "서버 내부 오류")
 	})
 	public ResponseEntity<ApiResult<ProductInsightResponse>> getProductInsight(
 		@RequestBody ProductInsightRequest request,
