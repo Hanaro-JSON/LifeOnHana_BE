@@ -17,6 +17,7 @@ import org.springframework.stereotype.Service;
 import com.example.lifeonhana.dto.response.ArticleResponse;
 import com.example.lifeonhana.dto.response.LikeResponseDto;
 import com.example.lifeonhana.entity.Article;
+import com.example.lifeonhana.global.exception.NotFoundException;
 import com.example.lifeonhana.repository.ArticleRepository;
 import com.example.lifeonhana.entity.ArticleLike;
 import com.example.lifeonhana.repository.ArticleLikeRepository;

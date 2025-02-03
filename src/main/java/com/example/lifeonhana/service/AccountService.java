@@ -2,9 +2,10 @@ package com.example.lifeonhana.service;
 
 import java.math.BigDecimal;
 import java.util.*;
+import java.util.stream.Collectors;
 
+import javax.security.auth.login.AccountNotFoundException;
 
-import com.example.lifeonhana.global.exception.*;
 import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -16,10 +17,10 @@ import com.example.lifeonhana.dto.response.AccountTransferResponse;
 import com.example.lifeonhana.dto.response.SalaryAccountResponseDTO;
 import com.example.lifeonhana.entity.Account;
 import com.example.lifeonhana.entity.User;
+import com.example.lifeonhana.global.exception.InsufficientBalanceException;
+import com.example.lifeonhana.global.exception.NotFoundException;
 import com.example.lifeonhana.repository.AccountRepository;
 import com.example.lifeonhana.repository.UserRepository;
-import com.fasterxml.jackson.databind.JsonSerializable.Base;
-
 import lombok.RequiredArgsConstructor;
 
 @Service
@@ -31,28 +32,35 @@ public class AccountService {
 
 	@Transactional(readOnly = true)
 	public AccountListResponseDTO getAccounts(Long userId) {
-		Account mainAccount = accountRepository.findByMydata_User_UserIdAndServiceAccount(userId, Account.ServiceAccount.SALARY)
-			.orElseThrow(() -> new BaseException(ErrorCode.MAIN_ACCOUNT_NOT_FOUND));
+		Account mainAccount = accountRepository.findByMydata_User_UserIdAndServiceAccount(userId, Account.ServiceAccount.SALARY);
+		if (mainAccount == null) {
+			throw new NotFoundException("메인 계좌를 찾을 수 없습니다.");
+		}
 
 		List<Account> allAccounts = accountRepository.findByMydata_User_UserId(userId);
 
 		List<AccountResponseDTO> otherAccounts = allAccounts.stream()
 			.filter(account -> !account.getServiceAccount().equals(Account.ServiceAccount.SALARY))
 			.map(this::toAccountResponseDTO)
-			.toList();
+			.collect(Collectors.toList());
 
-		return new AccountListResponseDTO(toAccountResponseDTO(mainAccount), otherAccounts);
+		AccountResponseDTO mainAccountDTO = toAccountResponseDTO(mainAccount);
+
+		return new AccountListResponseDTO(mainAccountDTO, otherAccounts);
 	}
 
 	@Transactional(readOnly = true)
 	public SalaryAccountResponseDTO getSalaryAccount(String authId) {
 		User user = userRepository.findByAuthId(authId)
-			.orElseThrow(() -> new BaseException(ErrorCode.USER_NOT_FOUND));
+			.orElseThrow(() -> new NotFoundException("사용자를 찾을 수 없습니다."));
 			
 		Account salaryAccount = accountRepository.findByMydata_User_UserIdAndServiceAccount(
-			user.getUserId(), Account.ServiceAccount.SALARY)
-			.orElseThrow(() -> new BaseException(ErrorCode.SALARY_ACCOUNT_NOT_FOUND));
+			user.getUserId(), Account.ServiceAccount.SALARY);
 			
+		if (salaryAccount == null) {
+			throw new NotFoundException("급여 계좌를 찾을 수 없습니다.");
+		}
+		
 		return new SalaryAccountResponseDTO(
 			salaryAccount.getAccountId(),
 			salaryAccount.getBalance()
@@ -61,33 +69,30 @@ public class AccountService {
 
 	@Transactional
 	public AccountTransferResponse transfer(String authId, AccountTransferRequest request) {
-		if (request.amount() == null) {
-			throw new BaseException(ErrorCode.ACCOUNT_NOT_FOUND);
-		}
-
 		if (request.amount().compareTo(BigDecimal.ZERO) <= 0) {
-			throw new BaseException(ErrorCode.NEGATIVE_TRANSFER_AMOUNT);
+			throw new IllegalArgumentException("이체 금액은 0보다 커야 합니다.");
 		}
 
 		if (request.fromAccountId().equals(request.toAccountId())) {
-			throw new BaseException(ErrorCode.TRANSFER_SAME_ACCOUNT);
+			throw new IllegalArgumentException("출금 계좌와 입금 계좌가 동일할 수 없습니다.");
 		}
 
 		Account fromAccount = accountRepository.findByAccountIdAndMydata_User_AuthId(
-			request.fromAccountId(), authId)
-			.orElseThrow(() -> new BaseException(ErrorCode.ACCOUNT_NOT_FOUND));
+			request.fromAccountId(), authId
+		).orElseThrow(() -> new NotFoundException("출금 계좌를 찾을 수 없습니다."));
 
 		Account toAccount = accountRepository.findById(request.toAccountId())
-			.orElseThrow(() -> new BaseException(ErrorCode.ACCOUNT_NOT_FOUND));
+			.orElseThrow(() -> new NotFoundException("입금 계좌를 찾을 수 없습니다."));
 
 		if (fromAccount.getBalance().compareTo(request.amount()) < 0) {
-			throw new BaseException(ErrorCode.INSUFFICIENT_BALANCE);
+			throw new InsufficientBalanceException("잔액이 부족합니다.");
 		}
 
 		fromAccount.withdraw(request.amount());
 		toAccount.deposit(request.amount());
 
-		accountRepository.saveAll(List.of(fromAccount, toAccount));
+		accountRepository.save(fromAccount);
+		accountRepository.save(toAccount);
 
 		return new AccountTransferResponse(
 			request.amount(),
@@ -96,19 +101,18 @@ public class AccountService {
 		);
 	}
 
-	@Scheduled(cron = "0 0 0 1 * *")
+	@Scheduled(cron = "0 0 0 1 * *") // 매월 1일 자정에 실행
 	@Transactional
 	public void applyMonthlyInterest() {
-		try {
-			Account salaryAccounts = accountRepository.findByServiceAccount(Account.ServiceAccount.SALARY);
-			
-			BigDecimal interest = salaryAccounts.getBalance().multiply(new BigDecimal("0.02"));
-			salaryAccounts.deposit(interest);
-			accountRepository.save(salaryAccounts);
-			
-		} catch (Exception e) {
-			throw new BaseException(ErrorCode.INTEREST_CALCULATION_FAILED, e.getMessage());
-		}
+		Account salaryAccounts = accountRepository.findByServiceAccount(Account.ServiceAccount.SALARY);
+
+		BigDecimal interestRate = new BigDecimal("0.02");
+
+		BigDecimal interest = salaryAccounts.getBalance().multiply(interestRate);
+		salaryAccounts.deposit(interest);
+
+		accountRepository.save(salaryAccounts);
+		System.out.println("SALARY 계좌에 이자가 지급되었습니다.");
 	}
 
 

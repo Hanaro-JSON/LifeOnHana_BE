@@ -1,17 +1,16 @@
 package com.example.lifeonhana.service;
 
-import org.apache.coyote.BadRequestException;
 import org.springframework.beans.factory.annotation.Value;
-import org.springframework.data.crossstore.ChangeSetPersister.NotFoundException;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 
 import com.example.lifeonhana.dto.request.AuthRequestDTO;
 import com.example.lifeonhana.dto.response.AuthResponseDTO;
+import com.example.lifeonhana.global.exception.BadRequestException;
+import com.example.lifeonhana.global.exception.NotFoundException;
+import com.example.lifeonhana.global.exception.UnauthorizedException;
 import com.example.lifeonhana.entity.User;
 import com.example.lifeonhana.repository.UserRepository;
-import com.example.lifeonhana.global.exception.BaseException;
-import com.example.lifeonhana.global.exception.ErrorCode;
 
 import jakarta.transaction.Transactional;
 import lombok.RequiredArgsConstructor;
@@ -30,10 +29,10 @@ public class AuthService {
 	@Transactional
 	public AuthResponseDTO signIn(AuthRequestDTO request) {
 		User user = userRepository.findByAuthId(request.authId())
-			.orElseThrow(() -> new BaseException(ErrorCode.USER_NOT_FOUND));
+			.orElseThrow(() -> new NotFoundException("사용자를 찾을 수 없습니다."));
 
 		if (!passwordEncoder.matches(request.password(), user.getPassword())) {
-			throw new BaseException(ErrorCode.INVALID_PASSWORD);
+			throw new UnauthorizedException("잘못된 비밀번호입니다.");
 		}
 
 		Boolean isFirstLogin = user.getIsFirst();
@@ -48,7 +47,7 @@ public class AuthService {
 
 	public AuthResponseDTO refreshToken(String refreshToken) {
 		if (!jwtService.isValidToken(refreshToken)) {
-			throw new BaseException(ErrorCode.INVALID_REFRESH_TOKEN);
+			throw new UnauthorizedException("유효하지 않은 리프레시 토큰입니다.");
 		}
 
 		String authId = jwtService.extractAuthId(refreshToken);
@@ -56,11 +55,11 @@ public class AuthService {
 
 		String storedRefreshToken = redisService.getRefreshToken(authId);
 		if (!refreshToken.equals(storedRefreshToken)) {
-			throw new BaseException(ErrorCode.TOKEN_MISMATCH);
+			throw new UnauthorizedException("토큰이 일치하지 않습니다.");
 		}
 
 		User user = userRepository.findByAuthId(authId)
-			.orElseThrow(() -> new BaseException(ErrorCode.USER_NOT_FOUND));
+			.orElseThrow(() -> new NotFoundException("사용자를 찾을 수 없습니다."));
 
 		return generateTokens(user, user.getIsFirst());
 	}
@@ -70,7 +69,7 @@ public class AuthService {
 			String accessToken = token.startsWith("Bearer ") ? token.substring(7) : token;
 
 			if (!jwtService.isValidToken(accessToken)) {
-				throw new BaseException(ErrorCode.TOKEN_MISMATCH);
+				throw new UnauthorizedException("Token validation failed");
 			}
 
 			String authId = jwtService.extractAuthId(accessToken);
@@ -79,11 +78,11 @@ public class AuthService {
 			redisService.addToBlacklist(accessToken, expiration);
 			redisService.deleteRefreshToken(authId);
 		} catch (IllegalArgumentException | SecurityException e) {
-			throw new BaseException(ErrorCode.TOKEN_MISMATCH);
-		} catch (BaseException e) {
+			throw new UnauthorizedException("Token validation failed");
+		} catch (UnauthorizedException e) {
 			throw e;
 		} catch (Exception e) {
-			throw new BaseException(ErrorCode.LOGOUT_ERROR);
+			throw new BadRequestException("로그아웃 처리 중 오류가 발생했습니다: " + e.getMessage());
 		}
 	}
 

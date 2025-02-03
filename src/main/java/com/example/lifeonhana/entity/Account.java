@@ -6,6 +6,7 @@ import lombok.NoArgsConstructor;
 import lombok.Setter;
 import java.math.BigDecimal;
 
+import com.example.lifeonhana.global.exception.InsufficientBalanceException;
 
 @Entity
 @Table(name = "account")

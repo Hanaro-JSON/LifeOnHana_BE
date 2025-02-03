@@ -21,9 +21,8 @@ import com.example.lifeonhana.entity.Whilick;
 import com.example.lifeonhana.repository.ArticleRepository;
 import com.example.lifeonhana.repository.WhilickRepository;
 import com.example.lifeonhana.repository.ArticleLikeRepository;
+import com.example.lifeonhana.global.exception.NotFoundException;
 import com.example.lifeonhana.client.RecommendationClient;
-import com.example.lifeonhana.global.exception.BaseException;
-import com.example.lifeonhana.global.exception.ErrorCode;
 
 @Service
 @RequiredArgsConstructor
@@ -41,8 +40,9 @@ public class WhilickService {
 		String accessToken = token.startsWith("Bearer ") ? token.substring(7) : token;
 		Long userId = jwtService.extractUserId(accessToken);
 
+		// 요청된 article이 존재하는지 확인
 		Article targetArticle = articleRepository.findById(articleId)
-			.orElseThrow(() -> new BaseException(ErrorCode.CONTENT_NOT_FOUND, articleId));
+			.orElseThrow(() -> new NotFoundException("컨텐츠를 찾을 수 없습니다."));
 
 		String cacheKey = "recommended_articles:" + userId;
 		List<Long> recommendedArticleIds;
@@ -83,7 +83,7 @@ public class WhilickService {
 		int end = Math.min(start + size, articleIds.size());
 
 		if (start >= articleIds.size()) {
-			throw new BaseException(ErrorCode.CONTENT_NOT_FOUND);
+			throw new NotFoundException("컨텐츠를 찾을 수 없습니다.");
 		}
 
 		List<Long> pageArticleIds = articleIds.subList(start, end);
@@ -158,8 +158,9 @@ public class WhilickService {
 
 	@Transactional(readOnly = true)
 	protected WhilickResponseDTO getDefaultSortsByArticleId(Long articleId, int size, Long userId) {
+		// 요청된 article 먼저 가져오기
 		Article targetArticle = articleRepository.findById(articleId)
-			.orElseThrow(() -> new BaseException(ErrorCode.CONTENT_NOT_FOUND, articleId));
+			.orElseThrow(() -> new NotFoundException("컨텐츠를 찾을 수 없습니다."));
 
 		// 나머지 article들을 최신순으로 가져오기 (targetArticle 제외)
 		Page<Article> articlesPage = whilickRepository.findAllArticlesExcept(
@@ -196,14 +197,8 @@ public class WhilickService {
 			return cachedIds;
 		}
 
-		List<Long> recommendedIds;
-		try {
-			recommendedIds = recommendationClient.getRecommendedArticleIds(userId);
-			redisTemplate.opsForValue().set(cacheKey, recommendedIds, 1, TimeUnit.HOURS);
-		} catch (Exception e) {
-			log.error("추천 시스템 서버 호출 실패", e);
-			throw new BaseException(ErrorCode.RECOMMENDATION_SERVICE_ERROR, e);
-		}
+		List<Long> recommendedIds = recommendationClient.getRecommendedArticleIds(userId);
+		redisTemplate.opsForValue().set(cacheKey, recommendedIds, 1, TimeUnit.HOURS);
 
 		return recommendedIds;
 	}

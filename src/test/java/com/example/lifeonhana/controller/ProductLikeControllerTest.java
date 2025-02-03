@@ -60,7 +60,8 @@ class ProductLikeControllerTest {
         mockMvc.perform(post("/api/users/" + productId + "/like")
                 .header("Authorization", validToken))
             .andExpect(status().isOk())
-            .andExpect(jsonPath("$.code").value("L201"))
+            .andExpect(jsonPath("$.code").value(200))
+            .andExpect(jsonPath("$.message").value("좋아요 성공"))
             .andExpect(jsonPath("$.data.isLiked").exists())
             .andDo(print());
     }
@@ -74,7 +75,8 @@ class ProductLikeControllerTest {
         mockMvc.perform(post("/api/users/" + productId + "/like")
                         .header("Authorization", validToken))
                 .andExpect(status().isOk())
-                .andExpect(jsonPath("$.code").value("L202"))
+                .andExpect(jsonPath("$.code").value(200))
+                .andExpect(jsonPath("$.message").value("좋아요 취소 성공"))
                 .andExpect(jsonPath("$.data.isLiked").exists())
                 .andDo(print());
     }
@@ -87,7 +89,8 @@ class ProductLikeControllerTest {
                 .header("Authorization", validToken)
                 .param("category", "FINANCE"))
             .andExpect(status().isOk())
-            .andExpect(jsonPath("$.code").value("L200"))
+            .andExpect(jsonPath("$.code").value(200))
+            .andExpect(jsonPath("$.message").value("좋아요한 상품 목록 조회 성공"))
             .andDo(print());
     }
 
@@ -95,7 +98,7 @@ class ProductLikeControllerTest {
     @DisplayName("인증되지 않은 사용자 접근")
     void unauthorized_Access() throws Exception {
         mockMvc.perform(get("/api/users/liked/products"))
-            .andExpect(status().isNotFound());
+            .andExpect(status().isBadRequest());
     }
 
     @Test
@@ -111,7 +114,7 @@ class ProductLikeControllerTest {
     void toggleLike_ProductNotFound() throws Exception {
         mockMvc.perform(post("/api/users/999/like")
                 .header("Authorization", validToken))
-            .andExpect(status().isNotFound());
+            .andExpect(status().isBadRequest());
     }
 
 }

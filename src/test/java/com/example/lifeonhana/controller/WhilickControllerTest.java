@@ -4,8 +4,8 @@ import com.example.lifeonhana.dto.response.WhilickResponseDTO;
 import com.example.lifeonhana.dto.response.WhilickContentDTO;
 import com.example.lifeonhana.dto.response.WhilickTextDTO;
 import com.example.lifeonhana.dto.response.PageableDTO;
-import com.example.lifeonhana.global.exception.BaseException;
-import com.example.lifeonhana.global.exception.ErrorCode;
+import com.example.lifeonhana.global.exception.NotFoundException;
+import com.example.lifeonhana.global.exception.UnauthorizedException;
 import com.example.lifeonhana.service.WhilickService;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
@@ -21,8 +21,7 @@ import org.springframework.transaction.annotation.Transactional;
 import static org.mockito.ArgumentMatchers.anyInt;
 import static org.mockito.ArgumentMatchers.anyLong;
 import static org.mockito.ArgumentMatchers.anyString;
-import static org.mockito.BDDMockito.given;
-import static org.mockito.Mockito.doThrow;
+import static org.mockito.Mockito.when;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 
@@ -80,8 +79,8 @@ class WhilickControllerTest {
 	@DisplayName("정상적인 쇼츠 조회 - articleId 없음")
 	void getShorts_WithoutArticleId_Success() {
 		// Given
-		given(whilickService.getShorts(anyInt(), anyInt(), anyString()))
-			.willReturn(mockResponse);
+		when(whilickService.getShorts(anyInt(), anyInt(), anyString()))
+			.thenReturn(mockResponse);
 
 		// When
 		ResponseEntity<?> response = whilickController.getShorts(
@@ -97,8 +96,8 @@ class WhilickControllerTest {
 	void getShorts_WithArticleId_Success() {
 		// Given
 		Long articleId = 1L;
-		given(whilickService.getShortsByArticleId(anyLong(), anyInt(), anyString()))
-			.willReturn(mockResponse);
+		when(whilickService.getShortsByArticleId(anyLong(), anyInt(), anyString()))
+			.thenReturn(mockResponse);
 
 		// When
 		ResponseEntity<?> response = whilickController.getShorts(
@@ -113,17 +112,14 @@ class WhilickControllerTest {
 	@DisplayName("인증되지 않은 사용자 쇼츠 조회 실패")
 	void getShorts_Unauthorized() {
 		// Given
-		doThrow(new BaseException(ErrorCode.AUTH_REQUIRED))
-			.when(whilickService).getShorts(anyInt(), anyInt(), anyString());
+		when(whilickService.getShorts(anyInt(), anyInt(), anyString()))
+			.thenThrow(new UnauthorizedException("Unauthorized access"));
 
 		// Then
 		assertThatThrownBy(() ->
 			whilickController.getShorts(null, 0, 10, "Invalid-Token"))
-			.isInstanceOf(BaseException.class)
-			.satisfies(e -> {
-				BaseException ex = (BaseException) e;
-				assertThat(ex.getErrorCode()).isEqualTo(ErrorCode.AUTH_REQUIRED);
-			});
+			.isInstanceOf(UnauthorizedException.class)
+			.hasMessageContaining("Unauthorized access");
 	}
 
 	@Test
@@ -131,29 +127,13 @@ class WhilickControllerTest {
 	void getShorts_NotFound() {
 		// Given
 		Long nonExistentArticleId = 999L;
-		doThrow(new BaseException(ErrorCode.CONTENT_NOT_FOUND, nonExistentArticleId))
-			.when(whilickService).getShortsByArticleId(anyLong(), anyInt(), anyString());
+		when(whilickService.getShortsByArticleId(anyLong(), anyInt(), anyString()))
+			.thenThrow(new NotFoundException("Article not found"));
 
 		// Then
 		assertThatThrownBy(() ->
 			whilickController.getShorts(nonExistentArticleId, 0, 10, VALID_TOKEN))
-			.isInstanceOf(BaseException.class)
-			.satisfies(e -> {
-				BaseException ex = (BaseException) e;
-				assertThat(ex.getErrorCode()).isEqualTo(ErrorCode.CONTENT_NOT_FOUND);
-			});
-	}
-
-	@Test
-	@DisplayName("잘못된 페이지네이션 파라미터로 조회 실패")
-	void getShorts_InvalidPagination() {
-		// When & Then
-		assertThatThrownBy(() ->
-			whilickController.getShorts(null, -1, 0, VALID_TOKEN))
-			.isInstanceOf(BaseException.class)
-			.satisfies(e -> {
-				BaseException ex = (BaseException) e;
-				assertThat(ex.getErrorCode()).isEqualTo(ErrorCode.INVALID_PAGINATION_PARAMS);
-			});
+			.isInstanceOf(NotFoundException.class)
+			.hasMessageContaining("Article not found");
 	}
 }

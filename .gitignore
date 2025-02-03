@@ -39,7 +39,3 @@ out/
 .gitmessage.txt
 
 application.yml
-
-
-#mac
-.DS_Store

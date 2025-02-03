@@ -6,12 +6,14 @@ import com.example.lifeonhana.entity.Article;
 import com.example.lifeonhana.entity.Mydata;
 import com.example.lifeonhana.entity.Product;
 import com.example.lifeonhana.entity.User;
+import com.example.lifeonhana.global.exception.UnauthorizedException;
 import com.example.lifeonhana.repository.ArticleRepository;
 import com.example.lifeonhana.repository.HistoryRepository;
 import com.example.lifeonhana.repository.ProductRepository;
 import com.example.lifeonhana.repository.UserRepository;
 import lombok.RequiredArgsConstructor;
 
+import org.springframework.security.core.AuthenticationException;
 import org.springframework.stereotype.Service;
 import org.springframework.web.client.RestTemplate;
 
@@ -21,10 +23,6 @@ import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 import java.util.stream.Collectors;
-
-import com.example.lifeonhana.global.exception.BaseException;
-import com.example.lifeonhana.global.exception.ErrorCode;
-
 @Service
 @RequiredArgsConstructor
 public class ProductInsightService {
@@ -37,16 +35,6 @@ public class ProductInsightService {
 	private final HistoryRepository historyRepository;
 
 	public ProductInsightResponse getProductInsight(ProductInsightRequest request, String authId) {
-		// 인증 확인
-		if (authId == null) {
-			throw new BaseException(ErrorCode.AUTH_REQUIRED);
-		}
-		
-		// 유효성 검사
-		if (request.productId() == null) {
-			throw new BaseException(ErrorCode.INVALID_INPUT, "productId는 필수값입니다");
-		}
-		
 		User user = getUser(authId);
 		Article article = getArticle(request.articleId());
 		Product product = getProduct(request.productId());
@@ -71,22 +59,22 @@ public class ProductInsightService {
 
 	private User getUser(String authId) {
 		return userRepository.findByAuthId(authId)
-			.orElseThrow(() -> new BaseException(ErrorCode.USER_NOT_FOUND, authId));
+			.orElseThrow(() -> new UnauthorizedException("사용자를 찾을 수 없습니다. authId: " + authId));
 	}
 
 	private Article getArticle(Long articleId) {
 		return articleRepository.findById(articleId)
-			.orElseThrow(() -> new BaseException(ErrorCode.ARTICLE_NOT_FOUND, articleId));
+			.orElseThrow(() -> new IllegalArgumentException("존재하지 않는 기사입니다. articleId: " + articleId));
 	}
 
 	private Product getProduct(Long productId) {
 		return productRepository.findById(productId)
-			.orElseThrow(() -> new BaseException(ErrorCode.PRODUCT_NOT_FOUND, productId));
+			.orElseThrow(() -> new IllegalArgumentException("존재하지 않는 상품입니다. productId: " + productId));
 	}
 
 	private Map<String, Object> prepareUserData(User user) {
 		Mydata mydata = Optional.ofNullable(user.getMydata())
-			.orElseThrow(() -> new BaseException(ErrorCode.MYDATA_NOT_FOUND, user.getUserId()));
+			.orElseThrow(() -> new IllegalArgumentException("사용자의 자산 정보가 없습니다. userId: " + user.getUserId()));
 
 		return Map.of(
 			"total_asset", Optional.ofNullable(mydata.getTotalAsset()).orElse(BigDecimal.ZERO),
@@ -134,7 +122,7 @@ public class ProductInsightService {
 			}
 			return response;
 		} catch (Exception e) {
-			throw new BaseException(ErrorCode.FLASK_API_ERROR, e);
+			throw new RuntimeException("Flask API 호출 중 오류가 발생했습니다.", e);
 		}
 	}
 }
