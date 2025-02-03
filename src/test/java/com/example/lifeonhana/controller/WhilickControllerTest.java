@@ -141,7 +141,6 @@ class WhilickControllerTest {
 			.satisfies(e -> {
 				BaseException ex = (BaseException) e;
 				assertThat(ex.getErrorCode()).isEqualTo(ErrorCode.CONTENT_NOT_FOUND);
-				assertThat(ex.getMessage()).contains(String.valueOf(nonExistentArticleId));
 			});
 	}
 

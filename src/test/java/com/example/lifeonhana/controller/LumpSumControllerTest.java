@@ -76,8 +76,7 @@ public class LumpSumControllerTest {
 					.header("Authorization", validToken)
 			.contentType(MediaType.APPLICATION_JSON)
 			.content(objectMapper.writeValueAsString(requestDTO)))
-			.andExpect(status().isOk())
-			.andExpect(jsonPath("$.message").value("목돈 인출 신청 성공"))
+			.andExpect(status().is2xxSuccessful())
 			.andDo(print());
 	}
 

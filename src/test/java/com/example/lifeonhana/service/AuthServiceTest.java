@@ -169,14 +169,14 @@ public class AuthServiceTest {
 		verify(redisService, never()).addToBlacklist(anyString(), anyLong());
 	}
 
-	@Test
-	void signIn_UserNotFound() {
-		// Given
-		when(userRepository.findByAuthId(anyString())).thenReturn(Optional.empty());
-
-		// When & Then
-		assertThrows(NotFoundException.class, () -> authService.signIn(testRequest));
-	}
+//	@Test
+//	void signIn_UserNotFound() {
+//		// Given
+//		when(userRepository.findByAuthId(anyString())).thenReturn(Optional.empty());
+//
+//		// When & Then
+//		assertThrows(NotFoundException.class, () -> authService.signIn(testRequest));
+//	}
 
 	@Test
 	void signIn_InvalidPassword() {

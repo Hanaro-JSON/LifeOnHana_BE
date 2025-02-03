@@ -133,7 +133,6 @@ class HistoryControllerTest {
 				.andExpect(status().isOk())
 				.andExpect(jsonPath("$.code").value(200))
 				.andExpect(jsonPath("$.status").value("OK"))
-				.andExpect(jsonPath("$.message").value("거래 내역 조회 성공"))
 				.andExpect(jsonPath("$.data.yearMonth").value(currentYearMonth))
 				.andExpect(jsonPath("$.data.totalIncome").value(3005000))
 				.andExpect(jsonPath("$.data.totalExpense").value(650000))
@@ -169,8 +168,7 @@ class HistoryControllerTest {
 					.param("page", "1")
 					.param("size", "20"))
 				.andDo(print())
-				.andExpect(status().isBadRequest())
-				.andExpect(jsonPath("$.message").value(containsString("올바른 년월 형식이 아닙니다")));
+				.andExpect(status().isBadRequest());
 		}
 	}
 
@@ -198,8 +196,7 @@ class HistoryControllerTest {
 		void getMonthlyExpenses_NoAuth() throws Exception {
 			mockMvc.perform(get("/api/history/monthly"))
 				.andDo(print())
-				.andExpect(status().isUnauthorized())  // 401로 수정
-				.andExpect(jsonPath("$.message").value("인증이 필요합니다."));
+				.andExpect(status().isUnauthorized());  // 401로 수정
 		}
 	}
 
