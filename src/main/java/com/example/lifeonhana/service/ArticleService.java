@@ -25,6 +25,7 @@ import org.slf4j.LoggerFactory;
 import com.example.lifeonhana.dto.response.ArticleDetailResponse;
 import com.example.lifeonhana.repository.ArticleRepository;
 import com.fasterxml.jackson.core.JsonProcessingException;
+import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.ObjectMapper;
 
 import org.springframework.data.domain.PageRequest;
@@ -57,20 +58,24 @@ public class ArticleService {
 	public ArticleDetailResponse getArticleDetails(Long articleId, String authId) {
 		User user = findUser(authId);
 		
-		// 1. 데이터베이스에서 기사 조회
 		var article = articleRepository.findById(articleId)
 			.orElseThrow(() -> new IllegalArgumentException("존재하지 않는 ID입니다."));
 
-		// 2. Redis에서 좋아요 정보 조회
 		LikeResponseDto likeInfo = articleLikeService.getLikeInfo(user.getUserId(), articleId);
 		
 		try {
-			// `content` 데이터를 JSON 배열로 변환
 			ObjectMapper objectMapper = new ObjectMapper();
-			List<Object> contentList = objectMapper.readValue(article.getContent(), List.class);
+			// List<Object> contentList = objectMapper.readValue(article.getContent(), List.class);
+
+			List<Map<String, Object>> contentList = objectMapper.readValue(article.getContent(), new TypeReference<List<Map<String, Object>>>() {});
+
+			String userPrompt = contentList.stream()
+				.filter(part -> "text".equals(part.get("type")))
+				.map(part -> part.get("content").toString())
+				.collect(Collectors.joining(" "));
 
 			// Flask 요청 데이터 생성
-			Map<String, Object> request = Map.of("content", contentList);
+			Map<String, Object> request = Map.of("content", userPrompt);
 			log.info("Sending request to Flask: {}", request);
 
 			// Flask로 요청 전송
