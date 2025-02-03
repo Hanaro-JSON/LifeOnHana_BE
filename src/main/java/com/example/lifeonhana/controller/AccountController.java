@@ -45,7 +45,11 @@ public class AccountController {
 	})
 	@GetMapping
 	public ResponseEntity<ApiResult<AccountListResponseDTO>> getAccounts(
-		@RequestHeader("Authorization") String token) {
+		@RequestHeader(value = "Authorization", required = false) String token) {
+		
+		if (token == null) {
+			throw new BaseException(ErrorCode.UNAUTHORIZED);
+		}
 		
 		validateTokenFormat(token);
 		Long userId = extractUserIdFromToken(token);

@@ -6,6 +6,7 @@ import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.bind.annotation.RestControllerAdvice;
 
 import com.example.lifeonhana.ApiResult;
+import com.example.lifeonhana.dto.response.ErrorResponse;
 
 import lombok.extern.slf4j.Slf4j;
 
@@ -16,6 +17,7 @@ import java.util.Map;
 import java.util.Optional;
 import java.util.stream.Collectors;
 import org.springframework.validation.FieldError;
+import org.springframework.web.bind.MissingRequestHeaderException;
 
 @RestControllerAdvice
 @Slf4j
@@ -46,9 +48,19 @@ public class GlobalExceptionHandler {
 		return buildResponse(ErrorCode.INTERNAL_SERVER_ERROR, null);
 	}
 
+	@ExceptionHandler(MissingRequestHeaderException.class)
+	public ResponseEntity<ApiResult<?>> handleMissingRequestHeaderException(MissingRequestHeaderException ex) {
+		return buildResponse(ErrorCode.UNAUTHORIZED, "인증 헤더가 존재하지 않습니다");
+	}
+
 	// 공통 응답 생성 메서드
 	private ResponseEntity<ApiResult<?>> buildResponse(ErrorCode errorCode, Object data) {
 		return ResponseEntity.status(errorCode.getHttpStatus())
 			.body(ApiResult.error(errorCode, data));
+	}
+
+	private ResponseEntity<ApiResult<?>> buildResponse(ErrorCode errorCode, String message) {
+		return ResponseEntity.status(errorCode.getHttpStatus())
+			.body(ApiResult.error(errorCode, message));
 	}
 }

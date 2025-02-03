@@ -61,6 +61,10 @@ public class AccountService {
 
 	@Transactional
 	public AccountTransferResponse transfer(String authId, AccountTransferRequest request) {
+		if (request.amount() == null) {
+			throw new BaseException(ErrorCode.ACCOUNT_NOT_FOUND);
+		}
+
 		if (request.amount().compareTo(BigDecimal.ZERO) <= 0) {
 			throw new BaseException(ErrorCode.NEGATIVE_TRANSFER_AMOUNT);
 		}

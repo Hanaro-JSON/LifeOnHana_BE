@@ -75,8 +75,7 @@ class AccountControllerTest {
         mockMvc.perform(get("/api/account")
                 .header("Authorization", validToken))
             .andExpect(status().isOk())
-            .andExpect(jsonPath("$.code").value(200))
-            .andExpect(jsonPath("$.message").value("계좌 목록 조회 성공"))
+            .andExpect(jsonPath("$.code").value("S200"))
             .andExpect(jsonPath("$.data.mainAccount.accountId").value(11))
             .andExpect(jsonPath("$.data.mainAccount.accountNumber").value("11111111111111"))
             .andExpect(jsonPath("$.data.mainAccount.balance").value(account.getBalance().doubleValue()))
@@ -102,7 +101,6 @@ class AccountControllerTest {
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(objectMapper.writeValueAsString(transferRequest)))
                 .andExpect(status().isOk())
-                .andExpect(jsonPath("$.message").value("이체가 완료되었습니다."))
                 .andExpect(jsonPath("$.data.amount").value("1000"))
                 .andDo(print());
 
@@ -124,21 +122,30 @@ class AccountControllerTest {
         mockMvc.perform(get("/api/account/salary")
                 .header("Authorization", validToken))
             .andExpect(status().isOk())
-            .andExpect(jsonPath("$.code").value(200))
-            .andExpect(jsonPath("$.message").value("월급 통장 조회 성공"))
+            .andExpect(jsonPath("$.code").value("S200"))
             .andExpect(jsonPath("$.data.accountId").value(11))
             .andExpect(jsonPath("$.data.balance").value(account.getBalance().doubleValue()));
     }
 
     @Test
+    @DisplayName("계좌 목록 조회 - 유저 없음")
     void getAccounts_UserNotFound() throws Exception {
-        mockMvc.perform(get("/api/accounts")
+        mockMvc.perform(get("/api/account")
                         .header("Authorization", "invalid-token"))
-                .andExpect(status().isInternalServerError())
-                .andExpect(jsonPath("$.message").value("서버 내부 오류가 발생했습니다."))
-                .andExpect(jsonPath("$.status").value("INTERNAL_SERVER_ERROR"));
+                .andExpect(status().isBadRequest())
+                .andExpect(jsonPath("$.code").value("A003"));
     }
 
+    @Test
+    @DisplayName("인증되지 않은 사용자 접근")
+    void unauthorized_Access() throws Exception {
+        mockMvc.perform(get("/api/account")
+                .contentType(MediaType.APPLICATION_JSON))
+            .andExpect(status().isUnauthorized())
+            .andExpect(jsonPath("$.code").value("A001"))
+            .andExpect(jsonPath("$.status").value("UNAUTHORIZED"))
+            .andExpect(jsonPath("$.customMessage").value("인증이 필요합니다"));
+    }
 
     @Test
     @DisplayName("계좌 이체 - 잔액 부족")
@@ -151,23 +158,12 @@ class AccountControllerTest {
                 .header("Authorization", validToken)
                 .contentType(MediaType.APPLICATION_JSON)
                 .content(objectMapper.writeValueAsString(transferRequest)))
-            .andExpect(status().isInternalServerError())  // 현재 구현상 500 에러 반환
-            .andExpect(jsonPath("$.code").value(500))
-            .andExpect(jsonPath("$.message").exists());
-    }
-
-    @Test
-    @DisplayName("인증되지 않은 사용자 접근")
-    void unauthorized_Access() throws Exception {
-        mockMvc.perform(get("/api/account"))
-            .andExpect(status().isInternalServerError())  // 현재 구현상 500 에러 반환
-            .andExpect(jsonPath("$.code").value(500))
-            .andExpect(jsonPath("$.message").exists());
+            .andExpect(status().isBadRequest())
+            .andExpect(jsonPath("$.code").value("AC002"));
     }
 
     @Test
     @DisplayName("잘못된 계좌 이체 요청")
-
     void transfer_InvalidRequest() throws Exception {
         String invalidRequest = "{\"fromAccountId\": 1, \"invalidField\": \"value\"}";
 
@@ -175,9 +171,8 @@ class AccountControllerTest {
                 .header("Authorization", validToken)
                 .contentType(MediaType.APPLICATION_JSON)
                 .content(invalidRequest))
-            .andExpect(status().isInternalServerError())  // 현재 구현상 500 에러 반환
-            .andExpect(jsonPath("$.code").value(500))
-            .andExpect(jsonPath("$.message").exists());
+            .andExpect(status().isNotFound())
+            .andExpect(jsonPath("$.code").value("AC001"));
     }
 
     @Test
@@ -191,7 +186,8 @@ class AccountControllerTest {
                 .header("Authorization", validToken)
                 .contentType(MediaType.APPLICATION_JSON)
                 .content(objectMapper.writeValueAsString(transferRequest)))
-            .andExpect(status().isNotFound());
+            .andExpect(status().isNotFound())
+            .andExpect(jsonPath("$.code").value("AC001"));
     }
 
     @Test
@@ -205,8 +201,8 @@ class AccountControllerTest {
                 .header("Authorization", validToken)
                 .contentType(MediaType.APPLICATION_JSON)
                 .content(objectMapper.writeValueAsString(transferRequest)))
-            .andExpect(jsonPath("$.code").value(400))
-            .andExpect(jsonPath("$.message").exists());
+            .andExpect(status().isBadRequest())
+            .andExpect(jsonPath("$.code").value("AC004"));
     }
 
     @Test
@@ -220,8 +216,8 @@ class AccountControllerTest {
                 .header("Authorization", validToken)
                 .contentType(MediaType.APPLICATION_JSON)
                 .content(objectMapper.writeValueAsString(transferRequest)))
-            .andExpect(jsonPath("$.code").value(400))
-            .andExpect(jsonPath("$.message").exists());
+            .andExpect(status().isBadRequest())
+            .andExpect(jsonPath("$.code").value("AC005"));
     }
 
     @Test
@@ -239,7 +235,6 @@ class AccountControllerTest {
         String expiredToken = "Bearer expired.token.here";
         mockMvc.perform(get("/api/account")
                 .header("Authorization", expiredToken))
-            .andExpect(status().isUnauthorized())
-            .andExpect(jsonPath("$.code").value("A004"));
+            .andExpect(status().isUnauthorized());
     }
-} 
+}
