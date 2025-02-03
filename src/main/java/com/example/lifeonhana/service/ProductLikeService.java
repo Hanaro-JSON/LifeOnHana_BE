@@ -19,8 +19,6 @@ import com.example.lifeonhana.entity.Product;
 import com.example.lifeonhana.entity.ProductLike;
 import com.example.lifeonhana.entity.ProductLikeId;
 import com.example.lifeonhana.entity.User;
-import com.example.lifeonhana.global.exception.BaseException;
-import com.example.lifeonhana.global.exception.ErrorCode;
 import com.example.lifeonhana.repository.ProductLikeRepository;
 import com.example.lifeonhana.repository.ProductRepository;
 import com.example.lifeonhana.repository.UserRepository;
@@ -36,10 +34,10 @@ public class ProductLikeService {
 
 	public ProductListResponseDTO<ProductResponseDTO> getProductLikes(String authId, int page, int size) {
 		User user = userRepository.findByAuthId(authId)
-			.orElseThrow(() -> new BaseException(ErrorCode.USER_NOT_FOUND, authId));
+			.orElseThrow(() -> new IllegalArgumentException("사용자를 찾을 수 없습니다."));
 
 		if (page < 0 || size <= 0 || size > 1000) {
-			throw new BaseException(ErrorCode.INVALID_PAGINATION_PARAMS);
+			throw new IllegalArgumentException("유효하지 않은 페이지네이션 파라미터입니다.");
 		}
 
 		String userLikesKey = "user:" + user.getUserId() + ":productLikes";
@@ -77,14 +75,17 @@ public class ProductLikeService {
 	@Transactional
 	public boolean toggleLike(Long productId, String authId) {
 		if (productId == null || productId <= 0) {
-			throw new BaseException(ErrorCode.INVALID_PRODUCT_ID);
+			throw new IllegalArgumentException("유효하지 않은 상품 ID입니다.");
 		}
 
+		// 사용자 존재 확인
 		User user = userRepository.findByAuthId(authId)
-			.orElseThrow(() -> new BaseException(ErrorCode.USER_NOT_FOUND, authId));
+				.orElseThrow(() -> new IllegalArgumentException("사용자를 찾을 수 없습니다."));
 
+		// 상품 존재 확인
 		Product product = productRepository.findById(productId)
-			.orElseThrow(() -> new BaseException(ErrorCode.PRODUCT_NOT_FOUND, productId));
+				.orElseThrow(() -> new IllegalArgumentException("상품을 찾을 수 없습니다."));
+
 
 		String userLikesKey = "user:" + user.getUserId() + ":productLikes";
 

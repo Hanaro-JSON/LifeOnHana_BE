@@ -13,8 +13,7 @@ import com.example.lifeonhana.entity.Product;
 import com.example.lifeonhana.entity.ProductLike;
 import com.example.lifeonhana.entity.ProductLikeId;
 import com.example.lifeonhana.entity.User;
-import com.example.lifeonhana.global.exception.BaseException;
-import com.example.lifeonhana.global.exception.ErrorCode;
+import com.example.lifeonhana.global.exception.NotFoundException;
 import com.example.lifeonhana.repository.ArticleLikeRepository;
 import com.example.lifeonhana.repository.ArticleRepository;
 import com.example.lifeonhana.repository.ProductLikeRepository;
@@ -56,7 +55,7 @@ public class RedisToDatabaseSynchronizer {
 				if (isLiked == null) continue;
 
 				Article article = articleRepository.findById(articleId)
-					.orElseThrow(() -> new BaseException(ErrorCode.ARTICLE_NOT_FOUND));
+					.orElseThrow(() -> new NotFoundException("해당 기사를 찾을 수 없습니다."));
 
 				ArticleLike articleLike = articleLikeRepository.findByIdUserIdAndIdArticleId(userId, articleId)
 					.orElse(new ArticleLike());
@@ -64,7 +63,7 @@ public class RedisToDatabaseSynchronizer {
 				if (articleLike.getId() == null) {
 					articleLike.setId(new ArticleLike.ArticleLikeId(userId, articleId));
 					articleLike.setUser(userRepository.findById(userId)
-						.orElseThrow(() -> new BaseException(ErrorCode.USER_NOT_FOUND)));
+						.orElseThrow(() -> new NotFoundException("사용자를 찾을 수 없습니다.")));
 					articleLike.setArticle(article);
 				}
 				
@@ -79,10 +78,7 @@ public class RedisToDatabaseSynchronizer {
 					articleRepository.save(article);
 				}
 			} catch (Exception e) {
-				log.error("[Sync Error] Code: {} | Message: {}", 
-					ErrorCode.SYNC_ARTICLE_LIKE_FAILED.getCode(), 
-					e.getMessage());
-				throw new BaseException(ErrorCode.SYNC_ARTICLE_LIKE_FAILED, e);
+				log.error("Error synchronizing article like for change {}: {}", change, e.getMessage());
 			}
 		}
 		
@@ -113,9 +109,9 @@ public class RedisToDatabaseSynchronizer {
 				if (isLiked == null) continue;
 
 				User user = userRepository.findById(userId)
-					.orElseThrow(() -> new BaseException(ErrorCode.USER_NOT_FOUND));
+					.orElseThrow(() -> new NotFoundException("사용자를 찾을 수 없습니다."));
 				Product product = productRepository.findById(productId)
-					.orElseThrow(() -> new BaseException(ErrorCode.PRODUCT_NOT_FOUND));
+					.orElseThrow(() -> new NotFoundException("상품을 찾을 수 없습니다."));
 
 				ProductLike productLike = productLikeRepository.findByUserAndProduct(user, product)
 					.orElse(new ProductLike());
@@ -129,10 +125,7 @@ public class RedisToDatabaseSynchronizer {
 				productLike.setIsLike(isLiked);
 				productLikeRepository.save(productLike);
 			} catch (Exception e) {
-				log.error("[Sync Error] Code: {} | Message: {}", 
-					ErrorCode.SYNC_PRODUCT_LIKE_FAILED.getCode(), 
-					e.getMessage());
-				throw new BaseException(ErrorCode.SYNC_PRODUCT_LIKE_FAILED, e);
+				log.error("Error synchronizing product like for change {}: {}", change, e.getMessage());
 			}
 		}
 		

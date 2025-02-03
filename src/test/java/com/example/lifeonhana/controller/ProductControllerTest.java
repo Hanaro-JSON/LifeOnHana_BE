@@ -92,8 +92,9 @@ public class ProductControllerTest {
 				.param("limit", "20")
 				.header("Authorization", validToken))
 			.andExpect(status().isOk())
-			.andExpect(jsonPath("$.code").value("P200"))
+			.andExpect(jsonPath("$.code").value(200))
 			.andExpect(jsonPath("$.status").value("OK"))
+			.andExpect(jsonPath("$.message").value("상품 목록 조회 성공"))
 			.andExpect(jsonPath("$.data.products[0].name").value("Product 1"))
 			.andExpect(jsonPath("$.data.products[1].name").value("Product 2"))
 			.andExpect(jsonPath("$.data.hasNext").value(true));
@@ -117,7 +118,8 @@ public class ProductControllerTest {
 		mockMvc.perform(get("/api/products/savings/1")
 				.header("Authorization", validToken))
 			.andExpect(status().isOk())
-			.andExpect(jsonPath("$.code").value("P201"))
+			.andExpect(jsonPath("$.code").value(200))
+			.andExpect(jsonPath("$.message").value("예적금 상품 상세 조회 성공"))
 			.andExpect(jsonPath("$.data.name").value("Savings Product"))
 			.andExpect(jsonPath("$.data.isLike").value(true))
 			.andExpect(jsonPath("$.data.savingsInfo.basicInterestRate").value(1.5));
@@ -146,7 +148,8 @@ public class ProductControllerTest {
 		mockMvc.perform(get("/api/products/loans/2")
 				.header("Authorization", validToken))
 			.andExpect(status().isOk())
-			.andExpect(jsonPath("$.code").value("P202"))
+			.andExpect(jsonPath("$.code").value(200))
+			.andExpect(jsonPath("$.message").value("대출 상품 상세 조회 성공"))
 			.andExpect(jsonPath("$.data.name").value("Loan Product"))
 			.andExpect(jsonPath("$.data.loanInfo.minAmount").value(2000));
 	}
@@ -166,7 +169,8 @@ public class ProductControllerTest {
 		mockMvc.perform(get("/api/products/life/3")
 				.header("Authorization", validToken))
 			.andExpect(status().isOk())
-			.andExpect(jsonPath("$.code").value("P203"))
+			.andExpect(jsonPath("$.code").value(200))
+			.andExpect(jsonPath("$.message").value("라이프 상품 상세 조회 성공"))
 			.andExpect(jsonPath("$.data.name").value("Life Product"))
 			.andExpect(jsonPath("$.data.isLike").value(true));
 	}

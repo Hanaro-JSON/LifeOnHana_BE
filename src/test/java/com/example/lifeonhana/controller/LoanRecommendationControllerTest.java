@@ -66,6 +66,7 @@ class LoanRecommendationControllerTest {
 			.andDo(print())
 			.andExpect(status().isOk())
 			.andExpect(jsonPath("$.code").value(200))
+			.andExpect(jsonPath("$.message").value("대출 상품 추천 성공"))
 			.andExpect(jsonPath("$.data").isArray())
 			.andExpect(jsonPath("$.data[0].productId").exists());
 	}
@@ -84,7 +85,8 @@ class LoanRecommendationControllerTest {
 				.header("Authorization", validToken))
 			.andDo(print())
 			.andExpect(status().isBadRequest())
-			.andExpect(jsonPath("$.code").value("L002"));
+			.andExpect(jsonPath("$.code").value(400))
+			.andExpect(jsonPath("$.message").value("대출 사유는 필수 항목입니다."));
 	}
 
 	@Test
@@ -100,8 +102,9 @@ class LoanRecommendationControllerTest {
 				.content(objectMapper.writeValueAsString(invalidRequestData))
 				.header("Authorization", validToken))
 			.andDo(print())
-			.andExpect(status().isInternalServerError())
-			.andExpect(jsonPath("$.code").value("S500"));
+			.andExpect(status().isBadRequest())
+			.andExpect(jsonPath("$.code").value(400))
+			.andExpect(jsonPath("$.message").value("대출 금액은 0보다 커야 합니다."));
 	}
 
 	@Test
@@ -118,7 +121,8 @@ class LoanRecommendationControllerTest {
 				.content(objectMapper.writeValueAsString(requestData)))
 			.andDo(print())
 			.andExpect(status().isUnauthorized())
-			.andExpect(jsonPath("$.code").value("A401"));
+			.andExpect(jsonPath("$.code").value(401))
+			.andExpect(jsonPath("$.message").exists());
 	}
 
 	// @Test

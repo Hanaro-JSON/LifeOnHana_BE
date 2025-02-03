@@ -84,6 +84,7 @@ class AuthControllerTest {
 				.content(objectMapper.writeValueAsString(request)))
 			.andExpect(status().isOk())
 			.andExpect(jsonPath("$.code").value(200))
+			.andExpect(jsonPath("$.message").value("로그인 성공"))
 			.andExpect(jsonPath("$.data.userId").value(testUser.getUserId().toString()))
 			.andExpect(jsonPath("$.data.accessToken").exists())
 			.andExpect(jsonPath("$.data.refreshToken").exists())
@@ -119,6 +120,7 @@ class AuthControllerTest {
 				.content(objectMapper.writeValueAsString(firstRequest)))
 			.andExpect(status().isOk())
 			.andExpect(jsonPath("$.code").value(200))
+			.andExpect(jsonPath("$.message").value("로그인 성공"))
 			.andExpect(jsonPath("$.data.userId").value(testUser.getUserId().toString()))
 			.andExpect(jsonPath("$.data.isFirst").value(false))  // 두 번째 로그인이므로 false
 			.andReturn();
@@ -141,7 +143,8 @@ class AuthControllerTest {
 		mockMvc.perform(post("/api/auth/signin")
 				.contentType(MediaType.APPLICATION_JSON)
 				.content(objectMapper.writeValueAsString(request)))
-			.andExpect(status().isUnauthorized());
+			.andExpect(status().isUnauthorized())
+			.andExpect(jsonPath("$.message").value("잘못된 비밀번호입니다."));
 	}
 
 	@Test
@@ -152,7 +155,8 @@ class AuthControllerTest {
 		mockMvc.perform(post("/api/auth/signin")
 				.contentType(MediaType.APPLICATION_JSON)
 				.content(objectMapper.writeValueAsString(request)))
-			.andExpect(status().isNotFound());
+			.andExpect(status().isNotFound())
+			.andExpect(jsonPath("$.message").value("Not Found.\n사용자를 찾을 수 없습니다."));
 	}
 
 	@Test
@@ -182,6 +186,7 @@ class AuthControllerTest {
 				.content(objectMapper.writeValueAsString(refreshRequest)))
 			.andExpect(status().isOk())
 			.andExpect(jsonPath("$.code").value(200))
+			.andExpect(jsonPath("$.message").value("토큰 갱신 성공"))
 			.andExpect(jsonPath("$.data.accessToken").exists())
 			.andExpect(jsonPath("$.data.refreshToken").exists());
 	}
@@ -208,7 +213,8 @@ class AuthControllerTest {
 		mockMvc.perform(post("/api/auth/signout")
 				.header("Authorization", "Bearer " + signInResponse.accessToken()))
 			.andExpect(status().isOk())
-			.andExpect(jsonPath("$.code").value("S200"));
+			.andExpect(jsonPath("$.code").value(200))
+			.andExpect(jsonPath("$.message").value("로그아웃 성공"));
 
 		// Verify token is blacklisted
 		assertTrue(redisService.isBlacklisted(signInResponse.accessToken()));
@@ -233,6 +239,7 @@ class AuthControllerTest {
 				.contentType(MediaType.APPLICATION_JSON)
 				.content(objectMapper.writeValueAsString(refreshRequest)))
 			.andExpect(status().isUnauthorized())
-			.andExpect(jsonPath("$.code").value("A003"));
+			.andExpect(jsonPath("$.code").value(401))
+			.andExpect(jsonPath("$.message").value("유효하지 않은 리프레시 토큰입니다."));
 	}
 }

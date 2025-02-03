@@ -1,6 +1,5 @@
 package com.example.lifeonhana.controller;
 
-import com.example.lifeonhana.global.exception.BaseException;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
@@ -11,7 +10,8 @@ import com.example.lifeonhana.dto.response.AuthResponseDTO;
 import com.example.lifeonhana.dto.request.RefreshTokenRequestDTO;
 import com.example.lifeonhana.service.AuthService;
 import com.example.lifeonhana.service.JwtService;
-import com.example.lifeonhana.global.exception.ErrorCode;
+import com.example.lifeonhana.global.exception.BadRequestException;
+import com.example.lifeonhana.global.exception.UnauthorizedException;
 
 import io.swagger.v3.oas.annotations.responses.ApiResponse;
 import lombok.RequiredArgsConstructor;
@@ -21,8 +21,6 @@ import io.swagger.v3.oas.annotations.tags.Tag;
 import io.swagger.v3.oas.annotations.responses.ApiResponses;
 import io.swagger.v3.oas.annotations.media.Content;
 import io.swagger.v3.oas.annotations.media.Schema;
-
-import java.util.Map;
 
 @RestController
 @RequiredArgsConstructor
@@ -39,16 +37,16 @@ public class AuthController {
 		@ApiResponse(responseCode = "401", description = "인증 실패")
 	})
 	@PostMapping("/signin")
-	public ResponseEntity<ApiResult<AuthResponseDTO>> signIn(@RequestBody AuthRequestDTO request) {
+	public ResponseEntity<ApiResult> signIn(@RequestBody AuthRequestDTO request) {
 		try {
 			AuthResponseDTO authResponse = authService.signIn(request);
-			return ResponseEntity.ok(ApiResult.<AuthResponseDTO>builder()
-				.code(String.valueOf(HttpStatus.OK.value()))
+			return ResponseEntity.ok(ApiResult.builder()
+				.code(HttpStatus.OK.value())
 				.status(HttpStatus.OK)
 				.message("로그인 성공")
 				.data(authResponse)
 				.build());
-		} catch (BaseException e) {
+		} catch (UnauthorizedException e) {
 			throw e;
 		}
 	}
@@ -60,16 +58,16 @@ public class AuthController {
 		@ApiResponse(responseCode = "401", description = "유효하지 않은 리프레시 토큰")
 	})
 	@PostMapping("/refresh")
-	public ResponseEntity<ApiResult<AuthResponseDTO>> refreshToken(@RequestBody RefreshTokenRequestDTO request) {
+	public ResponseEntity<ApiResult> refreshToken(@RequestBody RefreshTokenRequestDTO request) {
 		try {
 			AuthResponseDTO newTokens = authService.refreshToken(request.refreshToken());
-			return ResponseEntity.ok(ApiResult.<AuthResponseDTO>builder()
-				.code(String.valueOf(HttpStatus.OK.value()))
+			return ResponseEntity.ok(ApiResult.builder()
+				.code(HttpStatus.OK.value())
 				.status(HttpStatus.OK)
 				.message("토큰 갱신 성공")
 				.data(newTokens)
 				.build());
-		} catch (BaseException e) {
+		} catch (UnauthorizedException e) {
 			throw e;
 		}
 	}
@@ -81,10 +79,17 @@ public class AuthController {
 		@ApiResponse(responseCode = "401", description = "유효하지 않은 토큰")
 	})
 	@PostMapping("/signout")
-	public ResponseEntity<ApiResult<Void>> signOut(@RequestHeader("Authorization") String token) {
-		authService.signOut(token);
-		return ResponseEntity.ok(
-			ApiResult.success(ErrorCode.LOGOUT_SUCCESS, null)
-		);
+	public ResponseEntity<ApiResult> signOut(@RequestHeader("Authorization") String token) {
+		try {
+			authService.signOut(token);
+			return ResponseEntity.ok(ApiResult.builder()
+				.code(HttpStatus.OK.value())
+				.status(HttpStatus.OK)
+				.message("로그아웃 성공")
+				.data(null)
+				.build());
+		} catch (BadRequestException | UnauthorizedException e) {
+			throw e;
+		}
 	}
 }

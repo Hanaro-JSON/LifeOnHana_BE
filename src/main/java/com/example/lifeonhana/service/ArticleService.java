@@ -4,8 +4,7 @@ import com.example.lifeonhana.dto.response.LikeResponseDto;
 import com.example.lifeonhana.entity.Article;
 import com.example.lifeonhana.entity.ArticleLike;
 import com.example.lifeonhana.entity.User;
-import com.example.lifeonhana.global.exception.BaseException;
-import com.example.lifeonhana.global.exception.ErrorCode;
+import com.example.lifeonhana.global.exception.NotFoundException;
 import jakarta.persistence.criteria.CriteriaBuilder;
 import jakarta.persistence.criteria.Root;
 import org.springframework.transaction.annotation.Transactional;
@@ -17,6 +16,7 @@ import org.springframework.util.StringUtils;
 import org.springframework.web.client.HttpClientErrorException;
 import org.springframework.web.client.RestTemplate;
 
+import java.time.Duration;
 import java.util.List;
 import java.util.Map;
 import org.slf4j.Logger;
@@ -150,7 +150,7 @@ public class ArticleService {
 		}
 
 		Long userId = userRepository.findByAuthId(authId)
-			.orElseThrow(() -> new BaseException(ErrorCode.USER_NOT_FOUND))
+			.orElseThrow(() -> new NotFoundException("사용자를 찾을 수 없습니다."))
 			.getUserId();
 
 		String userLikesKey = "user:" + userId + ":likes";
@@ -252,7 +252,7 @@ public class ArticleService {
 
 	private User findUser(String authId) {
 		return userRepository.findByAuthId(authId)
-				.orElseThrow(() -> new BaseException(ErrorCode.USER_NOT_FOUND));
+				.orElseThrow(() -> new NotFoundException("사용자를 찾을 수 없습니다."));
 	}
 
 	private Map<Long, Boolean> getLikeStatusMap(List<Article> articles, User user) {
