@@ -60,14 +60,13 @@ class ArticleControllerTest {
     @Order(1)
     @DisplayName("기사 상세 조회 - 성공")
     void getArticleDetails_Success() throws Exception {
-        Long articleId = 15L;  // 실제 DB에 있는 게시글 ID
+        Long articleId = 15L;
 
         mockMvc.perform(get("/api/articles/{articleId}", articleId)
                 .header("Authorization", validToken))
             .andExpect(status().isOk())
             .andExpect(jsonPath("$.code").value(200))
             .andExpect(jsonPath("$.status").value("OK"))
-            .andExpect(jsonPath("$.message").value("기사 상세 조회 성공"))
             .andExpect(jsonPath("$.data.articleId").value(articleId))
             .andExpect(jsonPath("$.data.category").value("REAL_ESTATE"));
     }
@@ -83,7 +82,6 @@ class ArticleControllerTest {
                 .header("Authorization", validToken))
             .andExpect(status().isOk())
             .andExpect(jsonPath("$.code").value(200))
-            .andExpect(jsonPath("$.message").value("기사 목록 조회 성공"))
             .andExpect(jsonPath("$.data.articles[0].category").value("REAL_ESTATE"))
             .andDo(print());
     }
@@ -108,9 +106,8 @@ class ArticleControllerTest {
 
         mockMvc.perform(get("/api/articles/{articleId}", nonExistentArticleId)
                 .header("Authorization", validToken))
-            .andExpect(jsonPath("$.code").value(400))
-            .andExpect(jsonPath("$.status").value("BAD_REQUEST"))
-            .andExpect(jsonPath("$.message").value("존재하지 않는 ID입니다."));
+            .andExpect(jsonPath("$.code").value( "C001"))
+            .andExpect(jsonPath("$.status").value("BAD_REQUEST"));
     }
 
     @Test
@@ -120,7 +117,7 @@ class ArticleControllerTest {
 
         mockMvc.perform(get("/api/articles/{id}", articleId)
                         .header("Authorization", validToken))
-                .andExpect(jsonPath("$.code").value(400));
+                .andExpect(jsonPath("$.code").value("C001"));
     }
 
     @Test
@@ -136,7 +133,7 @@ class ArticleControllerTest {
     @DisplayName("인증되지 않은 사용자 접근")
     void unauthorizedAccess() throws Exception {
         mockMvc.perform(get("/api/articles/1"))
-                .andExpect(jsonPath("$.code").value(404));
+                .andExpect(jsonPath("$.code").value("AR001"));
     }
 
     @Test
@@ -175,8 +172,7 @@ class ArticleControllerTest {
                   .param("query", "테스트")
                  .header("Authorization", validToken))
                 .andExpect(status().isOk())
-                .andExpect(jsonPath("$.code").value(200))
-                .andExpect(jsonPath("$.message").value("기사 검색 성공"));
+                .andExpect(jsonPath("$.code").value(200));
     }
 
 
@@ -188,8 +184,7 @@ class ArticleControllerTest {
         // when & then
         mockMvc.perform(get("/api/articles")
                 .header("Authorization", "invalid_token"))
-            .andExpect(jsonPath("$.code").value(500))
-            .andExpect(jsonPath("$.message").value("기사 목록 조회 중 오류가 발생했습니다."));
+            .andExpect(jsonPath("$.code").value("A001"));
     }
 
     @Test
@@ -197,9 +192,8 @@ class ArticleControllerTest {
     void getArticles_NoToken() throws Exception {
         // when & then
         mockMvc.perform(get("/api/articles"))
-            .andExpect(jsonPath("$.code").value(500))
-            .andExpect(jsonPath("$.status").value("INTERNAL_SERVER_ERROR"))
-            .andExpect(jsonPath("$.message").value("기사 목록 조회 중 오류가 발생했습니다."));
+            .andExpect(jsonPath("$.code").value("A001"))
+            .andExpect(jsonPath("$.status").value("UNAUTHORIZED"));
     }
 } 
 

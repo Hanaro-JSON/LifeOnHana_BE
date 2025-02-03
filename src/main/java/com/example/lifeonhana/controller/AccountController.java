@@ -1,6 +1,5 @@
 package com.example.lifeonhana.controller;
 
-import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PostMapping;
@@ -17,15 +16,16 @@ import com.example.lifeonhana.dto.response.AccountTransferResponse;
 import com.example.lifeonhana.dto.response.SalaryAccountResponseDTO;
 import com.example.lifeonhana.service.AccountService;
 import com.example.lifeonhana.service.JwtService;
-import com.example.lifeonhana.global.exception.UnauthorizedException;
+import com.example.lifeonhana.global.exception.ErrorCode;
+import com.example.lifeonhana.global.exception.BaseException;
 
+import io.jsonwebtoken.JwtException;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.responses.ApiResponse;
 import io.swagger.v3.oas.annotations.responses.ApiResponses;
 import io.swagger.v3.oas.annotations.security.SecurityRequirement;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import io.swagger.v3.oas.annotations.media.Content;
-import io.swagger.v3.oas.annotations.Parameter;
 import lombok.RequiredArgsConstructor;
 
 @Tag(name = "Account", description = "계좌 관련 API")
@@ -44,23 +44,31 @@ public class AccountController {
 		@ApiResponse(responseCode = "500", description = "서버 오류", content = @Content(mediaType = "application/json"))
 	})
 	@GetMapping
-	public ResponseEntity<ApiResult> getAccounts(@RequestHeader("Authorization") String token) {
+	public ResponseEntity<ApiResult<AccountListResponseDTO>> getAccounts(
+		@RequestHeader(value = "Authorization", required = false) String token) {
+		
+		if (token == null) {
+			throw new BaseException(ErrorCode.UNAUTHORIZED);
+		}
+		
+		validateTokenFormat(token);
+		Long userId = extractUserIdFromToken(token);
+		
+		AccountListResponseDTO response = accountService.getAccounts(userId);
+		return ResponseEntity.ok(ApiResult.<AccountListResponseDTO>success(response));
+	}
+
+	private void validateTokenFormat(String token) {
+		if (token == null || !token.startsWith("Bearer ")) {
+			throw new BaseException(ErrorCode.INVALID_TOKEN);
+		}
+	}
+
+	private Long extractUserIdFromToken(String token) {
 		try {
-			token = token.substring(7);
-			Long userId = jwtService.extractUserId(token);
-
-			AccountListResponseDTO response = accountService.getAccounts(userId);
-
-			return ResponseEntity.ok(
-				ApiResult.builder()
-					.code(HttpStatus.OK.value())
-					.status(HttpStatus.OK)
-					.message("계좌 목록 조회 성공")
-					.data(response)
-					.build()
-			);
-		} catch (Exception e) {
-			throw new UnauthorizedException("유효하지 않은 토큰입니다.");
+			return jwtService.extractUserId(token.substring(7));
+		} catch (JwtException e) {
+			throw new BaseException(ErrorCode.EXPIRED_TOKEN);
 		}
 	}
 
@@ -72,24 +80,16 @@ public class AccountController {
 	})
 	@GetMapping("/salary")
 	@SecurityRequirement(name = "bearerAuth")
-	public ResponseEntity<ApiResult> getSalaryAccount(
-		@Parameter(hidden = true)
+	public ResponseEntity<ApiResult<SalaryAccountResponseDTO>> getSalaryAccount(
 		@AuthenticationPrincipal String authId
 	) {
 		if (authId == null || authId.isEmpty()) {
-			throw new UnauthorizedException("로그인이 필요한 서비스입니다.");
+			throw new BaseException(ErrorCode.UNAUTHORIZED);
 		}
 
 		SalaryAccountResponseDTO response = accountService.getSalaryAccount(authId);
 		
-		return ResponseEntity.ok(
-			ApiResult.builder()
-				.code(HttpStatus.OK.value())
-				.status(HttpStatus.OK)
-				.message("월급 통장 조회 성공")
-				.data(response)
-				.build()
-		);
+		return ResponseEntity.ok(ApiResult.<SalaryAccountResponseDTO>success(response));
 	}
 
 	@Operation(
@@ -103,21 +103,15 @@ public class AccountController {
 		}
 	)
 	@PostMapping("/transfer")
-	public ResponseEntity<ApiResult> transfer(
+	public ResponseEntity<ApiResult<AccountTransferResponse>> transfer(
 		@AuthenticationPrincipal String authId,
-		@RequestBody AccountTransferRequest transferRequest
-	) {
+		@RequestBody AccountTransferRequest transferRequest) {
+		
 		if (authId == null || authId.isEmpty()) {
-			throw new UnauthorizedException("로그인이 필요한 서비스입니다.");
+			throw new BaseException(ErrorCode.UNAUTHORIZED);
 		}
+		
 		AccountTransferResponse response = accountService.transfer(authId, transferRequest);
-		return ResponseEntity.ok(
-			ApiResult.builder()
-				.code(200)
-				.status(HttpStatus.OK)
-				.message("이체가 완료되었습니다.")
-				.data(response)
-				.build()
-		);
+		return ResponseEntity.ok(ApiResult.<AccountTransferResponse>success(response));
 	}
 }

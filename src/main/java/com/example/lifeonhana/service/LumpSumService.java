@@ -11,7 +11,8 @@ import com.example.lifeonhana.entity.Account;
 import com.example.lifeonhana.entity.LumpSum;
 import com.example.lifeonhana.entity.User;
 import com.example.lifeonhana.entity.Wallet;
-import com.example.lifeonhana.global.exception.BadRequestException;
+import com.example.lifeonhana.global.exception.BaseException;
+import com.example.lifeonhana.global.exception.ErrorCode;
 import com.example.lifeonhana.repository.AccountRepository;
 import com.example.lifeonhana.repository.LumpSumRepository;
 import com.example.lifeonhana.repository.UserRepository;
@@ -45,11 +46,11 @@ public class LumpSumService {
 
 	private Account validateRequest(String authId, LumpSumRequestDTO lumpSumRequestDTO) {
 		Wallet wallet =
-			walletRepository.findWalletIdByUserAuthId(authId).orElseThrow(() -> new BadRequestException("하나지갑이 존재하지 않습니다."));
+			walletRepository.findWalletIdByUserAuthId(authId).orElseThrow(() -> new BaseException(ErrorCode.WALLET_NOT_FOUND));
 		Account account = accountRepository.findByAccountId(lumpSumRequestDTO.accountId())
-			.orElseThrow(() -> new BadRequestException("유효하지 않은 계좌 id 입니다."));
+			.orElseThrow(() -> new BaseException(ErrorCode.ACCOUNT_NOT_FOUND));
 		if (lumpSumRequestDTO.amount().compareTo(account.getBalance()) > 0) {
-			throw new BadRequestException("잔액이 부족합니다.", Map.of("balance", account.getBalance()));
+			throw new BaseException(ErrorCode.INSUFFICIENT_BALANCE, Map.of("balance", account.getBalance()));
 		}
 		account.setBalance(account.getBalance().subtract(lumpSumRequestDTO.amount()));
 		accountRepository.save(account);

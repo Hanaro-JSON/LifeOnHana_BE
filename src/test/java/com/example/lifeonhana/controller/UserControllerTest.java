@@ -8,7 +8,8 @@ import com.example.lifeonhana.filter.JwtAuthenticationFilter;
 import com.example.lifeonhana.service.RedisService;
 import com.example.lifeonhana.service.UserService;
 import com.example.lifeonhana.service.JwtService;
-import com.example.lifeonhana.global.exception.NotFoundException;
+import com.example.lifeonhana.global.exception.BaseException;
+import com.example.lifeonhana.global.exception.ErrorCode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
@@ -30,7 +31,6 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 
 @WebMvcTest(UserController.class)
 @Import({JwtAuthenticationFilter.class, SecurityConfig.class})
-@Transactional
 class UserControllerTest {
 
 	@Autowired
@@ -110,8 +110,7 @@ class UserControllerTest {
 				.header("Authorization", "Bearer test-token")
 				.principal(() -> AUTH_ID))
 			.andExpect(status().isOk())
-			.andExpect(jsonPath("$.code").value(200))
-			.andExpect(jsonPath("$.message").value("사용자 정보 조회 성공"))
+			.andExpect(jsonPath("$.code").value("U200"))
 			.andExpect(jsonPath("$.data.userId").value(1))
 			.andExpect(jsonPath("$.data.name").value("Test User"));
 	}
@@ -130,55 +129,78 @@ class UserControllerTest {
 	void getUserInfo_UserNotFound() throws Exception {
 		// given
 		given(userService.getUserInfo(AUTH_ID))
-			.willThrow(new NotFoundException("사용자를 찾을 수 없습니다."));
+			.willThrow(new BaseException(ErrorCode.USER_NOT_FOUND, AUTH_ID));
 
 		// when & then
 		mockMvc.perform(get("/api/users/info")
 				.header("Authorization", "Bearer test-token")
 				.principal(() -> AUTH_ID))
 			.andExpect(status().isNotFound())
-			.andExpect(jsonPath("$.message").value("Not Found.\n사용자를 찾을 수 없습니다."));
+			.andExpect(jsonPath("$.code").value(ErrorCode.USER_NOT_FOUND.getCode()));
 	}
 
 	@Test
-	@DisplayName("마이데이터 조회 성공")
+	@DisplayName("마이데이터 조회 성공 - 정상 응답 검증")
 	void getMyData_Success() throws Exception {
 		// given
-		given(userService.getMyData(AUTH_ID)).willReturn(myDataResponseDTO);
+		MyDataResponseDTO mockResponse = new MyDataResponseDTO(
+			"2050",
+			BigDecimal.valueOf(10000000),
+			BigDecimal.valueOf(8000000),
+			BigDecimal.valueOf(5000000),
+			50,
+			BigDecimal.valueOf(2000000),
+			20,
+			BigDecimal.valueOf(2000000),
+			20,
+			BigDecimal.valueOf(1000000),
+			10,
+			BigDecimal.ZERO,
+			0,
+			LocalDateTime.now(),
+			new MyDataResponseDTO.SalaryAccountDTO("123-456-789", BigDecimal.valueOf(1000000), "HANA"),
+			BigDecimal.valueOf(500000)
+		);
+		
+		given(userService.getMyData(AUTH_ID)).willReturn(mockResponse);
 
 		// when & then
 		mockMvc.perform(get("/api/users/mydata")
 				.header("Authorization", "Bearer test-token")
 				.principal(() -> AUTH_ID))
 			.andExpect(status().isOk())
-			.andExpect(jsonPath("$.code").value(200))
-			.andExpect(jsonPath("$.message").value("마이데이터 조회 성공"))
+			.andExpect(jsonPath("$.code").value(ErrorCode.MYDATA_INFO_SUCCESS.getCode()))
 			.andExpect(jsonPath("$.data.pensionStart").value("2050"))
-			.andExpect(jsonPath("$.data.totalAsset").value(10000000));
+			.andExpect(jsonPath("$.data.totalAsset").value(10000000))
+			.andExpect(jsonPath("$.data.salaryAccount.accountNumber").value("123-456-789"));
 	}
-
-	// @Test
-	// @DisplayName("마이데이터 조회 실패 - 인증 없음")
-	// void getMyData_Unauthorized() throws Exception {
-	// 	mockMvc.perform(get("/api/users/mydata"))
-	// 		.andExpect(status().isUnauthorized())
-	// 		.andExpect(jsonPath("$.status").value(401))
-	// 		.andExpect(jsonPath("$.message").value("로그인이 필요한 서비스입니다."));
-	// }
 
 	@Test
 	@DisplayName("마이데이터 조회 실패 - 데이터 없음")
 	void getMyData_NotFound() throws Exception {
 		// given
 		given(userService.getMyData(AUTH_ID))
-			.willThrow(new NotFoundException("마이데이터 정보를 찾을 수 없습니다."));
+			.willThrow(new BaseException(ErrorCode.MYDATA_NOT_FOUND, AUTH_ID));
 
 		// when & then
 		mockMvc.perform(get("/api/users/mydata")
 				.header("Authorization", "Bearer test-token")
 				.principal(() -> AUTH_ID))
-			.andExpect(status().isNotFound())
-			.andExpect(jsonPath("$.message").value("Not Found.\n마이데이터 정보를 찾을 수 없습니다."));
+			.andExpect(status().is4xxClientError())
+			.andExpect(jsonPath("$.code").value(ErrorCode.MYDATA_NOT_FOUND.getCode()));
+	}
+
+	@Test
+	@DisplayName("마이데이터 조회 - 내부 서버 오류")
+	void getMyData_InternalServerError() throws Exception {
+		given(userService.getMyData(AUTH_ID))
+			.willThrow(new RuntimeException("DB Connection Error"));
+
+		mockMvc.perform(get("/api/users/mydata")
+				.header("Authorization", "Bearer test-token")
+				.principal(() -> AUTH_ID))
+			.andExpect(status().isInternalServerError())
+			.andExpect(jsonPath("$.code").value(ErrorCode.INTERNAL_SERVER_ERROR.getCode()));
 	}
 
 	@Test
@@ -192,34 +214,25 @@ class UserControllerTest {
 				.header("Authorization", "Bearer test-token")
 				.principal(() -> AUTH_ID))
 			.andExpect(status().isOk())
-			.andExpect(jsonPath("$.code").value(200))
-			.andExpect(jsonPath("$.message").value("사용자 칭호 조회 성공"))
+			.andExpect(jsonPath("$.code").value("N200"))
 			.andExpect(jsonPath("$.data.nickname").value("투자의 달인 Test User"));
 	}
 
-	// @Test
-	// @DisplayName("사용자 칭호 조회 실패 - 인증 없음")
-	// void getUserNickname_Unauthorized() throws Exception {
-	// 	mockMvc.perform(get("/api/users/nickname"))
-	// 		.andExpect(status().isUnauthorized())
-	// 		.andExpect(jsonPath("$.status").value(401))
-	// 		.andExpect(jsonPath("$.message").value("로그인이 필요한 서비스입니다."));
-	// }
+
 
 	@Test
 	@DisplayName("사용자 칭호 조회 실패 - 좋아요 기록 없음")
 	void getUserNickname_NoLikes() throws Exception {
 		// given
-		UserNicknameResponseDTO emptyResponse = UserNicknameResponseDTO.builder()
-			.nickname("좋아요한 칼럼이 없습니다.")
-			.build();
-		given(userService.getUserNickname(AUTH_ID)).willReturn(emptyResponse);
+		given(userService.getUserNickname(AUTH_ID))
+			.willThrow(new BaseException(ErrorCode.NO_LIKED_ARTICLES));
 
 		// when & then
 		mockMvc.perform(get("/api/users/nickname")
 				.header("Authorization", "Bearer test-token")
 				.principal(() -> AUTH_ID))
-			.andExpect(status().isOk())
-			.andExpect(jsonPath("$.data.nickname").value("좋아요한 칼럼이 없습니다."));
+			.andExpect(status().isNotFound())
+			.andExpect(jsonPath("$.code").value(ErrorCode.NO_LIKED_ARTICLES.getCode()));
 	}
+
 }

@@ -4,6 +4,7 @@ import java.time.LocalDate;
 import java.time.YearMonth;
 import java.time.format.DateTimeFormatter;
 import java.time.format.DateTimeParseException;
+import java.time.temporal.TemporalAccessor;
 
 import org.springframework.stereotype.Service;
 
@@ -11,8 +12,8 @@ import com.example.lifeonhana.dto.request.WalletRequestDTO;
 import com.example.lifeonhana.dto.response.WalletResponseDTO;
 import com.example.lifeonhana.entity.User;
 import com.example.lifeonhana.entity.Wallet;
-import com.example.lifeonhana.global.exception.BadRequestException;
-import com.example.lifeonhana.global.exception.NotFoundException;
+import com.example.lifeonhana.global.exception.BaseException;
+import com.example.lifeonhana.global.exception.ErrorCode;
 import com.example.lifeonhana.repository.UserRepository;
 import com.example.lifeonhana.repository.WalletRepository;
 
@@ -28,22 +29,19 @@ public class WalletService {
 
 	public WalletResponseDTO getUserWallet(String authId) {
 		Wallet wallet = walletRepository.findWalletIdByUserAuthId(authId)
-			.orElseThrow(() -> new NotFoundException("하나지갑이 존재하지 않습니다."));
+			.orElseThrow(() -> new BaseException(ErrorCode.WALLET_NOT_FOUND, authId));
 
-		return new WalletResponseDTO(
-			wallet.getWalletId(),
-			wallet.getWalletAmount(),
-			wallet.getPaymentDay().getValue(),
-			wallet.getStartDate().toLocalDate().format(DateTimeFormatter.ofPattern("yyyy-MM")),
-			wallet.getEndDate().toLocalDate().format(DateTimeFormatter.ofPattern("yyyy-MM"))
-		);
+		return convertToResponse(wallet);
 	}
 
 	public WalletResponseDTO creatWallet(WalletRequestDTO wallet, String authId) {
-		User user = userRepository.getUserByAuthId(authId);
+		User user = userRepository.findByAuthId(authId)
+			.orElseThrow(() -> new BaseException(ErrorCode.USER_NOT_FOUND, authId));
+
 		if (walletRepository.findWalletIdByUserAuthId(authId).isPresent()) {
-			throw new BadRequestException("이미 하나지갑 정보가 존재합니다.");
+			throw new BaseException(ErrorCode.WALLET_ALREADY_EXISTS, authId);
 		}
+
 		Wallet newWallet = new Wallet();
 		newWallet.setUser(user);
 		return setWallet(wallet, newWallet);
@@ -51,9 +49,9 @@ public class WalletService {
 
 	public WalletResponseDTO updateWallet(WalletRequestDTO walletDTO, String authId) {
 		Wallet wallet = walletRepository.findWalletIdByUserAuthId(authId)
-			.orElseThrow(() -> new NotFoundException("하나지갑이 존재하지 않습니다."));
-		return setWallet(walletDTO, wallet);
+			.orElseThrow(() -> new BaseException(ErrorCode.WALLET_NOT_FOUND, authId));
 
+		return setWallet(walletDTO, wallet);
 	}
 
 	private WalletResponseDTO setWallet(WalletRequestDTO walletDTO, Wallet wallet) {
@@ -72,7 +70,7 @@ public class WalletService {
 			wallet.setStartDate(startDate.atStartOfDay());
 			wallet.setEndDate(endDate.atStartOfDay());
 		} catch (DateTimeParseException | NumberFormatException e) {
-			throw new IllegalArgumentException("날짜 형식이 잘못되었습니다. 'yyyy-MM' 형식이어야 합니다.", e);
+			throw new BaseException(ErrorCode.INVALID_DATE_FORMAT, e);
 		}
 		walletRepository.save(wallet);
 
@@ -80,8 +78,22 @@ public class WalletService {
 			wallet.getWalletId(),
 			wallet.getWalletAmount(),
 			wallet.getPaymentDay().getValue(),
-			wallet.getStartDate().toLocalDate().format(DateTimeFormatter.ofPattern("yyyy-MM")),
-			wallet.getEndDate().toLocalDate().format(DateTimeFormatter.ofPattern("yyyy-MM"))
-			);
+			formatDate(wallet.getStartDate()),
+			formatDate(wallet.getEndDate())
+		);
+	}
+
+	private WalletResponseDTO convertToResponse(Wallet wallet) {
+		return new WalletResponseDTO(
+			wallet.getWalletId(),
+			wallet.getWalletAmount(),
+			wallet.getPaymentDay().getValue(),
+			formatDate(wallet.getStartDate()),
+			formatDate(wallet.getEndDate())
+		);
+	}
+
+	private String formatDate(TemporalAccessor date) {
+		return DateTimeFormatter.ofPattern("yyyy-MM").format(date);
 	}
 }

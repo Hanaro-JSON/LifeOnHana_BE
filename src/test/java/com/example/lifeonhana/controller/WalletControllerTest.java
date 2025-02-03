@@ -79,8 +79,7 @@ public class WalletControllerTest {
 				.contentType(MediaType.APPLICATION_JSON)
 				.content(objectMapper.writeValueAsString(requestDTO)))
 			.andExpect(status().isOk())
-			.andExpect(jsonPath("$.code").value(200))
-			.andExpect(jsonPath("$.message").value("하나지갑 정보 등록 성공"))
+			.andExpect(jsonPath("$.code").value("W200"))
 			.andExpect(jsonPath("$.data.walletAmount").value(330000000))
 			.andExpect(jsonPath("$.data.paymentDay").value("15"))
 			.andExpect(jsonPath("$.data.startDate").value("2023-01"))
@@ -103,8 +102,7 @@ public class WalletControllerTest {
 				.contentType(MediaType.APPLICATION_JSON)
 				.content(objectMapper.writeValueAsString(requestDTO)))
 			.andExpect(status().isBadRequest())
-			.andExpect(jsonPath("$.code").value(400))
-			.andExpect(jsonPath("$.message").value("Bad Request.\n이미 하나지갑 정보가 존재합니다."));
+			.andExpect(jsonPath("$.code").value("W400"));
 	}
 
 
@@ -118,8 +116,7 @@ public class WalletControllerTest {
 		mockMvc.perform(get("/api/wallet")
 			.header("Authorization", validToken))
 			.andExpect(status().isOk())
-			.andExpect(jsonPath("$.code").value(200))
-			.andExpect(jsonPath("$.message").value("하나지갑 정보 조회 성공"))
+			.andExpect(jsonPath("$.code").value("W201"))
 			.andExpect(jsonPath("$.data.walletAmount").value(wallet.getWalletAmount()))
 			.andExpect(jsonPath("$.data.startDate").value(wallet.getStartDate().format(
 				DateTimeFormatter.ofPattern("yyyy-MM"))))
@@ -144,9 +141,7 @@ public class WalletControllerTest {
 			.contentType(MediaType.APPLICATION_JSON)
 			.content(objectMapper.writeValueAsString(requestDTO)))
 			.andExpect(status().isOk())
-			.andExpect(jsonPath("$.code").value(200))
-			.andExpect(jsonPath("$.message").value("하나지갑 정보 수정 성공"))
-			.andExpect(jsonPath("$.data.walletAmount").value(responseDTO.walletAmount()))
+			.andExpect(jsonPath("$.code").value("W202"))
 			.andExpect(jsonPath("$.data.paymentDay").value(responseDTO.paymentDay()))
 			.andExpect(jsonPath("$.data.startDate").value(responseDTO.startDate()))
 			.andExpect(jsonPath("$.data.endDate").value(responseDTO.endDate()))

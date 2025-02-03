@@ -5,10 +5,11 @@ import com.example.lifeonhana.dto.response.MyDataResponseDTO;
 import com.example.lifeonhana.entity.*;
 import com.example.lifeonhana.repository.ArticleLikeRepository;
 import com.example.lifeonhana.repository.UserRepository;
-import com.example.lifeonhana.global.exception.NotFoundException;
 import com.example.lifeonhana.repository.HistoryRepository;
 import com.example.lifeonhana.dto.response.UserNicknameResponseDTO;
 import com.example.lifeonhana.entity.enums.ArticleCategory;
+import com.example.lifeonhana.global.exception.BaseException;
+import com.example.lifeonhana.global.exception.ErrorCode;
 import com.example.lifeonhana.repository.ArticleRepository;
 import org.springframework.data.redis.core.RedisTemplate;
 
@@ -41,7 +42,7 @@ public class UserService {
     @Transactional(readOnly = true)
     public UserResponseDTO getUserInfo(String authId) {
         User user = userRepository.findByAuthId(authId)
-            .orElseThrow(() -> new NotFoundException("사용자를 찾을 수 없습니다."));
+            .orElseThrow(() -> new BaseException(ErrorCode.USER_NOT_FOUND, authId));
             
         return new UserResponseDTO(
             user.getUserId(),
@@ -55,17 +56,17 @@ public class UserService {
     @Transactional(readOnly = true)
     public MyDataResponseDTO getMyData(String authId) {
         User user = userRepository.findByAuthId(authId)
-            .orElseThrow(() -> new NotFoundException("사용자를 찾을 수 없습니다."));
+            .orElseThrow(() -> new BaseException(ErrorCode.USER_NOT_FOUND, authId));
             
         Mydata mydata = user.getMydata();
         if (mydata == null) {
-            throw new NotFoundException("마이데이터 정보를 찾을 수 없습니다.");
+            throw new BaseException(ErrorCode.MYDATA_NOT_FOUND, user.getUserId());
         }
 
         Account salaryAccount = mydata.getAccounts().stream()
             .filter(account -> account.getServiceAccount() == Account.ServiceAccount.SALARY)
             .findFirst()
-            .orElseThrow(() -> new NotFoundException("급여 계좌를 찾을 수 없습니다."));
+            .orElseThrow(() -> new BaseException(ErrorCode.SALARY_ACCOUNT_NOT_FOUND));
 
         BigDecimal netAsset = mydata.getTotalAsset().subtract(mydata.getLoanAmount());
         
@@ -141,9 +142,8 @@ public class UserService {
     }
 
     public UserNicknameResponseDTO getUserNickname(String authId) {
-        // 1. 사용자 정보 조회
         User user = userRepository.findByAuthId(authId)
-            .orElseThrow(() -> new NotFoundException("사용자를 찾을 수 없습니다."));
+            .orElseThrow(() -> new BaseException(ErrorCode.USER_NOT_FOUND, authId));
 
         String userLikesKey = "user:" + user.getUserId() + ":likes";
         
@@ -163,9 +163,7 @@ public class UserService {
             // DB에서 가장 많이 좋아요한 카테고리 조회
             Optional<String> categoryStrOpt = articleLikeRepository.findMostLikedCategory(authId);
             if (categoryStrOpt.isEmpty()) {
-                return UserNicknameResponseDTO.builder()
-                    .nickname("좋아요한 칼럼이 없습니다.")
-                    .build();
+                throw new BaseException(ErrorCode.NO_LIKED_ARTICLES);
             }
             
             ArticleCategory topCategory = ArticleCategory.valueOf(categoryStrOpt.get());
@@ -183,9 +181,7 @@ public class UserService {
             .collect(Collectors.toList());
 
         if (likedArticleIds.isEmpty()) {
-            return UserNicknameResponseDTO.builder()
-                .nickname("좋아요한 칼럼이 없습니다.")
-                .build();
+            throw new BaseException(ErrorCode.NO_LIKED_ARTICLES);
         }
 
         Map<Article.Category, Long> categoryCount = articleRepository.findAllByArticleIdIn(likedArticleIds)
@@ -203,9 +199,7 @@ public class UserService {
             });
             
         if (dbTopCategory == null) {
-            return UserNicknameResponseDTO.builder()
-                .nickname("좋아요한 칼럼이 없습니다.")
-                .build();
+            throw new BaseException(ErrorCode.NO_LIKED_ARTICLES);
         }
 
         ArticleCategory topCategory = ArticleCategory.valueOf(dbTopCategory.name());

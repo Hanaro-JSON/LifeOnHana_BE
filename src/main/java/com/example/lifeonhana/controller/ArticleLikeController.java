@@ -43,7 +43,7 @@ public class ArticleLikeController {
 		}
 	)
 	@PostMapping("/{articleId}/like")
-	public ResponseEntity<ApiResult> toggleLike(
+	public ResponseEntity<ApiResult<LikeResponseDto>> toggleLike(
 		@PathVariable Long articleId,
 		@RequestHeader("Authorization") String token) {
 
@@ -53,8 +53,8 @@ public class ArticleLikeController {
 		LikeResponseDto responseDto = articleLikeService.toggleLike(userId, articleId);
 
 		return ResponseEntity.ok(
-			ApiResult.builder()
-				.code(200)
+			ApiResult.<LikeResponseDto>builder()
+				.code(String.valueOf(HttpStatus.OK.value()))
 				.status(HttpStatus.OK)
 				.message(responseDto.isLiked() ? "좋아요 성공" : "좋아요 취소 성공")
 				.data(responseDto)
@@ -72,7 +72,7 @@ public class ArticleLikeController {
 		}
 	)
 	@GetMapping("/{articleId}/like")
-	public ResponseEntity<ApiResult> getLikeInfo(
+	public ResponseEntity<ApiResult<LikeResponseDto>> getLikeInfo(
 		@PathVariable Long articleId,
 		@RequestHeader("Authorization") String token) {
 
@@ -82,8 +82,8 @@ public class ArticleLikeController {
 		LikeResponseDto responseDto = articleLikeService.getLikeInfo(userId, articleId);
 
 		return ResponseEntity.ok(
-			ApiResult.builder()
-				.code(200)
+			ApiResult.<LikeResponseDto>builder()
+				.code(String.valueOf(HttpStatus.OK.value()))
 				.status(HttpStatus.OK)
 				.message("게시글 좋아요 정보 조회 성공")
 				.data(responseDto)
@@ -101,7 +101,7 @@ public class ArticleLikeController {
 		}
 	)
 	@GetMapping("/liked")
-	public ResponseEntity<ApiResult> getLikedArticles(
+	public ResponseEntity<ApiResult<Map<String, Object>>> getLikedArticles(
 		@RequestHeader("Authorization") String token,
 		@RequestParam(value = "page", defaultValue = "0") int page,
 		@RequestParam(value = "size", defaultValue = "20") int size,
@@ -112,8 +112,8 @@ public class ArticleLikeController {
 
 		Slice<ArticleResponse> articlesSlice = articleLikeService.getLikedArticles(userId, page, size, category);
 
-		return ResponseEntity.ok(ApiResult.builder()
-			.code(200)
+		return ResponseEntity.ok(ApiResult.<Map<String, Object>>builder()
+			.code(String.valueOf(HttpStatus.OK.value()))
 			.status(HttpStatus.OK)
 			.message(articlesSlice.hasContent() ? "좋아요한 기사 목록 조회 성공" : "좋아요한 기사가 없습니다.")
 			.data(Map.of(

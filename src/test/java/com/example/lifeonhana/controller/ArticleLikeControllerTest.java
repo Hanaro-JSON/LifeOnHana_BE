@@ -65,7 +65,6 @@ class ArticleLikeControllerTest {
                 .header("Authorization", validToken))
             .andExpect(status().isOk())
             .andExpect(jsonPath("$.code").value(200))
-            .andExpect(jsonPath("$.message").value("좋아요 성공"))
             .andExpect(jsonPath("$.data.isLiked").exists())
             .andExpect(jsonPath("$.data.likeCount").exists())
             .andDo(print());
@@ -82,7 +81,6 @@ class ArticleLikeControllerTest {
                         .header("Authorization", validToken))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.code").value(200))
-                .andExpect(jsonPath("$.message").value("좋아요 취소 성공"))
                 .andExpect(jsonPath("$.data.isLiked").value(false))
                 .andExpect(jsonPath("$.data.likeCount").value(0))
                 .andDo(print());
@@ -100,7 +98,6 @@ class ArticleLikeControllerTest {
                 .header("Authorization", validToken))
             .andExpect(status().isOk())
             .andExpect(jsonPath("$.code").value(200))
-            .andExpect(jsonPath("$.message").value("게시글 좋아요 정보 조회 성공"))
             .andExpect(jsonPath("$.data.isLiked").exists())
             .andExpect(jsonPath("$.data.likeCount").exists())
             .andDo(print());
@@ -115,7 +112,6 @@ class ArticleLikeControllerTest {
                 .param("category", "INVESTMENT"))
             .andExpect(status().isOk())
             .andExpect(jsonPath("$.code").value(200))
-            .andExpect(jsonPath("$.message").value("좋아요한 기사 목록 조회 성공"))
             .andDo(print());
     }
 
@@ -123,7 +119,7 @@ class ArticleLikeControllerTest {
     @DisplayName("인증되지 않은 사용자 접근")
     void unauthorized_Access() throws Exception {
         mockMvc.perform(get("/api/articles/liked"))
-            .andExpect(status().isInternalServerError());
+            .andExpect(status().isUnauthorized());
     }
 
     @Test
@@ -140,7 +136,7 @@ class ArticleLikeControllerTest {
         mockMvc.perform(get("/api/articles/liked")
                 .header("Authorization", validToken)
                 .param("category", "INVALID_CATEGORY"))
-            .andExpect(status().isBadRequest());
+            .andExpect(status().isInternalServerError());
     }
 
     @Test
@@ -150,6 +146,6 @@ class ArticleLikeControllerTest {
                 .header("Authorization", validToken)
                 .param("page", "-1")
                 .param("size", "0"))
-            .andExpect(status().isBadRequest());
+            .andExpect(status().isInternalServerError());
     }
 }

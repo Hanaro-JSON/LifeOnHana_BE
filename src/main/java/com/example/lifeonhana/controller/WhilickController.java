@@ -12,8 +12,8 @@ import org.springframework.web.bind.annotation.*;
 import com.example.lifeonhana.ApiResult;
 import com.example.lifeonhana.dto.response.WhilickResponseDTO;
 import com.example.lifeonhana.service.WhilickService;
-import com.example.lifeonhana.global.exception.UnauthorizedException;
-import com.example.lifeonhana.global.exception.NotFoundException;
+import com.example.lifeonhana.global.exception.BaseException;
+import com.example.lifeonhana.global.exception.ErrorCode;
 
 @RestController
 @RequiredArgsConstructor
@@ -30,25 +30,26 @@ public class WhilickController {
 		@ApiResponse(responseCode = "404", description = "컨텐츠를 찾을 수 없음")
 	})
 	@GetMapping({"/shorts", "/shorts/{articleId}"})
-	public ResponseEntity<ApiResult> getShorts(
+	public ResponseEntity<ApiResult<WhilickResponseDTO>> getShorts(
 		@PathVariable(required = false) Long articleId,
 		@RequestParam(defaultValue = "0") int page,
 		@RequestParam(defaultValue = "10") int size,
 		@RequestHeader("Authorization") String token
 	) {
-		try {
-			WhilickResponseDTO response = (articleId != null)
-				? whilickService.getShortsByArticleId(articleId, size, token)
-				: whilickService.getShorts(page, size, token);
+		validatePaginationParams(page, size);
+		
+		WhilickResponseDTO response = (articleId != null)
+			? whilickService.getShortsByArticleId(articleId, size, token)
+			: whilickService.getShorts(page, size, token);
 
-			return ResponseEntity.ok(ApiResult.builder()
-				.code(HttpStatus.OK.value())
-				.status(HttpStatus.OK)
-				.message("컨텐츠 조회 성공")
-				.data(response)
-				.build());
-		} catch (UnauthorizedException | NotFoundException e) {
-			throw e;
+		return ResponseEntity.ok(
+			ApiResult.success(ErrorCode.SHORTS_READ_SUCCESS, response)
+		);
+	}
+
+	private void validatePaginationParams(int page, int size) {
+		if (page < 0 || size <= 0 || size > 100) {
+			throw new BaseException(ErrorCode.INVALID_PAGINATION_PARAMS);
 		}
 	}
 }

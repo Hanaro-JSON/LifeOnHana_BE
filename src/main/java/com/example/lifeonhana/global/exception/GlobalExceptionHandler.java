@@ -6,50 +6,61 @@ import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.bind.annotation.RestControllerAdvice;
 
 import com.example.lifeonhana.ApiResult;
+import com.example.lifeonhana.dto.response.ErrorResponse;
+
+import lombok.extern.slf4j.Slf4j;
+
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+import org.springframework.web.bind.MethodArgumentNotValidException;
+import java.util.Map;
+import java.util.Optional;
+import java.util.stream.Collectors;
+import org.springframework.validation.FieldError;
+import org.springframework.web.bind.MissingRequestHeaderException;
 
 @RestControllerAdvice
+@Slf4j
 public class GlobalExceptionHandler {
+
+	// 1. 모든 커스텀 예외 처리 (핵심)
 	@ExceptionHandler(BaseException.class)
-	public ResponseEntity<?> handleApiException(BaseException exception) {
-		ApiResult response = ApiResult.builder()
-			.code(exception.getStatusCode())
-			.status(exception.getHttpStatus())
-			.message(exception.getCustomMessage())
-			.data(exception.getData())
-			.build();
-		return ResponseEntity.status(exception.getHttpStatus()).body(response);
+	public ResponseEntity<ApiResult<?>> handleBaseException(BaseException e) {
+		log.error("Business Exception: {}", e.getErrorCode().name(), e);
+		return buildResponse(e.getErrorCode(), e.getDetails());
 	}
 
-	@ExceptionHandler(IllegalArgumentException.class)
-	public ResponseEntity<?> handleIllegalArgumentException(IllegalArgumentException exception) {
-		ApiResult response = ApiResult.builder()
-			.code(HttpStatus.BAD_REQUEST.value())
-			.status(HttpStatus.BAD_REQUEST)
-			.message(exception.getMessage())
-			.data(null)
-			.build();
-		return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(response);
+	// 2. 스프링 프레임워크 예외 처리
+	@ExceptionHandler(MethodArgumentNotValidException.class)
+	public ResponseEntity<ApiResult<?>> handleValidation(MethodArgumentNotValidException e) {
+		Map<String, String> errors = e.getFieldErrors().stream()
+			.collect(Collectors.toMap(
+				FieldError::getField,
+				fieldError -> Optional.ofNullable(fieldError.getDefaultMessage()).orElse("")
+			));
+		return buildResponse(ErrorCode.INVALID_INPUT, errors);
 	}
 
-	@ExceptionHandler(UnauthorizedException.class)
-	public ResponseEntity<?> handleUnauthorizedException(UnauthorizedException exception) {
-		ApiResult response = ApiResult.builder()
-			.code(HttpStatus.UNAUTHORIZED.value())
-			.status(HttpStatus.UNAUTHORIZED)
-			.message(exception.getMessage())
-			.data(null)
-			.build();
-		return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(response);
-	}
-
+	// 3. 처리되지 않은 모든 예외
 	@ExceptionHandler(Exception.class)
-	public ResponseEntity<?> handleException(Exception exception) {
-		ApiResult response = ApiResult.builder()
-			.code(HttpStatus.INTERNAL_SERVER_ERROR.value())
-			.status(HttpStatus.INTERNAL_SERVER_ERROR)
-			.message("서버 내부 오류가 발생했습니다.")
-			.data(null)
-			.build();
-		return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(response);
+	public ResponseEntity<ApiResult<?>> handleAll(Exception e) {
+		log.error("Unhandled Exception: ", e);
+		return buildResponse(ErrorCode.INTERNAL_SERVER_ERROR, null);
+	}
+
+	@ExceptionHandler(MissingRequestHeaderException.class)
+	public ResponseEntity<ApiResult<?>> handleMissingRequestHeaderException(MissingRequestHeaderException ex) {
+		return buildResponse(ErrorCode.UNAUTHORIZED, "인증 헤더가 존재하지 않습니다");
+	}
+
+	// 공통 응답 생성 메서드
+	private ResponseEntity<ApiResult<?>> buildResponse(ErrorCode errorCode, Object data) {
+		return ResponseEntity.status(errorCode.getHttpStatus())
+			.body(ApiResult.error(errorCode, data));
+	}
+
+	private ResponseEntity<ApiResult<?>> buildResponse(ErrorCode errorCode, String message) {
+		return ResponseEntity.status(errorCode.getHttpStatus())
+			.body(ApiResult.error(errorCode, message));
 	}
 }

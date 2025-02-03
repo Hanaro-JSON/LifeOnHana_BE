@@ -11,6 +11,7 @@ import org.springframework.web.bind.annotation.RestController;
 import com.example.lifeonhana.ApiResult;
 import com.example.lifeonhana.dto.request.LumpSumRequestDTO;
 import com.example.lifeonhana.dto.response.LumpSumResponseDTO;
+import com.example.lifeonhana.global.exception.ErrorCode;
 import com.example.lifeonhana.service.LumpSumService;
 
 import io.swagger.v3.oas.annotations.Operation;
@@ -61,12 +62,12 @@ public class LumpSumController {
 		@ApiResponse(responseCode = "400", description = "잘못된 요청입니다.")
 	})
 	@SecurityRequirement(name = "bearerAuth")
-	public ResponseEntity<ApiResult> createLumpSum(
+	public ResponseEntity<ApiResult<LumpSumResponseDTO>> createLumpSum(
 		@AuthenticationPrincipal String authId,
 		@RequestBody LumpSumRequestDTO requestDTO) {
 		LumpSumResponseDTO responseDTO = lumpSumService.createLumpSum(authId, requestDTO);
-		return ResponseEntity.ok(
-			new ApiResult(200, HttpStatus.OK, "목돈 인출 신청 성공", responseDTO)
-		);
+		return ResponseEntity
+			.status(HttpStatus.CREATED)
+			.body(ApiResult.success(ErrorCode.LUMP_SUM_CREATED, responseDTO));
 	}
 }

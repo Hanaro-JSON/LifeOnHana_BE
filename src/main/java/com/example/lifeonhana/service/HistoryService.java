@@ -9,7 +9,8 @@ import com.example.lifeonhana.dto.response.StatisticsResponseDTO;
 import com.example.lifeonhana.entity.History;
 import com.example.lifeonhana.entity.History.Category;
 import com.example.lifeonhana.entity.User;
-import com.example.lifeonhana.global.exception.BadRequestException;
+import com.example.lifeonhana.global.exception.BaseException;
+import com.example.lifeonhana.global.exception.ErrorCode;
 import com.example.lifeonhana.repository.HistoryRepository;
 import com.example.lifeonhana.repository.UserRepository;
 import com.example.lifeonhana.repository.WalletRepository;
@@ -39,14 +40,14 @@ public class HistoryService {
 	// 공통 유틸리티 메서드
 	private User getUser(String authId) {
 		return userRepository.findByAuthId(authId)
-			.orElseThrow(() -> new BadRequestException("사용자를 찾을 수 없습니다."));
+			.orElseThrow(() -> new BaseException(ErrorCode.USER_NOT_FOUND));
 	}
 
 	private YearMonth parseYearMonth(String yearMonth) {
 		try {
 			return YearMonth.parse(yearMonth); // ISO 형식 (YYYY-MM)은 기본 파싱 지원
 		} catch (DateTimeParseException e) {
-			throw new BadRequestException("올바른 년월 형식이 아닙니다. (YYYY-MM)");
+			throw new BaseException(ErrorCode.INVALID_DATE_FORMAT);
 		}
 	}
 

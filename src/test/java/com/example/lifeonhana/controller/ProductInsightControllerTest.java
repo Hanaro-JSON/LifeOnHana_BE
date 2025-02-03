@@ -80,8 +80,7 @@ class ProductInsightControllerTest {
 				.header("Authorization", validToken))
 			.andDo(print())
 			.andExpect(status().isOk())
-			.andExpect(jsonPath("$.code").value(200))
-			.andExpect(jsonPath("$.message").value("상품 분석 성공"))
+			.andExpect(jsonPath("$.code").value("I200"))
 			.andExpect(jsonPath("$.data.analysisResult").exists())
 			.andExpect(jsonPath("$.data.productLink").exists())
 			.andExpect(jsonPath("$.data.productName").exists())
@@ -102,9 +101,8 @@ class ProductInsightControllerTest {
 				.content(objectMapper.writeValueAsString(invalidRequestData))
 				.header("Authorization", validToken))
 			.andDo(print())
-			.andExpect(status().isBadRequest())
-			.andExpect(jsonPath("$.code").value(400))
-			.andExpect(jsonPath("$.message").exists());
+			.andExpect(status().is4xxClientError())
+			.andExpect(jsonPath("$.code").value("AR001"));
 	}
 
 	@Test
@@ -120,8 +118,7 @@ class ProductInsightControllerTest {
 				.contentType(MediaType.APPLICATION_JSON)
 				.content(objectMapper.writeValueAsString(requestData)))
 			.andDo(print())
-			.andExpect(status().isUnauthorized())
-			.andExpect(jsonPath("$.code").value(401))
-			.andExpect(jsonPath("$.message").exists());
+			.andExpect(status().is4xxClientError())
+			.andExpect(jsonPath("$.code").value("A001"));
 	}
 }

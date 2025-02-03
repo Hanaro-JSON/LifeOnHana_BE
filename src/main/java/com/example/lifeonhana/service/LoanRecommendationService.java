@@ -1,5 +1,6 @@
 package com.example.lifeonhana.service;
 
+import org.springframework.data.crossstore.ChangeSetPersister.NotFoundException;
 import org.springframework.stereotype.Service;
 import org.springframework.web.client.HttpClientErrorException;
 import org.springframework.web.client.RestTemplate;
@@ -8,13 +9,14 @@ import com.example.lifeonhana.dto.response.LoanProductResponse;
 import com.example.lifeonhana.entity.Mydata;
 import com.example.lifeonhana.entity.Product;
 import com.example.lifeonhana.entity.User;
-import com.example.lifeonhana.global.exception.BadRequestException;
-import com.example.lifeonhana.global.exception.NotFoundException;
-import com.example.lifeonhana.global.exception.UnauthorizedException;
+import com.example.lifeonhana.global.exception.BaseException;
+import com.example.lifeonhana.global.exception.ErrorCode;
 import com.example.lifeonhana.repository.LoanProductRepository;
 import com.example.lifeonhana.repository.UserRepository;
 
 import lombok.RequiredArgsConstructor;
+
+import org.apache.coyote.BadRequestException;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -37,26 +39,22 @@ public class LoanRecommendationService {
 	private User getUser(String authId) {
 		log.info("Fetching user with authId: {}", authId);
 		return userRepository.findByAuthId(authId)
-			.orElseThrow(() -> new UnauthorizedException("인증되지 않은 사용자입니다."));
+			.orElseThrow(() -> new BaseException(ErrorCode.AUTH_REQUIRED));
 	}
 
 	public List<LoanProductResponse> recommendLoanProducts(String reason, BigDecimal amount, String authId) {
-		if (reason == null || reason.isEmpty()) {
-			log.error("Reason is missing or empty");
-			throw new IllegalArgumentException("대출 사유는 필수 항목입니다.");
+		if (reason == null || reason.isBlank()) {
+			throw new BaseException(ErrorCode.LOAN_REASON_REQUIRED);
 		}
-
-		if (amount == null || amount.compareTo(BigDecimal.ZERO) <= 0) {
-			log.error("Amount is invalid: {}", amount);
-			throw new IllegalArgumentException("대출 금액은 0보다 커야 합니다.");
+		if (amount.compareTo(BigDecimal.ZERO) <= 0) {
+			throw new BaseException(ErrorCode.LOAN_AMOUNT_INVALID);
 		}
 
 		User user = getUser(authId);
 
 		Mydata mydata = user.getMydata();
 		if (mydata == null) {
-			log.error("Mydata not found for userId: {}", user.getUserId());
-			throw new BadRequestException("사용자의 마이데이터 정보가 존재하지 않습니다.");
+			throw new BaseException(ErrorCode.MYDATA_NOT_FOUND);
 		}
 
 		log.info("User Mydata: deposit_amount={}, loan_amount={}, real_estate_amount={}, total_asset={}",
@@ -64,12 +62,10 @@ public class LoanRecommendationService {
 
 		log.info("Fetching loan products with category LOAN");
 		List<Product> loanProducts = loanProductRepository.findByCategory(Product.Category.LOAN);
-		log.info("Found {} loan products", loanProducts.size());
-
 		if (loanProducts.isEmpty()) {
-			log.error("No loan products found in the database");
-			throw new NotFoundException("대출 상품이 존재하지 않습니다.");
+			throw new BaseException(ErrorCode.LOAN_PRODUCTS_NOT_FOUND);
 		}
+		log.info("Found {} loan products", loanProducts.size());
 
 		Map<String, Object> request = Map.of(
 			"reason", reason,
@@ -100,17 +96,16 @@ public class LoanRecommendationService {
 
 			log.info("Received response from Flask: {}", response);
 			if (response.getBody() == null) {
-				throw new BadRequestException("Flask API 응답에 데이터가 없습니다.");
+				throw new BaseException(ErrorCode.FLASK_RESPONSE_EMPTY);
 			}
 			if (response.getBody().get("products") == null) {
-				throw new BadRequestException("Flask API 응답에 'products'가 없습니다.");
+				throw new BaseException(ErrorCode.FLASK_RESPONSE_INVALID);
 			}
 
 			List<Map<String, Object>> recommendedProducts = (List<Map<String, Object>>) response.getBody().get("products");
 
 			if (recommendedProducts.isEmpty()) {
-				log.warn("No recommended loan products found in Flask response");
-				throw new NotFoundException("추천된 대출 상품이 없습니다.");
+				throw new BaseException(ErrorCode.NO_RECOMMENDED_PRODUCTS);
 			}
 
 			log.info("Recommended products received: {}", recommendedProducts);
@@ -155,11 +150,9 @@ public class LoanRecommendationService {
 				}).toList();
 
 		} catch (HttpClientErrorException e) {
-			log.error("HTTP error occurred while calling Flask: {}", e.getMessage(), e);
-			throw new BadRequestException("Flask API 호출 중 오류가 발생했습니다.");
+			throw new BaseException(ErrorCode.FLASK_API_ERROR, e);
 		} catch (Exception e) {
-			log.error("Unexpected error occurred while calling Flask: {}", e.getMessage(), e);
-			throw new RuntimeException("예상치 못한 오류가 발생했습니다.", e);
+			throw new BaseException(ErrorCode.INTERNAL_SERVER_ERROR, e);
 		}
 	}
 }

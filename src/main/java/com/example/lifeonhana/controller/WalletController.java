@@ -1,6 +1,5 @@
 package com.example.lifeonhana.controller;
 
-import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.web.bind.annotation.GetMapping;
@@ -13,6 +12,7 @@ import org.springframework.web.bind.annotation.RestController;
 import com.example.lifeonhana.ApiResult;
 import com.example.lifeonhana.dto.request.WalletRequestDTO;
 import com.example.lifeonhana.dto.response.WalletResponseDTO;
+import com.example.lifeonhana.global.exception.ErrorCode;
 import com.example.lifeonhana.service.WalletService;
 
 import io.swagger.v3.oas.annotations.Operation;
@@ -26,7 +26,7 @@ import io.swagger.v3.oas.annotations.tags.Tag;
 @Tag(name="Wallet API", description = "하나지갑 관련 api")
 public class WalletController {
 
-	WalletService walletService;
+	private final WalletService walletService;
 
 	public WalletController(WalletService walletService) {
 		this.walletService = walletService;
@@ -41,10 +41,13 @@ public class WalletController {
 		@ApiResponse(responseCode = "404", description = "하나지갑 정보를 등록할 수 없습니다.")
 	})
 	@SecurityRequirement(name = "bearerAuth")
-	public ResponseEntity<ApiResult> createWallet(@AuthenticationPrincipal String authId,
+	public ResponseEntity<ApiResult<WalletResponseDTO>> createWallet(
+		@AuthenticationPrincipal String authId,
 		@RequestBody WalletRequestDTO wallet) {
 		WalletResponseDTO walletDTO = walletService.creatWallet(wallet, authId);
-		return ResponseEntity.ok(new ApiResult(200, HttpStatus.OK, "하나지갑 정보 등록 성공", walletDTO));
+		return ResponseEntity.ok(
+			ApiResult.success(ErrorCode.WALLET_CREATE_SUCCESS, walletDTO)
+		);
 	}
 
 	@GetMapping("")
@@ -55,9 +58,12 @@ public class WalletController {
 		@ApiResponse(responseCode = "404", description = "하나지갑 정보를 찾을 수 없습니다.")
 	})
 	@SecurityRequirement(name = "bearerAuth")
-	public ResponseEntity<ApiResult> getWallet(@AuthenticationPrincipal String authId) {
+	public ResponseEntity<ApiResult<WalletResponseDTO>> getWallet(
+		@AuthenticationPrincipal String authId) {
 		WalletResponseDTO wallet = walletService.getUserWallet(authId);
-		return ResponseEntity.ok(new ApiResult(200, HttpStatus.OK, "하나지갑 정보 조회 성공", wallet));
+		return ResponseEntity.ok(
+			ApiResult.success(ErrorCode.WALLET_READ_SUCCESS, wallet)
+		);
 	}
 
 	@PutMapping("")
@@ -68,10 +74,13 @@ public class WalletController {
 		@ApiResponse(responseCode = "404", description = "하나지갑 정보를 찾을 수 없습니다.")
 	})
 	@SecurityRequirement(name = "bearerAuth")
-	public ResponseEntity<ApiResult> putWallet(@AuthenticationPrincipal String authId,
+	public ResponseEntity<ApiResult<WalletResponseDTO>> putWallet(
+		@AuthenticationPrincipal String authId,
 		@RequestBody WalletRequestDTO wallet) {
 		WalletResponseDTO walletDTO = walletService.updateWallet(wallet, authId);
-		return ResponseEntity.ok(new ApiResult(HttpStatus.OK.value(), HttpStatus.OK, "하나지갑 정보 수정 성공", walletDTO));
+		return ResponseEntity.ok(
+			ApiResult.success(ErrorCode.WALLET_UPDATE_SUCCESS, walletDTO)
+		);
 	}
 
 }
