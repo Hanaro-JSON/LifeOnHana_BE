@@ -11,6 +11,7 @@
 - [ ⏰ BE 시간 관리](#-be-시간-관리)
 - [ 📚 기술 스택](#-기술-스택)
 - [ 📄 APIs](#-apis)
+- [ ✅ Jacoco](#-jacoco)
 - [ 🤗 BE 팀원](#-be-팀원)
 <br />
 
@@ -37,6 +38,12 @@
 
 
 👉🏻 [API 바로보기](/APIs.md)
+
+<br />
+
+
+## ✅ Jacoco
+![jacoco](https://github.com/user-attachments/assets/086300d3-9ccf-42ac-8880-21f4c3d373f2)
 
 <br />
 
