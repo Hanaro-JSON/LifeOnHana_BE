@@ -30,6 +30,7 @@ import com.example.lifeonhana.entity.User;
 import com.example.lifeonhana.repository.UserRepository;
 import com.example.lifeonhana.service.JwtService;
 import com.example.lifeonhana.service.ProductService;
+import org.springframework.transaction.annotation.Transactional;
 
 @SpringBootTest(
 	properties = "spring.profiles.active=test",
@@ -38,6 +39,7 @@ import com.example.lifeonhana.service.ProductService;
 @AutoConfigureMockMvc
 @TestMethodOrder(MethodOrderer.OrderAnnotation.class)
 @ActiveProfiles("test")
+@Transactional
 public class ProductControllerTest {
 	@Autowired
 	private MockMvc mockMvc;

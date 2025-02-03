@@ -26,6 +26,7 @@ import com.example.lifeonhana.repository.AccountRepository;
 import com.example.lifeonhana.repository.UserRepository;
 import com.example.lifeonhana.service.JwtService;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import org.springframework.transaction.annotation.Transactional;
 
 @SpringBootTest(
 	properties = "spring.profiles.active=test",
@@ -34,6 +35,7 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 @AutoConfigureMockMvc
 @TestMethodOrder(MethodOrderer.OrderAnnotation.class)
 @ActiveProfiles("test")
+@Transactional
 public class LumpSumControllerTest {
 
 	@Autowired
