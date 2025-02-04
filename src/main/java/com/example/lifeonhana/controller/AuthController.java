@@ -13,6 +13,7 @@ import com.example.lifeonhana.service.AuthService;
 import com.example.lifeonhana.service.JwtService;
 import com.example.lifeonhana.global.exception.ErrorCode;
 
+import io.swagger.v3.oas.annotations.Parameter;
 import io.swagger.v3.oas.annotations.responses.ApiResponse;
 import lombok.RequiredArgsConstructor;
 
@@ -81,7 +82,9 @@ public class AuthController {
 		@ApiResponse(responseCode = "401", description = "유효하지 않은 토큰")
 	})
 	@PostMapping("/signout")
-	public ResponseEntity<ApiResult<Void>> signOut(@RequestHeader("Authorization") String token) {
+	public ResponseEntity<ApiResult<Void>> signOut(
+		@Parameter(description = "Bearer 인증 토큰", required = true)
+		@RequestHeader("Authorization") String token) {
 		authService.signOut(token);
 		return ResponseEntity.ok(
 			ApiResult.success(ErrorCode.LOGOUT_SUCCESS, null)

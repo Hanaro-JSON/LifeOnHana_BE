@@ -38,7 +38,8 @@ import com.example.lifeonhana.global.exception.ErrorCode;
 @RequiredArgsConstructor
 @Validated
 @Slf4j
-@Tag(name = "Article API", description = "기사 관련 API")
+@Tag(name = "Article", description = "기사 관련 API")
+@SecurityRequirement(name = "bearerAuth")
 public class ArticleController {
 
 	private final ArticleService articleService;
@@ -56,8 +57,10 @@ public class ArticleController {
 	)
 	@GetMapping("/{articleId}")
 	public ResponseEntity<ApiResult<ArticleDetailResponse>> getArticleDetails(
-			@PathVariable Long articleId, 
-			@AuthenticationPrincipal String authId) {
+		@Parameter(description = "기사 ID", required = true, example = "1")
+		@PathVariable Long articleId,
+		@Parameter(description = "사용자 인증 ID")
+		@AuthenticationPrincipal String authId) {
 		try {
 			ArticleDetailResponse articleResponse = articleService.getArticleDetails(articleId, authId);
 			return ResponseEntity.ok(ApiResult.<ArticleDetailResponse>builder()
@@ -88,10 +91,12 @@ public class ArticleController {
 	@SecurityRequirement(name = "bearerAuth")
 	@GetMapping
 	public ResponseEntity<ApiResult<Map<String, Object>>> getArticles(
-			@RequestParam(value = "category", required = false) String category,
-			@RequestParam(value = "page", defaultValue = "1") int page,
-			@RequestParam(value = "size", defaultValue = "20") int size,
-			@Parameter(hidden = true) @AuthenticationPrincipal String authId) {
+		@RequestParam(value = "category", required = false) String category,
+		@Parameter(description = "페이지 번호", example = "1")
+		@RequestParam(value = "page", defaultValue = "1") @Min(1) int page,
+		@Parameter(description = "페이지당 항목 수", example = "20")
+		@RequestParam(value = "size", defaultValue = "20") @Min(1) @Max(200) int size,
+		@Parameter(hidden = true) @AuthenticationPrincipal String authId) {
 		try {
 			validateAuthentication(authId);
 			
@@ -119,12 +124,11 @@ public class ArticleController {
 
 	@Operation(summary = "기사 검색", description = "키워드로 기사를 검색합니다.")
 	@ApiResponses({
-			@ApiResponse(responseCode = "200", description = "기사 검색 성공"),
-			@ApiResponse(responseCode = "400", description = "잘못된 요청"),
-			@ApiResponse(responseCode = "401", description = "인증이 필요합니다.")
+		@ApiResponse(responseCode = "200", description = "기사 검색 성공"),
+		@ApiResponse(responseCode = "400", description = "잘못된 요청"),
+		@ApiResponse(responseCode = "401", description = "인증이 필요합니다.")
 	})
 	@GetMapping("/search")
-	@SecurityRequirement(name = "bearerAuth")
 	public ResponseEntity<ApiResult<Map<String, Object>>> searchArticles(
 			@Parameter(description = "검색 키워드")
 			@RequestParam(name = "query", required = false) String query,

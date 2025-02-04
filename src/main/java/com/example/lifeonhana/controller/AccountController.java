@@ -21,6 +21,8 @@ import com.example.lifeonhana.global.exception.BaseException;
 
 import io.jsonwebtoken.JwtException;
 import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.Parameter;
+import io.swagger.v3.oas.annotations.media.Schema;
 import io.swagger.v3.oas.annotations.responses.ApiResponse;
 import io.swagger.v3.oas.annotations.responses.ApiResponses;
 import io.swagger.v3.oas.annotations.security.SecurityRequirement;
@@ -32,6 +34,7 @@ import lombok.RequiredArgsConstructor;
 @RestController
 @RequestMapping("/api/account")
 @RequiredArgsConstructor
+@SecurityRequirement(name = "bearerAuth")
 public class AccountController {
 	private final JwtService jwtService;
 	private final AccountService accountService;
@@ -45,6 +48,7 @@ public class AccountController {
 	})
 	@GetMapping
 	public ResponseEntity<ApiResult<AccountListResponseDTO>> getAccounts(
+		@Parameter(description = "Bearer 인증 토큰", required = true)
 		@RequestHeader(value = "Authorization", required = false) String token) {
 		
 		if (token == null) {
@@ -95,16 +99,23 @@ public class AccountController {
 	@Operation(
 		summary = "계좌 이체",
 		description = "출금 계좌에서 입금 계좌로 금액을 이체합니다.",
+		security = @SecurityRequirement(name = "bearerAuth"),
 		responses = {
-			@ApiResponse(responseCode = "200", description = "이체 성공", content = @Content(mediaType = "application/json")),
-			@ApiResponse(responseCode = "400", description = "잘못된 요청", content = @Content(mediaType = "application/json")),
-			@ApiResponse(responseCode = "401", description = "인증 필요", content = @Content(mediaType = "application/json")),
-			@ApiResponse(responseCode = "404", description = "계좌를 찾을 수 없음", content = @Content(mediaType = "application/json"))
+			@ApiResponse(responseCode = "200", description = "이체 성공",
+				content = @Content(mediaType = "application/json", schema = @Schema(implementation = AccountTransferResponse.class))),
+			@ApiResponse(responseCode = "400", description = "잘못된 요청",
+				content = @Content(mediaType = "application/json")),
+			@ApiResponse(responseCode = "401", description = "인증 필요",
+				content = @Content(mediaType = "application/json")),
+			@ApiResponse(responseCode = "404", description = "계좌를 찾을 수 없음",
+				content = @Content(mediaType = "application/json"))
 		}
 	)
 	@PostMapping("/transfer")
 	public ResponseEntity<ApiResult<AccountTransferResponse>> transfer(
+		@Parameter(description = "사용자 인증 ID")
 		@AuthenticationPrincipal String authId,
+		@Parameter(description = "계좌 이체 요청 정보", required = true)
 		@RequestBody AccountTransferRequest transferRequest) {
 		
 		if (authId == null || authId.isEmpty()) {

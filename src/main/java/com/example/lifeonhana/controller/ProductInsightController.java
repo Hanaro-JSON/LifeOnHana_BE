@@ -1,5 +1,6 @@
 package com.example.lifeonhana.controller;
 import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.Parameter;
 import io.swagger.v3.oas.annotations.media.Content;
 import io.swagger.v3.oas.annotations.responses.ApiResponse;
 import io.swagger.v3.oas.annotations.tags.Tag;
@@ -24,6 +25,7 @@ import io.swagger.v3.oas.annotations.security.SecurityRequirement;
 @RequiredArgsConstructor
 @RequestMapping("/api/anthropic")
 @Tag(name = "Product Insight API", description = "상품 선택시 기대효과 API")
+@SecurityRequirement(name = "bearerAuth")
 public class ProductInsightController {
 
 	private final ProductInsightService productInsightService;
@@ -37,8 +39,10 @@ public class ProductInsightController {
 		@ApiResponse(responseCode = "500", description = "서버 내부 오류")
 	})
 	public ResponseEntity<ApiResult<ProductInsightResponse>> getProductInsight(
+		@Parameter(description = "상품 기대효과 분석 요청 정보", required = true)
 		@RequestBody ProductInsightRequest request,
-		@AuthenticationPrincipal String authId) 
+		@Parameter(description = "사용자 인증 ID")
+		@AuthenticationPrincipal String authId)
 	{
 		ProductInsightResponse response = productInsightService.getProductInsight(request, authId);
 		return ResponseEntity.ok(ApiResult.success(ErrorCode.INSIGHT_ANALYSIS_SUCCESS, response));

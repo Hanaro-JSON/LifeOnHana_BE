@@ -17,8 +17,10 @@ import com.example.lifeonhana.dto.response.LoanProductResponse;
 import com.example.lifeonhana.service.LoanRecommendationService;
 
 import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.Parameter;
 import io.swagger.v3.oas.annotations.media.Content;
 import io.swagger.v3.oas.annotations.responses.ApiResponse;
+import io.swagger.v3.oas.annotations.security.SecurityRequirement;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import lombok.RequiredArgsConstructor;
 
@@ -26,6 +28,7 @@ import lombok.RequiredArgsConstructor;
 @RequiredArgsConstructor
 @RequestMapping("/api/anthropic/loans")
 @Tag(name = "Loan Recommendation API", description = "대출 상품 추천 API")
+@SecurityRequirement(name = "bearerAuth")
 public class LoanRecommendationController {
 
 	private final LoanRecommendationService loanRecommendationService;
@@ -42,9 +45,10 @@ public class LoanRecommendationController {
 	)
 	@PostMapping
 	public ResponseEntity<ApiResult<List<LoanProductResponse>>> recommendLoanProducts(
+		@Parameter(description = "대출 추천 요청 정보", required = true)
 		@RequestBody LoanRecommendationRequest request,
-		@AuthenticationPrincipal String authId
-	) {
+		@Parameter(description = "사용자 인증 ID")
+		@AuthenticationPrincipal String authId) {
 		String reason = request.reason();
 		BigDecimal amount = request.amount();
 

@@ -11,7 +11,8 @@ import org.springframework.context.annotation.Configuration;
 
 @OpenAPIDefinition(
 	servers = {
-		@Server(url = "https://lifeonhana.topician.com")
+		@Server(url = "http://localhost:8080", description = "Local server"),
+		@Server(url = "https://lifeonhana.topician.com", description = "Production server")
 	}
 )
 @Configuration

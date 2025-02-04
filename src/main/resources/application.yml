@@ -17,7 +17,7 @@ spring:
     driver-class-name: com.mysql.cj.jdbc.Driver
     url: jdbc:mysql://seochodb.cnisi2wyicv7.ap-northeast-2.rds.amazonaws.com:3306/lifeonhanaDB?serverTimezone=Asia/Seoul&characterEncoding=UTF-8
     username: json
-    password: LifeOnHana1!
+    password: json123
 
   jpa:
     show-sql: true

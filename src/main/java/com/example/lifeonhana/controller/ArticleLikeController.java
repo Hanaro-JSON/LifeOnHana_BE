@@ -20,8 +20,10 @@ import com.example.lifeonhana.service.ArticleLikeService;
 import com.example.lifeonhana.service.JwtService;
 
 import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.Parameter;
 import io.swagger.v3.oas.annotations.media.Content;
 import io.swagger.v3.oas.annotations.responses.ApiResponse;
+import io.swagger.v3.oas.annotations.security.SecurityRequirement;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import lombok.RequiredArgsConstructor;
 
@@ -29,6 +31,7 @@ import lombok.RequiredArgsConstructor;
 @RequestMapping("/api/articles")
 @RequiredArgsConstructor
 @Tag(name="ArticleLike API", description = "칼럼 좋아요 관련 api")
+@SecurityRequirement(name = "bearerAuth")
 public class ArticleLikeController {
 	private final JwtService jwtService;
 	private final ArticleLikeService articleLikeService;
@@ -102,9 +105,13 @@ public class ArticleLikeController {
 	)
 	@GetMapping("/liked")
 	public ResponseEntity<ApiResult<Map<String, Object>>> getLikedArticles(
+		@Parameter(description = "Bearer 인증 토큰")
 		@RequestHeader("Authorization") String token,
+		@Parameter(description = "페이지 번호", example = "0")
 		@RequestParam(value = "page", defaultValue = "0") int page,
+		@Parameter(description = "페이지 크기", example = "20")
 		@RequestParam(value = "size", defaultValue = "20") int size,
+		@Parameter(description = "카테고리 필터", required = false)
 		@RequestParam(value = "category", required = false) String category) {
 
 		token = token.substring(7);
