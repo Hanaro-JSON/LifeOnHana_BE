@@ -5,6 +5,7 @@ import java.util.Collections;
 import java.util.List;
 import java.util.Map;
 import java.util.stream.Collectors;
+import java.time.Instant;
 
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
@@ -13,6 +14,7 @@ import org.springframework.data.domain.SliceImpl;
 import org.springframework.data.domain.Sort;
 import org.springframework.data.redis.core.RedisTemplate;
 import org.springframework.stereotype.Service;
+import org.springframework.kafka.core.KafkaTemplate;
 
 import com.example.lifeonhana.dto.response.ArticleResponse;
 import com.example.lifeonhana.dto.response.LikeResponseDto;
@@ -21,6 +23,7 @@ import com.example.lifeonhana.global.exception.NotFoundException;
 import com.example.lifeonhana.repository.ArticleRepository;
 import com.example.lifeonhana.entity.ArticleLike;
 import com.example.lifeonhana.repository.ArticleLikeRepository;
+import com.example.lifeonhana.dto.event.LikeEvent;
 
 import lombok.RequiredArgsConstructor;
 import org.slf4j.Logger;
@@ -32,55 +35,24 @@ public class ArticleLikeService {
 	private final RedisTemplate<String, Object> redisTemplate;
 	private final ArticleRepository articleRepository;
 	private final ArticleLikeRepository articleLikeRepository;
+	private final KafkaTemplate<String, LikeEvent> kafkaTemplate;
 	private static final Logger log = LoggerFactory.getLogger(ArticleLikeService.class);
 
 	public LikeResponseDto toggleLike(Long userId, Long articleId) {
-		String articleLikeCountKey = "article:" + articleId + ":likeCount";
-		String userLikesKey = "user:" + userId + ":likes";
-		Integer likeCount;
-
-		Boolean isLiked = (Boolean) redisTemplate.opsForHash().get(userLikesKey, articleId.toString());
-		if (isLiked == null) {
-			// DB에서 좋아요 상태와 수 확인
-			isLiked = articleRepository.isUserLikedArticle(articleId, userId);
-			if (isLiked == null) isLiked = false;  // null 처리 추가
-			Integer dbLikeCount = articleRepository.findArticleById(articleId).getLikeCount();
-			
-			// Redis에 둘 다 저장
-			redisTemplate.opsForHash().put(userLikesKey, articleId.toString(), isLiked);
-			redisTemplate.opsForValue().set(articleLikeCountKey, dbLikeCount);
-			likeCount = dbLikeCount;
-		} else {
-			likeCount = getOrInitializeLikeCount(articleId, articleLikeCountKey);
-		}
-
-		// 새로운 상태 (토글 후)
-		boolean newIsLiked = !isLiked;
-
-		if (isLiked) {
-			// 좋아요 취소 시 현재 카운트가 0 이상인지 확인
-			if (likeCount > 0) {
-				redisTemplate.opsForHash().put(userLikesKey, articleId.toString(), false);
-				redisTemplate.opsForValue().decrement(articleLikeCountKey);
-				likeCount--;
-			} else {
-				// 좋아요 수가 0이면 취소하지 않음
-				redisTemplate.opsForHash().put(userLikesKey, articleId.toString(), false);
-			}
-		} else {
-			redisTemplate.opsForHash().put(userLikesKey, articleId.toString(), true);
-			redisTemplate.opsForValue().increment(articleLikeCountKey);
-			likeCount++;
-		}
-
-		// 변경된 좋아요 상태를 동기화 대상으로 표시
-		redisTemplate.opsForSet().add("changedArticleLikes", userId + ":" + articleId);
-		// 변경된 좋아요 수를 동기화 대상으로 표시
-		redisTemplate.opsForSet().add("changedArticleLikeCount", articleId.toString());
-
+		Boolean currentStatus = redisTemplate.opsForHash()
+			.get("user:"+userId+":likes", articleId.toString()) != null;
+		
+		// Kafka 이벤트 발행
+		kafkaTemplate.send("like-events", 
+			new LikeEvent(userId, articleId, !currentStatus, Instant.now()));
+		
+		// 예상 값 계산
+		int projectedCount = (Integer) redisTemplate.opsForValue().get("article:"+articleId+":likeCount") 
+			+ (currentStatus ? -1 : 1);
+		
 		return LikeResponseDto.builder()
-			.isLiked(newIsLiked)
-			.likeCount(Math.max(0, likeCount))  // 음수 방지
+			.isLiked(!currentStatus)
+			.likeCount(Math.max(0, projectedCount))
 			.build();
 	}
 
