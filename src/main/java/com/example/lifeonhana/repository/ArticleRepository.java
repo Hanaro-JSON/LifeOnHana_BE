@@ -34,5 +34,9 @@ public interface ArticleRepository extends JpaRepository<Article, Long>, JpaSpec
 
 	@Query("SELECT a FROM Article a WHERE a.articleId IN :articleIds")
 	List<Article> findAllByArticleIdIn(@Param("articleIds") List<Long> articleIds);
+
+	@Query("SELECT a FROM Article a WHERE a.articleId = :articleId")
+	Article findArticleById(@Param("articleId") Long articleId);
+
 }
 

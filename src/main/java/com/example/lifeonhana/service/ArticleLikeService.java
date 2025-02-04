@@ -44,7 +44,7 @@ public class ArticleLikeService {
 			// DB에서 좋아요 상태와 수 확인
 			isLiked = articleRepository.isUserLikedArticle(articleId, userId);
 			if (isLiked == null) isLiked = false;  // null 처리 추가
-			Integer dbLikeCount = articleRepository.findLikeCountByArticleId(articleId);
+			Integer dbLikeCount = articleRepository.findArticleById(articleId).getLikeCount();
 			
 			// Redis에 둘 다 저장
 			redisTemplate.opsForHash().put(userLikesKey, articleId.toString(), isLiked);
@@ -92,7 +92,7 @@ public class ArticleLikeService {
 		Integer likeCount = (Integer) redisTemplate.opsForValue().get(articleLikeCountKey);
 		if (likeCount == null) {
 			// DB에서 조회
-			likeCount = articleRepository.findLikeCountByArticleId(articleId);
+			likeCount = articleRepository.findArticleById(articleId).getLikeCount();
 			// Redis에 저장 (1시간 유효)
 			redisTemplate.opsForValue().set(articleLikeCountKey, likeCount, Duration.ofHours(1));
 			log.info("Like count loaded from DB for articleId {}: {}", articleId, likeCount);
@@ -119,7 +119,7 @@ public class ArticleLikeService {
 
 		if (likeCount == null) {
 			// DB에서 실제 좋아요 수 조회
-			likeCount = articleRepository.findLikeCountByArticleId(articleId);
+			likeCount = articleRepository.findArticleById(articleId).getLikeCount();
 			// Redis에 저장
 			redisTemplate.opsForValue().set(articleLikeCountKey, likeCount);
 		}
