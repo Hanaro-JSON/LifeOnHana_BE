@@ -1,10 +1,16 @@
 package com.example.lifeonhana.service;
 
 import java.util.List;
+import java.util.Map;
 
+import com.example.lifeonhana.entity.ProductLike;
+import com.example.lifeonhana.entity.User;
+import com.example.lifeonhana.global.exception.UnauthorizedException;
+import com.example.lifeonhana.repository.UserRepository;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Slice;
+import org.springframework.data.redis.core.RedisTemplate;
 import org.springframework.stereotype.Service;
 
 import com.example.lifeonhana.dto.response.LifeProductResponseDTO;
@@ -25,6 +31,8 @@ public class ProductService {
 
 	private final ProductRepository productRepository;
 	private final ProductLikeRepository productLikeRepository;
+	private final UserRepository userRepository;
+	private final RedisTemplate<String, Object> redisTemplate;
 
 	public ProductListResponseDTO<SimpleProductResponseDTO> getProducts(String category, int page, int size) {
 		Pageable pageable = PageRequest.of(page - 1, size);
@@ -45,7 +53,8 @@ public class ProductService {
 	}
 
 
-	public SavingProductResponseDTO getSavingsProduct(Long productId) {
+	public SavingProductResponseDTO getSavingsProduct(Long productId,String authId) {
+		User user = getUser(authId);
 		Product product = productRepository.findByProductId(productId)
 				.orElseThrow(() -> new BadRequestException("존재하지 않는 id 입니다."));
 
@@ -53,11 +62,26 @@ public class ProductService {
 			throw new BadRequestException("존재하지 않는 id 입니다.");
 		}
 
-		boolean isLike = productLikeRepository.existsById_ProductIdAndIsLikeTrue(productId);
+		String userLikesKey = "user:" + user.getUserId() + ":productLikes";
+		Map<Object, Object> likedProductsMap = redisTemplate.opsForHash().entries(userLikesKey);
+
+		if (likedProductsMap.isEmpty()) {
+			List<ProductLike> dbLikes = productLikeRepository.findByUserAndIsLikeTrue(user);
+			for (ProductLike like : dbLikes) {
+				redisTemplate.opsForHash().put(userLikesKey,
+						like.getProduct().getProductId().toString(), true);
+			}
+			likedProductsMap = redisTemplate.opsForHash().entries(userLikesKey);
+		}
+
+		Boolean redisProduct = (Boolean) redisTemplate.opsForHash().get(userLikesKey, product.getProductId().toString());
+		boolean isLike = Boolean.TRUE.equals(redisProduct);
+
 		return SavingProductResponseDTO.fromEntity(product, isLike);
 	}
 
-	public LoanProductDetailResponseDTO getLoanProduct(Long productId) {
+	public LoanProductDetailResponseDTO getLoanProduct(Long productId,String authId) {
+		User user = getUser(authId);
 		Product product = productRepository.findByProductId(productId).orElseThrow(() -> new BadRequestException(
 			"존재하지 않는 id 입니다."));
 
@@ -65,11 +89,26 @@ public class ProductService {
 			throw new BadRequestException("존재하지 않는 id 입니다.");
 		}
 
-		boolean isLike = productLikeRepository.existsById_ProductIdAndIsLikeTrue(productId);
+		String userLikesKey = "user:" + user.getUserId() + ":productLikes";
+		Map<Object, Object> likedProductsMap = redisTemplate.opsForHash().entries(userLikesKey);
+
+		if (likedProductsMap.isEmpty()) {
+			List<ProductLike> dbLikes = productLikeRepository.findByUserAndIsLikeTrue(user);
+			for (ProductLike like : dbLikes) {
+				redisTemplate.opsForHash().put(userLikesKey,
+						like.getProduct().getProductId().toString(), true);
+			}
+			likedProductsMap = redisTemplate.opsForHash().entries(userLikesKey);
+		}
+
+		Boolean redisProduct = (Boolean) redisTemplate.opsForHash().get(userLikesKey, product.getProductId().toString());
+		boolean isLike = Boolean.TRUE.equals(redisProduct);
+
 		return LoanProductDetailResponseDTO.fromEntity(product, isLike);
 	}
 
-	public LifeProductResponseDTO getLifeProduct(Long productId) {
+	public LifeProductResponseDTO getLifeProduct(Long productId,String authId) {
+		User user = getUser(authId);
 		Product product = productRepository.findByProductId(productId).orElseThrow(() -> new BadRequestException(
 			"존재하지 않는 id 입니다."));
 
@@ -77,7 +116,26 @@ public class ProductService {
 			throw new BadRequestException("존재하지 않는 id 입니다.");
 		}
 
-		boolean isLike = productLikeRepository.existsById_ProductIdAndIsLikeTrue(productId);
+		String userLikesKey = "user:" + user.getUserId() + ":productLikes";
+		Map<Object, Object> likedProductsMap = redisTemplate.opsForHash().entries(userLikesKey);
+
+		if (likedProductsMap.isEmpty()) {
+			List<ProductLike> dbLikes = productLikeRepository.findByUserAndIsLikeTrue(user);
+			for (ProductLike like : dbLikes) {
+				redisTemplate.opsForHash().put(userLikesKey,
+						like.getProduct().getProductId().toString(), true);
+			}
+			likedProductsMap = redisTemplate.opsForHash().entries(userLikesKey);
+		}
+
+		Boolean redisProduct = (Boolean) redisTemplate.opsForHash().get(userLikesKey, product.getProductId().toString());
+		boolean isLike = Boolean.TRUE.equals(redisProduct);
+
 		return LifeProductResponseDTO.fromEntity(product, isLike);
+	}
+
+	private User getUser(String authId) {
+		return userRepository.findByAuthId(authId)
+				.orElseThrow(() -> new UnauthorizedException("사용자를 찾을 수 없습니다. authId: " + authId));
 	}
 }
