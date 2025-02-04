@@ -8,11 +8,13 @@ import org.springframework.stereotype.Service;
 import com.example.lifeonhana.dto.request.LumpSumRequestDTO;
 import com.example.lifeonhana.dto.response.LumpSumResponseDTO;
 import com.example.lifeonhana.entity.Account;
+import com.example.lifeonhana.entity.History;
 import com.example.lifeonhana.entity.LumpSum;
 import com.example.lifeonhana.entity.User;
 import com.example.lifeonhana.entity.Wallet;
 import com.example.lifeonhana.global.exception.BadRequestException;
 import com.example.lifeonhana.repository.AccountRepository;
+import com.example.lifeonhana.repository.HistoryRepository;
 import com.example.lifeonhana.repository.LumpSumRepository;
 import com.example.lifeonhana.repository.UserRepository;
 import com.example.lifeonhana.repository.WalletRepository;
@@ -25,6 +27,7 @@ public class LumpSumService {
 	private final LumpSumRepository lumpSumRepository;
 	private final AccountRepository accountRepository;
 	private final WalletRepository walletRepository;
+	private final HistoryRepository historyRepository;
 	private final UserRepository userRepository;
 
 	public LumpSumResponseDTO createLumpSum(String authId, LumpSumRequestDTO lumpSumRequestDTO){
@@ -55,6 +58,18 @@ public class LumpSumService {
 		accountRepository.save(account);
 		wallet.setWalletBalance(wallet.getWalletBalance() + lumpSumRequestDTO.amount().longValue());
 		walletRepository.save(wallet);
+
+		History history = new History();
+		history.setUser(wallet.getUser());
+		history.setCategory(History.Category.DEPOSIT);
+		history.setAmount(lumpSumRequestDTO.amount());
+		history.setDescription("목돈 지급");
+		history.setHistoryDatetime(LocalDateTime.now());
+		history.setIsFixed(false);
+		history.setIsExpense(false);
+
+		historyRepository.save(history);
+
 
 		return account;
 	}
