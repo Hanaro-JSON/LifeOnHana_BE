@@ -2,17 +2,12 @@ package com.example.lifeonhana.service;
 
 import com.example.lifeonhana.dto.request.ProductInsightRequest;
 import com.example.lifeonhana.dto.response.ProductInsightResponse;
-import com.example.lifeonhana.entity.Article;
-import com.example.lifeonhana.entity.Mydata;
-import com.example.lifeonhana.entity.Product;
-import com.example.lifeonhana.entity.User;
+import com.example.lifeonhana.entity.*;
 import com.example.lifeonhana.global.exception.UnauthorizedException;
-import com.example.lifeonhana.repository.ArticleRepository;
-import com.example.lifeonhana.repository.HistoryRepository;
-import com.example.lifeonhana.repository.ProductRepository;
-import com.example.lifeonhana.repository.UserRepository;
+import com.example.lifeonhana.repository.*;
 import lombok.RequiredArgsConstructor;
 
+import org.springframework.data.redis.core.RedisTemplate;
 import org.springframework.security.core.AuthenticationException;
 import org.springframework.stereotype.Service;
 import org.springframework.web.client.RestTemplate;
@@ -33,6 +28,8 @@ public class ProductInsightService {
 	private final ArticleRepository articleRepository;
 	private final ProductRepository productRepository;
 	private final HistoryRepository historyRepository;
+	private final ProductLikeRepository productLikeRepository;
+	private final RedisTemplate<String, Object> redisTemplate;
 
 	public ProductInsightResponse getProductInsight(ProductInsightRequest request, String authId) {
 		User user = getUser(authId);
@@ -46,8 +43,19 @@ public class ProductInsightService {
 		String analysisResult = (String) flaskResponse.getOrDefault("analysisResult", "No analysis result provided");
 		String productLink = (String) flaskResponse.getOrDefault("productLink", "N/A");
 
-		boolean isLiked = product.getProductLikes().stream()
-			.anyMatch(productLike -> productLike.getUser().getUserId().equals(user.getUserId()));
+		String userLikesKey = "user:" + user.getUserId() + ":productLikes";
+		Map<Object, Object> likedProductsMap = redisTemplate.opsForHash().entries(userLikesKey);
+
+		if (likedProductsMap.isEmpty()) {
+			List<ProductLike> dbLikes = productLikeRepository.findByUserAndIsLikeTrue(user);
+			for (ProductLike like : dbLikes) {
+				redisTemplate.opsForHash().put(userLikesKey,
+						like.getProduct().getProductId().toString(), true);
+			}
+			likedProductsMap = redisTemplate.opsForHash().entries(userLikesKey);
+		}
+
+		boolean isLiked = likedProductsMap.containsKey(product.getProductId().toString());
 
 		return new ProductInsightResponse(
 			analysisResult,
