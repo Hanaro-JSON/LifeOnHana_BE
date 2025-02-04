@@ -50,12 +50,13 @@ public class ProductInsightService {
 			List<ProductLike> dbLikes = productLikeRepository.findByUserAndIsLikeTrue(user);
 			for (ProductLike like : dbLikes) {
 				redisTemplate.opsForHash().put(userLikesKey,
-						like.getProduct().getProductId().toString(), true);
+					like.getProduct().getProductId().toString(), true);
 			}
 			likedProductsMap = redisTemplate.opsForHash().entries(userLikesKey);
 		}
 
-		boolean isLiked = likedProductsMap.containsKey(product.getProductId().toString());
+		Boolean redisProduct = (Boolean) redisTemplate.opsForHash().get(userLikesKey, product.getProductId().toString());
+		boolean isLiked = Boolean.TRUE.equals(redisProduct);
 
 		return new ProductInsightResponse(
 			analysisResult,
