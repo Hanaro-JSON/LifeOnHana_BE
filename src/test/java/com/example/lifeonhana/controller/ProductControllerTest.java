@@ -52,12 +52,14 @@ public class ProductControllerTest {
 
 	private String validToken;
 
+	private User user;
+
 	@MockBean
 	private ProductService productService;
 
 	@BeforeEach
 	void setUp() {
-		User user = userRepository.findById(3L).orElseThrow(() -> new RuntimeException("테스트 사용자가 없습니다."));
+		user = userRepository.findById(3L).orElseThrow(() -> new RuntimeException("테스트 사용자가 없습니다."));
 		validToken = "Bearer " + jwtService.generateAccessToken(user.getAuthId(), 3L);
 		System.out.println("validToken = " + validToken);
 	}
@@ -111,7 +113,7 @@ public class ProductControllerTest {
 				BigDecimal.valueOf(2.0)
 			)
 		);
-		Mockito.when(productService.getSavingsProduct(eq(1L)))
+		Mockito.when(productService.getSavingsProduct(eq(1L), eq(user.getAuthId())))
 			.thenReturn(response);
 
 		// When & Then
@@ -141,7 +143,7 @@ public class ProductControllerTest {
 			)
 		);
 
-		Mockito.when(productService.getLoanProduct(eq(2L)))
+		Mockito.when(productService.getLoanProduct(eq(2L), eq(user.getAuthId())))
 			.thenReturn(response);
 
 		// When & Then
@@ -162,7 +164,7 @@ public class ProductControllerTest {
 			3L, "Life Product", "Description", "https://example.com", true
 		);
 
-		Mockito.when(productService.getLifeProduct(eq(3L)))
+		Mockito.when(productService.getLifeProduct(eq(3L), eq(user.getAuthId())))
 			.thenReturn(response);
 
 		// When & Then
