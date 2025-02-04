@@ -17,8 +17,10 @@ import com.example.lifeonhana.dto.response.WhilickContentDTO;
 import com.example.lifeonhana.dto.response.WhilickTextDTO;
 import com.example.lifeonhana.dto.response.PageableDTO;
 import com.example.lifeonhana.entity.Article;
+import com.example.lifeonhana.entity.User;
 import com.example.lifeonhana.entity.Whilick;
 import com.example.lifeonhana.repository.ArticleRepository;
+import com.example.lifeonhana.repository.UserRepository;
 import com.example.lifeonhana.repository.WhilickRepository;
 import com.example.lifeonhana.repository.ArticleLikeRepository;
 import com.example.lifeonhana.global.exception.NotFoundException;
@@ -32,50 +34,48 @@ public class WhilickService {
 	private final ArticleRepository articleRepository;
 	private final ArticleLikeRepository articleLikeRepository;
 	private final RecommendationClient recommendationClient;
-	private final JwtService jwtService;
+	private final UserRepository userRepository;
 	private final RedisTemplate<String, Object> redisTemplate;
 
 	@Transactional(readOnly = true)
-	public WhilickResponseDTO getShortsByArticleId(Long articleId, int size, String token) {
-		String accessToken = token.startsWith("Bearer ") ? token.substring(7) : token;
-		Long userId = jwtService.extractUserId(accessToken);
+	public WhilickResponseDTO getShortsByArticleId(Long articleId, int size, String authId) {
+		User user = userRepository.getUserByAuthId(authId);
 
 		// 요청된 article이 존재하는지 확인
 		Article targetArticle = articleRepository.findById(articleId)
 			.orElseThrow(() -> new NotFoundException("컨텐츠를 찾을 수 없습니다."));
 
-		String cacheKey = "recommended_articles:" + userId;
+		String cacheKey = "recommended_articles:" + user.getUserId();
 		List<Long> recommendedArticleIds;
 
 		try {
-			recommendedArticleIds = getRecommendedArticleIds(userId, cacheKey);
+			recommendedArticleIds = getRecommendedArticleIds(user.getUserId(), cacheKey);
 			// 타겟 article을 리스트의 첫번째로 이동
 			recommendedArticleIds.remove(articleId);
 			recommendedArticleIds.add(0, articleId);
 		} catch (Exception e) {
 			log.error("추천 시스템 서버 호출 실패", e);
-			return getDefaultSortsByArticleId(articleId, size, userId);
+			return getDefaultSortsByArticleId(articleId, size, user.getUserId());
 		}
 
-		return processArticles(recommendedArticleIds, 0, size, userId);
+		return processArticles(recommendedArticleIds, 0, size, user.getUserId());
 	}
 
 	@Transactional(readOnly = true)
-	public WhilickResponseDTO getShorts(int page, int size, String token) {
-		String accessToken = token.startsWith("Bearer ") ? token.substring(7) : token;
-		Long userId = jwtService.extractUserId(accessToken);
+	public WhilickResponseDTO getShorts(int page, int size, String authId) {
+		User user = userRepository.getUserByAuthId(authId);
 
-		String cacheKey = "recommended_articles:" + userId;
+		String cacheKey = "recommended_articles:" + user.getUserId();
 		List<Long> recommendedArticleIds;
 
 		try {
-			recommendedArticleIds = getRecommendedArticleIds(userId, cacheKey);
+			recommendedArticleIds = getRecommendedArticleIds(user.getUserId(), cacheKey);
 		} catch (Exception e) {
 			log.error("추천 시스템 서버 호출 실패", e);
-			return getDefaultSortedShorts(page, size, userId);
+			return getDefaultSortedShorts(page, size, user.getUserId());
 		}
 
-		return processArticles(recommendedArticleIds, page, size, userId);
+		return processArticles(recommendedArticleIds, page, size, user.getUserId());
 	}
 
 	private WhilickResponseDTO processArticles(List<Long> articleIds, int page, int size, Long userId) {

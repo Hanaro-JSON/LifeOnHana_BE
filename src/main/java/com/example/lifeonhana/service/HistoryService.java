@@ -36,7 +36,6 @@ public class HistoryService {
 	private final UserRepository userRepository;
 	private final WalletRepository walletRepository;
 
-	// 공통 유틸리티 메서드
 	private User getUser(String authId) {
 		return userRepository.findByAuthId(authId)
 			.orElseThrow(() -> new BadRequestException("사용자를 찾을 수 없습니다."));
@@ -44,7 +43,7 @@ public class HistoryService {
 
 	private YearMonth parseYearMonth(String yearMonth) {
 		try {
-			return YearMonth.parse(yearMonth); // ISO 형식 (YYYY-MM)은 기본 파싱 지원
+			return YearMonth.parse(yearMonth);
 		} catch (DateTimeParseException e) {
 			throw new BadRequestException("올바른 년월 형식이 아닙니다. (YYYY-MM)");
 		}
@@ -69,7 +68,6 @@ public class HistoryService {
 			.intValue();
 	}
 
-	// 1. 입출금 내역 조회
 	@Transactional(readOnly = true)
 	public HistoryResponseDTO getHistories(String yearMonth, String authId, int page, int size) {
 		User user = getUser(authId);
@@ -107,7 +105,6 @@ public class HistoryService {
 		);
 	}
 
-	// 2. 월별 지출 내역 조회
 	@Transactional(readOnly = true)
 	public MonthlyExpenseResponseDTO getMonthlyExpenses(String authId) {
 		User user = getUser(authId);
@@ -119,7 +116,7 @@ public class HistoryService {
 
 		Map<String, Integer> expensesByMonth = monthlyExpensesRaw.stream()
 			.collect(Collectors.toMap(
-				row -> (String) row[0],  // 이미 YYYY-MM 형식으로 반환됨
+				row -> (String) row[0],
 				row -> (Integer) row[1]
 			));
 
@@ -142,7 +139,6 @@ public class HistoryService {
 		);
 	}
 
-	// 3. 거래 통계 조회
 	@Transactional(readOnly = true)
 	public StatisticsResponseDTO getStatistics(String yearMonth, String authId) {
 		User user = getUser(authId);

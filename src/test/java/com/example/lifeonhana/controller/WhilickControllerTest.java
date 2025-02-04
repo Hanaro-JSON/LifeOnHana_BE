@@ -6,6 +6,7 @@ import com.example.lifeonhana.dto.response.WhilickTextDTO;
 import com.example.lifeonhana.dto.response.PageableDTO;
 import com.example.lifeonhana.global.exception.NotFoundException;
 import com.example.lifeonhana.global.exception.UnauthorizedException;
+import com.example.lifeonhana.service.JwtService;
 import com.example.lifeonhana.service.WhilickService;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
@@ -18,9 +19,7 @@ import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.transaction.annotation.Transactional;
 
-import static org.mockito.ArgumentMatchers.anyInt;
-import static org.mockito.ArgumentMatchers.anyLong;
-import static org.mockito.ArgumentMatchers.anyString;
+import static org.mockito.ArgumentMatchers.*;
 import static org.mockito.Mockito.when;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
@@ -37,7 +36,11 @@ class WhilickControllerTest {
 	@Mock
 	private WhilickService whilickService;
 
+	@Mock
+	private JwtService jwtService;
+
 	private static final String VALID_TOKEN = "Bearer valid-token";
+	private static final String VALID_AUTH_ID = "test-auth-id";
 	private WhilickResponseDTO mockResponse;
 
 	@BeforeEach
@@ -63,12 +66,12 @@ class WhilickControllerTest {
 
 		// Mock PageableDTO 생성
 		PageableDTO pageableDTO = new PageableDTO(
-			0,      // pageNumber
-			10,     // pageSize
-			1,      // totalPages
-			1L,     // totalElements
-			true,   // first
-			true    // last
+			0,
+			10,
+			1,
+			1L,
+			true,
+			true
 		);
 
 		// Mock WhilickResponseDTO 생성
@@ -79,7 +82,8 @@ class WhilickControllerTest {
 	@DisplayName("정상적인 쇼츠 조회 - articleId 없음")
 	void getShorts_WithoutArticleId_Success() {
 		// Given
-		when(whilickService.getShorts(anyInt(), anyInt(), anyString()))
+		when(jwtService.extractAuthId("valid-token")).thenReturn(VALID_AUTH_ID);
+		when(whilickService.getShorts(anyInt(), anyInt(), eq(VALID_AUTH_ID)))
 			.thenReturn(mockResponse);
 
 		// When
@@ -96,7 +100,8 @@ class WhilickControllerTest {
 	void getShorts_WithArticleId_Success() {
 		// Given
 		Long articleId = 1L;
-		when(whilickService.getShortsByArticleId(anyLong(), anyInt(), anyString()))
+		when(jwtService.extractAuthId("valid-token")).thenReturn(VALID_AUTH_ID);
+		when(whilickService.getShortsByArticleId(anyLong(), anyInt(), eq(VALID_AUTH_ID)))
 			.thenReturn(mockResponse);
 
 		// When
@@ -112,12 +117,13 @@ class WhilickControllerTest {
 	@DisplayName("인증되지 않은 사용자 쇼츠 조회 실패")
 	void getShorts_Unauthorized() {
 		// Given
-		when(whilickService.getShorts(anyInt(), anyInt(), anyString()))
+		String invalidToken = "Bearer invalid-token";
+		when(jwtService.extractAuthId("invalid-token"))
 			.thenThrow(new UnauthorizedException("Unauthorized access"));
 
 		// Then
 		assertThatThrownBy(() ->
-			whilickController.getShorts(null, 0, 10, "Invalid-Token"))
+			whilickController.getShorts(null, 0, 10, invalidToken))
 			.isInstanceOf(UnauthorizedException.class)
 			.hasMessageContaining("Unauthorized access");
 	}
@@ -127,7 +133,8 @@ class WhilickControllerTest {
 	void getShorts_NotFound() {
 		// Given
 		Long nonExistentArticleId = 999L;
-		when(whilickService.getShortsByArticleId(anyLong(), anyInt(), anyString()))
+		when(jwtService.extractAuthId("valid-token")).thenReturn(VALID_AUTH_ID);
+		when(whilickService.getShortsByArticleId(anyLong(), anyInt(), eq(VALID_AUTH_ID)))
 			.thenThrow(new NotFoundException("Article not found"));
 
 		// Then
