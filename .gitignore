@@ -39,3 +39,4 @@ out/
 .gitmessage.txt
 
 application.yml
+application-test.yml
