@@ -11,6 +11,7 @@ import org.springframework.transaction.annotation.Transactional;
 import java.util.*;
 import java.util.concurrent.TimeUnit;
 import java.util.stream.Collectors;
+import java.time.Duration;
 
 import com.example.lifeonhana.dto.response.WhilickResponseDTO;
 import com.example.lifeonhana.dto.response.WhilickContentDTO;
@@ -215,26 +216,34 @@ public class WhilickService {
 			))
 			.collect(Collectors.toList());
 
-		String userArticleLikesKey = "user:" + userId + ":articleLikes";
-		Map<Object, Object> likedArticlesMap = redisTemplate.opsForHash().entries(userArticleLikesKey);
+		Long articleId = article.getArticleId();
+		String articleLikeCountKey = "article:" + articleId + ":likeCount";
+		String userLikesKey = "user:" + userId + ":likes";
 
-		if (likedArticlesMap.isEmpty()) {
-			List<ArticleLike> dbLikes = articleLikeRepository.findByIdUserIdAndIsLikeTrue(userId);
-			for (ArticleLike like : dbLikes) {
-				redisTemplate.opsForHash().put(userArticleLikesKey, 
-					like.getId().getArticleId().toString(), true);
-			}
-			likedArticlesMap = redisTemplate.opsForHash().entries(userArticleLikesKey);
+		Boolean isLiked = (Boolean) redisTemplate.opsForHash().get(userLikesKey, articleId.toString());
+		if (isLiked == null) {
+			isLiked = articleRepository.isUserLikedArticle(articleId, userId);
+			redisTemplate.opsForHash().put(userLikesKey, articleId.toString(), isLiked);
+			log.info("User like status loaded from DB for userId {}, articleId {}: {}", userId, articleId, isLiked);
 		}
-
-		// 레디스에서 좋아요 상태 조회
-		Boolean redisArticle = (Boolean) redisTemplate.opsForHash().get(userArticleLikesKey, article.getArticleId().toString());
-		boolean isLiked = Boolean.TRUE.equals(redisArticle);
 
 		Float totalDuration = article.getWhilicks().stream()
 			.findFirst()
 			.map(Whilick::getTotalDuration)
 			.orElse(0.0f);
+
+		Integer likeCount = (Integer) redisTemplate.opsForValue().get(articleLikeCountKey);
+		
+		if (likeCount == null) {
+			likeCount = articleRepository.findLikeCountByArticleId(article.getArticleId());
+			likeCount = likeCount != null ? likeCount : 0;
+			redisTemplate.opsForValue().set(
+				articleLikeCountKey, 
+				likeCount, 
+				Duration.ofHours(1)
+			);
+			log.info("DB에서 좋아요 수 동기화 - 게시글 ID: {}, 좋아요 수: {}", article.getArticleId(), likeCount);
+		}
 
 		return WhilickContentDTO.builder()
 			.articleId(article.getArticleId())
@@ -242,7 +251,7 @@ public class WhilickService {
 			.text(texts)
 			.ttsUrl(article.getTtsS3Key())
 			.totalDuration(totalDuration)
-			.likeCount(article.getLikeCount())
+			.likeCount(likeCount)
 			.isLiked(isLiked)
 			.build();
 	}
