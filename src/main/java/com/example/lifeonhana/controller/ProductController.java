@@ -2,6 +2,7 @@ package com.example.lifeonhana.controller;
 
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.RequestMapping;
@@ -55,8 +56,8 @@ public class ProductController {
 	})
 	@SecurityRequirement(name = "bearerAuth")
 	public ResponseEntity<ApiResult> getSavings(
-		@PathVariable Long productId) {
-		SavingProductResponseDTO savingsResponse = productService.getSavingsProduct(productId);
+		@PathVariable Long productId,@AuthenticationPrincipal String authId) {
+		SavingProductResponseDTO savingsResponse = productService.getSavingsProduct(productId,authId);
 
 		return ResponseEntity.ok().body(new ApiResult(200, HttpStatus.OK, "예적금 상품 상세 조회 성공", savingsResponse));
 	}
@@ -69,9 +70,10 @@ public class ProductController {
 	})
 	@SecurityRequirement(name = "bearerAuth")
 	public ResponseEntity<ApiResult> getLoans(
-		@PathVariable Long productId
+		@PathVariable Long productId,
+		@AuthenticationPrincipal String authId
 	) {
-		LoanProductDetailResponseDTO loanResponse = productService.getLoanProduct(productId);
+		LoanProductDetailResponseDTO loanResponse = productService.getLoanProduct(productId,authId);
 
 		return ResponseEntity.ok().body(new ApiResult(200, HttpStatus.OK, "대출 상품 상세 조회 성공" , loanResponse));
 	}
@@ -83,8 +85,8 @@ public class ProductController {
 		@ApiResponse(responseCode = "400", description = "존재하지 않는 id 입니다.")
 	})
 	@SecurityRequirement(name = "bearerAuth")
-	public ResponseEntity<ApiResult> getLife(@PathVariable Long productId) {
-		LifeProductResponseDTO lifeResponse = productService.getLifeProduct(productId);
+	public ResponseEntity<ApiResult> getLife(@PathVariable Long productId,@AuthenticationPrincipal String authId) {
+		LifeProductResponseDTO lifeResponse = productService.getLifeProduct(productId,authId);
 
 		return ResponseEntity.ok().body(new ApiResult(200, HttpStatus.OK, "라이프 상품 상세 조회 성공", lifeResponse));
 	}
