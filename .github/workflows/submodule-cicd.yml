@@ -3,7 +3,7 @@ name: Trigger Main Repository CI/CD
 on:
   push:
     branches:
-      - JSON-41--develop
+      - main
 
 jobs:
   trigger-main:
@@ -19,6 +19,6 @@ jobs:
           "event_type": "submodule-update",
           "client_payload": {
             "module": "LifeOnHana_BE",
-            "branch": "JSON-41--develop"
+            "branch": "main"
           }
         }'
