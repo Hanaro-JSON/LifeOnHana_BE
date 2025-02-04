@@ -30,7 +30,6 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 
 @WebMvcTest(UserController.class)
 @Import({JwtAuthenticationFilter.class, SecurityConfig.class})
-@Transactional
 class UserControllerTest {
 
 	@Autowired
