@@ -23,6 +23,9 @@ public class Wallet {
 	@Column(nullable = false)
 	private Long walletAmount;
 
+	@Column
+	private Long walletBalance;
+
 	@Enumerated(EnumType.STRING)
 	@Column(nullable = false)
 	private PaymentDay paymentDay;

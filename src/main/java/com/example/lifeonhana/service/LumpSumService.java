@@ -53,7 +53,7 @@ public class LumpSumService {
 		}
 		account.setBalance(account.getBalance().subtract(lumpSumRequestDTO.amount()));
 		accountRepository.save(account);
-		wallet.setWalletAmount(wallet.getWalletAmount() + lumpSumRequestDTO.amount().longValue());
+		wallet.setWalletBalance(wallet.getWalletAmount() + lumpSumRequestDTO.amount().longValue());
 		walletRepository.save(wallet);
 
 		return account;
