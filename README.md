@@ -10,8 +10,7 @@
 ## 📜 목차
 - [ ⏰ BE 시간 관리](#-be-시간-관리)
 - [ 📚 기술 스택](#-기술-스택)
-- [ 📄 APIs](#-apis)
-- [ ✅ Jacoco](#-jacoco)
+- [ ⚙️ 개발 인프라](#-개발-인프라)
 - [ 🤗 BE 팀원](#-be-팀원)
 <br />
 
@@ -32,22 +31,29 @@
 
 <br />
 
-
-## 📄 APIs
+## ⚙️ 개발 인프라
+### ➡️ APIs
 작성한 API는 아래에서 확인할 수 있습니다.
 
 
 👉🏻 [API 바로보기](/APIs.md)
 
-![스크린샷 2025-02-03 180207](https://github.com/user-attachments/assets/ae651b01-4e59-4f08-935a-c24cd1165316)
 👉🏻 [Swagger](https://lifeonhana.topician.com/utils/swagger-ui/index.html)
 
+![스크린샷 2025-02-03 180207](https://github.com/user-attachments/assets/ae651b01-4e59-4f08-935a-c24cd1165316)
 
-<br />
 
-
-## ✅ Jacoco
+### ➡️ Jacoco
 ![jacoco](https://github.com/user-attachments/assets/086300d3-9ccf-42ac-8880-21f4c3d373f2)
+
+
+### ➡️ ERD
+![drawSQL-image-export-2025-02-04](https://github.com/user-attachments/assets/7bf57527-bae4-458d-a394-7b25e86d0b62)
+
+
+### ➡️ Actuator
+![스크린샷 2025-02-05 오전 12 46 23 1](https://github.com/user-attachments/assets/cb9296e4-d554-4fb8-a540-1ec6c46c0446)
+
 
 <br />
 
