@@ -121,7 +121,7 @@ public class ProductControllerTest {
 			.andExpect(jsonPath("$.code").value(200))
 			.andExpect(jsonPath("$.message").value("예적금 상품 상세 조회 성공"))
 			.andExpect(jsonPath("$.data.name").value("Savings Product"))
-			.andExpect(jsonPath("$.data.isLike").value(true))
+			.andExpect(jsonPath("$.data.isLiked").value(true))
 			.andExpect(jsonPath("$.data.savingsInfo.basicInterestRate").value(1.5));
 	}
 
@@ -172,6 +172,6 @@ public class ProductControllerTest {
 			.andExpect(jsonPath("$.code").value(200))
 			.andExpect(jsonPath("$.message").value("라이프 상품 상세 조회 성공"))
 			.andExpect(jsonPath("$.data.name").value("Life Product"))
-			.andExpect(jsonPath("$.data.isLike").value(true));
+			.andExpect(jsonPath("$.data.isLiked").value(true));
 	}
 }
