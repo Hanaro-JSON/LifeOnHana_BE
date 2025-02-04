@@ -11,7 +11,7 @@ public record LoanProductDetailResponseDTO(
 	String feature,
 	String target,
 	String link,
-	boolean isLike,
+	boolean isLiked,
 	LoanInfo loanInfo
 ) {
 	public record LoanInfo(
@@ -25,7 +25,7 @@ public record LoanProductDetailResponseDTO(
 	) {
 	}
 
-	public static LoanProductDetailResponseDTO fromEntity(Product product, boolean isLike) {
+	public static LoanProductDetailResponseDTO fromEntity(Product product, boolean isLiked) {
 		return new LoanProductDetailResponseDTO(
 			product.getProductId(),
 			product.getName(),
@@ -33,7 +33,7 @@ public record LoanProductDetailResponseDTO(
 			product.getFeature(),
 			product.getTarget(),
 			product.getLink(),
-			isLike,
+			isLiked,
 			new LoanProductDetailResponseDTO.LoanInfo(
 				product.getMinAmount(),
 				product.getMaxAmount(),

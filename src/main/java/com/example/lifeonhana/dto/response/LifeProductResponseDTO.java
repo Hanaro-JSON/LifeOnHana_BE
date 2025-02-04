@@ -7,15 +7,15 @@ public record LifeProductResponseDTO(
 	String name,
 	String description,
 	String link,
-	boolean isLike
+	boolean isLiked
 ) {
-	public static LifeProductResponseDTO fromEntity(Product product, boolean isLike) {
+	public static LifeProductResponseDTO fromEntity(Product product, boolean isLiked) {
 		return new LifeProductResponseDTO(
 			product.getProductId(),
 			product.getName(),
 			product.getDescription(),
 			product.getLink(),
-			isLike
+			isLiked
 		);
 	}
 }
