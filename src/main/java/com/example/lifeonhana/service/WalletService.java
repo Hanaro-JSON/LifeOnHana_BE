@@ -58,6 +58,7 @@ public class WalletService {
 
 	private WalletResponseDTO setWallet(WalletRequestDTO walletDTO, Wallet wallet) {
 		wallet.setWalletAmount(walletDTO.walletAmount());
+		wallet.setWalletBalance(walletDTO.walletAmount());
 		wallet.setPaymentDay(Wallet.PaymentDay.fromValue(walletDTO.paymentDay()));
 		try {
 			DateTimeFormatter formatter = DateTimeFormatter.ofPattern("yyyy-MM");
