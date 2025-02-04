@@ -2,7 +2,7 @@
 name: Feature request
 about: "[feat] ✨ 이슈제목"
 title: "[feat] ✨ 00기능 개발 요청"
-labels: feature
+labels: ''
 assignees: ''
 
 ---

@@ -35,3 +35,8 @@ out/
 
 ### VS Code ###
 .vscode/
+
+.gitmessage.txt
+
+application.yml
+application-test.yml

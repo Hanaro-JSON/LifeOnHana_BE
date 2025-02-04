@@ -1,7 +1,8 @@
 plugins {
 	id 'java'
-	id 'org.springframework.boot' version '3.4.1'
-	id 'io.spring.dependency-management' version '1.1.7'
+	id 'jacoco'
+	id 'org.springframework.boot' version '3.3.5'
+	id 'io.spring.dependency-management' version '1.1.6'
 }
 
 group = 'com.example'
@@ -28,15 +29,53 @@ dependencies {
 	implementation 'org.springframework.boot:spring-boot-starter-web'
 	implementation 'org.springframework.boot:spring-boot-starter-data-redis'
 	implementation 'org.springframework.boot:spring-boot-starter-data-jpa'
+	implementation 'org.springframework.boot:spring-boot-starter-webflux'
 	runtimeOnly 'com.mysql:mysql-connector-j'
+
+	implementation 'io.jsonwebtoken:jjwt-api:0.12.3'
+	runtimeOnly 'io.jsonwebtoken:jjwt-impl:0.12.3'
+	runtimeOnly 'io.jsonwebtoken:jjwt-jackson:0.12.3'
 
 	compileOnly 'org.projectlombok:lombok'
 	annotationProcessor 'org.projectlombok:lombok'
 	testImplementation 'org.springframework.boot:spring-boot-starter-test'
 	testImplementation 'org.springframework.security:spring-security-test'
 	testRuntimeOnly 'org.junit.platform:junit-platform-launcher'
+	testImplementation 'org.springframework.boot:spring-boot-starter-test'
+
+	//스웨거
+	implementation "org.springdoc:springdoc-openapi-starter-common:2.3.0"
+	implementation "org.springdoc:springdoc-openapi-starter-webmvc-ui:2.3.0"
+
+	//actuator
+	implementation 'org.springframework.boot:spring-boot-starter-actuator'
+
+	//Prometheus
+	runtimeOnly 'io.micrometer:micrometer-registry-prometheus'
 }
 
 tasks.named('test') {
 	useJUnitPlatform()
+}
+
+test {
+	finalizedBy jacocoTestReport
+}
+jacocoTestReport {
+	dependsOn test
+}
+check.dependsOn jacocoTestReport
+
+jacocoTestCoverageVerification {
+	violationRules {
+		rule {
+			element = 'CLASS'
+
+			limit {
+				counter = 'BRANCH'
+				value = 'COVEREDRATIO'
+				minimum = 0.80
+			}
+		}
+	}
 }
