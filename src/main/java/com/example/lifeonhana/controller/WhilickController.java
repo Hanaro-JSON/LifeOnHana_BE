@@ -11,6 +11,7 @@ import org.springframework.web.bind.annotation.*;
 
 import com.example.lifeonhana.ApiResult;
 import com.example.lifeonhana.dto.response.WhilickResponseDTO;
+import com.example.lifeonhana.service.JwtService;
 import com.example.lifeonhana.service.WhilickService;
 import com.example.lifeonhana.global.exception.UnauthorizedException;
 import com.example.lifeonhana.global.exception.NotFoundException;
@@ -21,6 +22,7 @@ import com.example.lifeonhana.global.exception.NotFoundException;
 @Tag(name = "Whilick", description = "칼럼 쇼츠 관련 API")
 public class WhilickController {
 	private final WhilickService whilickService;
+	private final JwtService jwtService;
 
 	@Operation(summary = "칼럼 쇼츠 조회", description = "페이지네이션을 적용한 칼럼 쇼츠 목록 조회")
 	@ApiResponses({
@@ -37,9 +39,12 @@ public class WhilickController {
 		@RequestHeader("Authorization") String token
 	) {
 		try {
+			String accessToken = token.startsWith("Bearer ") ? token.substring(7) : token;
+			String authId = jwtService.extractAuthId(accessToken);
+
 			WhilickResponseDTO response = (articleId != null)
-				? whilickService.getShortsByArticleId(articleId, size, token)
-				: whilickService.getShorts(page, size, token);
+				? whilickService.getShortsByArticleId(articleId, size, authId)
+				: whilickService.getShorts(page, size, authId);
 
 			return ResponseEntity.ok(ApiResult.builder()
 				.code(HttpStatus.OK.value())

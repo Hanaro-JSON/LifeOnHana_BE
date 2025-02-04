@@ -50,7 +50,7 @@ public class HistoryController {
 			throw new UnauthorizedException("로그인이 필요한 서비스입니다.");
 		}
 
-		// YYYYMM 형식 검증
+
 		if (!yearMonth.matches("\\d{4}-\\d{2}")) {
 			throw new BadRequestException("올바른 년월 형식이 아닙니다. (YYYY-MM)");
 		}
@@ -109,7 +109,6 @@ public class HistoryController {
 			throw new UnauthorizedException("로그인이 필요한 서비스입니다.");
 		}
 
-		// YYYYMM 형식 검증
 		if (!yearMonth.matches("\\d{4}-\\d{2}")) {
 			throw new BadRequestException("올바른 년월 형식이 아닙니다. (YYYY-MM)");
 		}

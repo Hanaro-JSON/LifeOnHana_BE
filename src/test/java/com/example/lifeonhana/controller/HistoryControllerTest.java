@@ -78,6 +78,7 @@ class HistoryControllerTest {
 		Wallet wallet = new Wallet();
 		wallet.setUser(testUser);
 		wallet.setWalletAmount(1000000L);
+		wallet.setWalletBalance(1000000L);
 		wallet.setPaymentDay(Wallet.PaymentDay.DAY_1);
 		wallet.setStartDate(LocalDateTime.now().withDayOfMonth(1));
 		wallet.setEndDate(LocalDateTime.now().plusMonths(1).withDayOfMonth(1).minusSeconds(1));
