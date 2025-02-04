@@ -25,6 +25,7 @@ import com.example.lifeonhana.repository.WhilickRepository;
 import com.example.lifeonhana.repository.ArticleLikeRepository;
 import com.example.lifeonhana.global.exception.NotFoundException;
 import com.example.lifeonhana.client.RecommendationClient;
+import com.example.lifeonhana.entity.ArticleLike;
 
 @Service
 @RequiredArgsConstructor
@@ -214,7 +215,21 @@ public class WhilickService {
 			))
 			.collect(Collectors.toList());
 
-		boolean isLiked = articleLikeRepository.existsByArticleAndUserId(article, userId);
+		String userArticleLikesKey = "user:" + userId + ":articleLikes";
+		Map<Object, Object> likedArticlesMap = redisTemplate.opsForHash().entries(userArticleLikesKey);
+
+		if (likedArticlesMap.isEmpty()) {
+			List<ArticleLike> dbLikes = articleLikeRepository.findByIdUserIdAndIsLikeTrue(userId);
+			for (ArticleLike like : dbLikes) {
+				redisTemplate.opsForHash().put(userArticleLikesKey, 
+					like.getId().getArticleId().toString(), true);
+			}
+			likedArticlesMap = redisTemplate.opsForHash().entries(userArticleLikesKey);
+		}
+
+		// 레디스에서 좋아요 상태 조회
+		Boolean redisArticle = (Boolean) redisTemplate.opsForHash().get(userArticleLikesKey, article.getArticleId().toString());
+		boolean isLiked = Boolean.TRUE.equals(redisArticle);
 
 		Float totalDuration = article.getWhilicks().stream()
 			.findFirst()
