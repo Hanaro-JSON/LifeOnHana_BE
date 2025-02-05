@@ -134,15 +134,6 @@ class ArticleLikeControllerTest {
             .andExpect(status().isUnauthorized());
     }
 
-    // @Test
-    // @DisplayName("카테고리 파라미터 검증")
-    // void validateCategoryParameter() throws Exception {
-    //     mockMvc.perform(get("/api/articles/liked")
-    //             .header("Authorization", validToken)
-    //             .param("category", "INVALID_CATEGORY"))
-    //         .andExpect(status().isBadRequest());
-    // }
-
     @Test
     @DisplayName("페이지네이션 파라미터 검증")
     void validatePaginationParameters() throws Exception {
