@@ -12,6 +12,7 @@ import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.Parameter;
 import io.swagger.v3.oas.annotations.responses.ApiResponse;
 import io.swagger.v3.oas.annotations.responses.ApiResponses;
+import io.swagger.v3.oas.annotations.security.SecurityRequirement;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
@@ -32,6 +33,7 @@ public class HistoryController {
 		@ApiResponse(responseCode = "400", description = "올바른 년월 형식이 아닙니다. (YYYYMM)"),
 		@ApiResponse(responseCode = "401", description = "인증이 필요합니다.")
 	})
+	@SecurityRequirement(name = "bearerAuth")
 	@GetMapping
 	public ResponseEntity<ApiResult> getHistories(
 		@Parameter(description = "조회할 년월 (YYYY-MM 형식)", required = true)
@@ -69,6 +71,7 @@ public class HistoryController {
 		@ApiResponse(responseCode = "200", description = "월별 지출 내역 조회 성공"),
 		@ApiResponse(responseCode = "401", description = "인증이 필요합니다.")
 	})
+	@SecurityRequirement(name = "bearerAuth")
 	@GetMapping("/monthly")
 	public ResponseEntity<ApiResult> getMonthlyExpenses(
 		@Parameter(hidden = true)
@@ -97,6 +100,7 @@ public class HistoryController {
 		@ApiResponse(responseCode = "400", description = "올바른 년월 형식이 아닙니다. (YYYYMM)"),
 		@ApiResponse(responseCode = "401", description = "인증이 필요합니다.")
 	})
+	@SecurityRequirement(name = "bearerAuth")
 	@GetMapping("/statistics")
 	public ResponseEntity<ApiResult> getStatistics(
 		@Parameter(description = "조회할 년월 (YYYY-MM 형식)", required = true)

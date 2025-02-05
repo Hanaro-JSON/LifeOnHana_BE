@@ -3,6 +3,7 @@ package com.example.lifeonhana.controller;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.responses.ApiResponse;
 import io.swagger.v3.oas.annotations.responses.ApiResponses;
+import io.swagger.v3.oas.annotations.security.SecurityRequirement;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
@@ -31,6 +32,7 @@ public class WhilickController {
 		@ApiResponse(responseCode = "401", description = "인증 필요"),
 		@ApiResponse(responseCode = "404", description = "컨텐츠를 찾을 수 없음")
 	})
+	@SecurityRequirement(name = "bearerAuth")
 	@GetMapping({"/shorts", "/shorts/{articleId}"})
 	public ResponseEntity<ApiResult> getShorts(
 		@PathVariable(required = false) Long articleId,
