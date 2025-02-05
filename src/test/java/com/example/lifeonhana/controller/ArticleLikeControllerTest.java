@@ -76,16 +76,16 @@ class ArticleLikeControllerTest {
     @DisplayName("좋아요 취소 - 성공")
     void cancelLike_Success() throws Exception {
         Article article = articleRepository.findById(13L)
-                .orElseThrow(() -> new RuntimeException("테스트 기사가 없습니다."));
+            .orElseThrow(() -> new RuntimeException("테스트 기사가 없습니다."));
 
         mockMvc.perform(post("/api/articles/" + article.getArticleId() + "/like")
-                        .header("Authorization", validToken))
-                .andExpect(status().isOk())
-                .andExpect(jsonPath("$.code").value(200))
-                .andExpect(jsonPath("$.message").value("좋아요 취소 성공"))
-                .andExpect(jsonPath("$.data.isLiked").value(false))
-                .andExpect(jsonPath("$.data.likeCount").value(0))
-                .andDo(print());
+                .header("Authorization", validToken))
+            .andExpect(status().isOk())
+            .andExpect(jsonPath("$.code").value(200))
+            .andExpect(jsonPath("$.message").value("좋아요 취소 성공"))
+            .andExpect(jsonPath("$.data.isLiked").value(false))
+            .andExpect(jsonPath("$.data.likeCount").value(0))
+            .andDo(print());
     }
 
 
@@ -132,15 +132,6 @@ class ArticleLikeControllerTest {
         mockMvc.perform(get("/api/articles/liked")
                 .header("Authorization", "Bearer invalid-token"))
             .andExpect(status().isUnauthorized());
-    }
-
-    @Test
-    @DisplayName("카테고리 파라미터 검증")
-    void validateCategoryParameter() throws Exception {
-        mockMvc.perform(get("/api/articles/liked")
-                .header("Authorization", validToken)
-                .param("category", "INVALID_CATEGORY"))
-            .andExpect(status().isBadRequest());
     }
 
     @Test

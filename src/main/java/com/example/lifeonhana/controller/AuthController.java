@@ -14,6 +14,7 @@ import com.example.lifeonhana.global.exception.BadRequestException;
 import com.example.lifeonhana.global.exception.UnauthorizedException;
 
 import io.swagger.v3.oas.annotations.responses.ApiResponse;
+import io.swagger.v3.oas.annotations.security.SecurityRequirement;
 import lombok.RequiredArgsConstructor;
 
 import io.swagger.v3.oas.annotations.Operation;
@@ -78,6 +79,7 @@ public class AuthController {
 		@ApiResponse(responseCode = "400", description = "잘못된 요청"),
 		@ApiResponse(responseCode = "401", description = "유효하지 않은 토큰")
 	})
+	@SecurityRequirement(name = "bearerAuth")
 	@PostMapping("/signout")
 	public ResponseEntity<ApiResult> signOut(@RequestHeader("Authorization") String token) {
 		try {

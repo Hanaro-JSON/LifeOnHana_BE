@@ -21,6 +21,7 @@ import com.example.lifeonhana.service.LoanRecommendationService;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.media.Content;
 import io.swagger.v3.oas.annotations.responses.ApiResponse;
+import io.swagger.v3.oas.annotations.security.SecurityRequirement;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import lombok.RequiredArgsConstructor;
 
@@ -42,6 +43,7 @@ public class LoanRecommendationController {
 			@ApiResponse(responseCode = "500", description = "서버 오류", content = @Content(mediaType = "application/json"))
 		}
 	)
+	@SecurityRequirement(name = "bearerAuth")
 	@PostMapping
 	public ResponseEntity<ApiResult> recommendLoanProducts(
 		@RequestBody LoanRecommendationRequest request,

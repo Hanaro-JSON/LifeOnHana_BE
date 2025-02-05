@@ -33,7 +33,6 @@ public class ProductLikeController {
 	public ProductLikeController(ProductLikeService productLikeService) {
 		this.productLikeService = productLikeService;
 	}
-
 	@GetMapping("/liked/products")
 	@Operation(summary = "좋아요한 상품 목록 조회", description = "좋아요한 상품 목록을 조회합니다.")
 	@ApiResponses(value = {
@@ -61,6 +60,7 @@ public class ProductLikeController {
 			@ApiResponse(responseCode = "404", description = "상품을 찾을 수 없음", content = @Content(mediaType = "application/json"))
 		}
 	)
+	@SecurityRequirement(name = "bearerAuth")
 	@PostMapping("/{productId}/like")
 	public ResponseEntity<ApiResult> toggleLike(
 		@PathVariable Long productId,

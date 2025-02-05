@@ -43,6 +43,7 @@ public class AccountController {
 		@ApiResponse(responseCode = "400", description = "잘못된 요청", content = @Content(mediaType = "application/json")),
 		@ApiResponse(responseCode = "500", description = "서버 오류", content = @Content(mediaType = "application/json"))
 	})
+	@SecurityRequirement(name = "bearerAuth")
 	@GetMapping
 	public ResponseEntity<ApiResult> getAccounts(@RequestHeader("Authorization") String token) {
 		try {

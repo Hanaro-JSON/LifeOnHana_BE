@@ -53,6 +53,7 @@ public class ArticleController {
 			@ApiResponse(responseCode = "500", description = "서버 오류", content = @Content(mediaType = "application/json"))
 		}
 	)
+	@SecurityRequirement(name = "bearerAuth")
 	@GetMapping("/{articleId}")
 	public ResponseEntity<ApiResult> getArticleDetails(@PathVariable Long articleId ,@AuthenticationPrincipal String authId) {
 		try {
